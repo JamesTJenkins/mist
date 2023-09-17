@@ -1,6 +1,6 @@
-[submodule "mist/vender/SDL2"]
-	path = mist/vender/SDL2
+[submodule "mist/vendor/SDL2"]
+	path = mist/vendor/SDL2
 	url = git@github.com:libsdl-org/SDL.git
-[submodule "mist/vender/glm"]
-	path = mist/vender/glm
+[submodule "mist/vendor/glm"]
+	path = mist/vendor/glm
 	url = git@github.com:g-truc/glm.git
