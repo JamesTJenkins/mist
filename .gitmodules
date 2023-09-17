@@ -1,9 +1,6 @@
-[submodule "mist/vendor/SDL2"]
-	path = mist/vendor/SDL2
-	url = https://github.com/libsdl-org/SDL
-[submodule "mist/vendor/imgui"]
-	path = mist/vendor/imgui
-	url = https://github.com/ocornut/imgui
-[submodule "mist/vendor/glm"]
-	path = mist/vendor/glm
-	url = https://github.com/g-truc/glm
+[submodule "mist/vender/SDL2"]
+	path = mist/vender/SDL2
+	url = git@github.com:libsdl-org/SDL.git
+[submodule "mist/vender/glm"]
+	path = mist/vender/glm
+	url = git@github.com:g-truc/glm.git
