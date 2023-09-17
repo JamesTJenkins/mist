@@ -1,0 +1,9 @@
+[submodule "Crisp/vendor/SDL2"]
+	path = Crisp/vendor/SDL2
+	url = https://github.com/libsdl-org/SDL
+[submodule "Crisp/vendor/imgui"]
+	path = Crisp/vendor/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "Crisp/vendor/glm"]
+	path = Crisp/vendor/glm
+	url = https://github.com/g-truc/glm
