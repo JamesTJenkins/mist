@@ -24,6 +24,8 @@ add_executable(mist ${SOURCES})
 # will keep as exe for now while testing
 # add_library(mist STATIC ${SOURCES})
 
+target_include_directories(mist PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
 target_link_libraries(${PROJECT_NAME} 
     SDL2::SDL2
     glm::glm
