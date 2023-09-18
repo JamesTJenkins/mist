@@ -4,6 +4,6 @@
 [submodule "mist/vendor/glm"]
 	path = mist/vendor/glm
 	url = git@github.com:g-truc/glm.git
-[submodule "mist/vendor/vulkan"]
-	path = mist/vendor/vulkan
-	url = git@github.com:KhronosGroup/Vulkan-Hpp.git
+[submodule "mist/vendor/Vulkan-Headers"]
+	path = mist/vendor/Vulkan-Headers
+	url = git@github.com:KhronosGroup/Vulkan-Headers.git
