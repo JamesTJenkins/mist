@@ -1,0 +1,37 @@
+Language: Cpp
+UseCRLF: true
+IndentWidth: 4
+UseTab: Always
+IndentCaseLabels: false
+IndentCaseBlocks: false
+IndentWrappedFunctionNames: true
+NamespaceIndentation: NI_All
+FixNamespaceComments: false
+AlignAfterOpenBracket: Align
+InsertBraces: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  BeforeCatch: false
+  BeforeElse: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInParens: SIPO_Never
+SpacesInLineCommentPrefix: -1
+SpacesInContainerLiterals: false
+SpacesInAngles: SIAS_Never
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpaceBeforeParensOptions: Custom
+  AfterControlStatements: true
+  AfterFunctionDefinitionName: false
+  AfterFunctionDeclarationName: false
+  AfterOverloadedOperator: false
+  AfterRequiresInClause: false
+  AfterRequiresInExpression: false
+  BeforeNonEmptyParentheses: false
