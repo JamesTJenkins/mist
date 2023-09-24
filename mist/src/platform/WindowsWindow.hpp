@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL.h>
-#include "../core/Window.hpp"
-#include "../core/Application.hpp"
+#include "core/Window.hpp"
+#include "core/Application.hpp"
 
 namespace mist {
     class WindowsWindow : public Window {
