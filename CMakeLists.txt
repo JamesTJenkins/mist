@@ -7,7 +7,6 @@ project(mist C CXX)
 set(BUILD_SHARED_LIBS ON)
 
 add_subdirectory(mist/vendor/SDL2)
-add_subdirectory(mist/vendor/glm)
 add_subdirectory(mist/vendor/Vulkan-Headers)
 
 file(GLOB_RECURSE SOURCES "mist/src/*.cpp")
@@ -24,11 +23,18 @@ add_executable(mist ${SOURCES})
 # will keep as exe for now while testing
 # add_library(mist STATIC ${SOURCES})
 
-target_include_directories(mist PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+# SDL2
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/SDL2/cmake")
+include(sdlfind)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/SDL2/include
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/glm
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/Vulkan-Headers/include
+)
 
 target_link_libraries(${PROJECT_NAME} 
     SDL2::SDL2
-    glm::glm
     Vulkan::Headers
 )
 
