@@ -28,6 +28,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/SDL2/cmak
 include(sdlfind)
 
 target_include_directories(${PROJECT_NAME}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/src/
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/SDL2/include
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/glm
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mist/vendor/Vulkan-Headers/include
