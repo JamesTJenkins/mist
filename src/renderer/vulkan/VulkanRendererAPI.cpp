@@ -22,7 +22,6 @@ namespace mist {
 			// EXTENSIONS
 #ifdef DEBUG
 			std::vector<const char*> extensions = {
-				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 				VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 			};
 #else
