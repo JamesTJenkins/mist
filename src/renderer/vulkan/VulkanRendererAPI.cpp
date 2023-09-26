@@ -6,6 +6,9 @@
 
 namespace mist {
 	void VulkanRendererAPI::Initialize() {
+		VkResult error;
+
+		// VULKAN INSTANCE
 		{
 			// APP INFO
 			VkApplicationInfo appInfo = {};
@@ -49,18 +52,44 @@ namespace mist {
 			createInfo.enabledLayerCount = 1;
 #endif
 
-			VkResult error = vkCreateInstance(&createInfo, allocator, &instance);
-			check_vk_result(error);
+			error = vkCreateInstance(&createInfo, allocator, &instance);
+			CheckVkResult(error);
+
 #ifdef DEBUG
 			auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
 			VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
 			debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 			debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-			debug_report_ci.pfnCallback = debug_report;
+			debug_report_ci.pfnCallback = DebugReport;
 			debug_report_ci.pUserData = NULL;
 			error = vkCreateDebugReportCallbackEXT(instance, &debug_report_ci, allocator, &debugReport);
-			check_vk_result(error);
+			CheckVkResult(error);
 #endif
+		}
+		// SELECT GPU
+		{
+			uint32_t gpuCount;
+			error = vkEnumeratePhysicalDevices(instance, &gpuCount, NULL);
+			CheckVkResult(error);
+
+			VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpuCount);
+			error = vkEnumeratePhysicalDevices(instance, &gpuCount, gpus);
+			CheckVkResult(error);
+
+			// TODO: Add support for multi dedicated GPUs
+			// Finds a discrete GPU
+			uint32_t gpuIdx = 0;
+			for (uint32_t i = 0; i < gpuCount; i++) {
+				VkPhysicalDeviceProperties properties;
+				vkGetPhysicalDeviceProperties(gpus[i], &properties);
+				if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+					gpuIdx = i;
+					break;
+				}
+			}
+
+			physicalDevice = gpus[gpuIdx];
+			free(gpus);
 		}
 	}
 

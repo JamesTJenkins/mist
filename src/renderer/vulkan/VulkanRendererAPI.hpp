@@ -14,6 +14,7 @@ namespace mist {
         virtual void Clear() override;
     private:
         VkInstance instance;
+        VkPhysicalDevice physicalDevice;
         VkAllocationCallbacks* allocator = NULL;
         VkDebugReportCallbackEXT debugReport;
     };
