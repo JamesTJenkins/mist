@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "Window.hpp"
+#include "core/Window.hpp"
 
 namespace mist {
 	class Application {

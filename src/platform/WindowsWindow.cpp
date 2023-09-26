@@ -1,4 +1,4 @@
-#include "WindowsWindow.hpp"
+#include "platform/WindowsWindow.hpp"
 
 namespace mist {
     Window* Window::Create(const WindowProperties& properties) {

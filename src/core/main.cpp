@@ -1,4 +1,4 @@
-#include "Application.hpp"
+#include "core/Application.hpp"
 #include <SDL.h>
 
 int main(int argc, char** argv) {
