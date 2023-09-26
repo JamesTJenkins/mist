@@ -1,12 +1,13 @@
-#include "VulkanRendererAPI.hpp"
+#include "renderer/vulkan/VulkanRendererAPI.hpp"
 #include <vector>
 #include <SDL2/SDL_vulkan.h>
-#include "VulkanDebug.hpp"
+#include "renderer/vulkan/VulkanDebug.hpp"
 #include "core/Application.hpp"
 
 namespace mist {
 	void VulkanRendererAPI::Initialize() {
 		{
+			// APP INFO
 			VkApplicationInfo appInfo = {};
 			appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 			appInfo.pApplicationName = "Untitled";
@@ -14,25 +15,39 @@ namespace mist {
 			appInfo.pEngineName = "mist";
 			appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 			appInfo.apiVersion = VK_API_VERSION_1_0;
+
+			// EXTENSIONS
 #ifdef DEBUG
-			std::vector<const char*> sdlExtensions = {
-				VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+			std::vector<const char*> extensions = {
+				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+				VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 			};
 #else
-			std::vector<const char*> sdlExtensions = {};
+			std::vector<const char*> extensions = {};
 #endif
-			unsigned int count = sdlExtensions.size();
-			SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, sdlExtensions.data());
-#ifdef DEBUG
-			// Additional debugging extensions
-			sdlExtensions.push_back("VK_LAYER_KHRONOS_validation");
-			sdlExtensions.push_back("VK_EXT_debug_report");
-#endif
+
+			// GET SDL EXTENSIONS
+			unsigned int count = 0;
+			SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, nullptr);
+			size_t additionalExtensionCount = extensions.size();
+			extensions.resize(additionalExtensionCount + count);
+			SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, extensions.data() + additionalExtensionCount);
+			
+			// CREATE INFO
 			VkInstanceCreateInfo createInfo = {};
 			createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 			createInfo.pApplicationInfo = &appInfo;
-			createInfo.ppEnabledExtensionNames = sdlExtensions.data();
-			createInfo.enabledExtensionCount = static_cast<uint32_t>(sdlExtensions.size());
+			createInfo.ppEnabledExtensionNames = extensions.data();
+			createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+			
+#ifdef DEBUG
+			// VALIDATION LAYERS
+			const char* layers[] = {
+				"VK_LAYER_KHRONOS_validation"
+			};
+			createInfo.ppEnabledLayerNames = layers;
+			createInfo.enabledLayerCount = 1;
+#endif
 
 			VkResult error = vkCreateInstance(&createInfo, allocator, &instance);
 			check_vk_result(error);
@@ -47,6 +62,10 @@ namespace mist {
 			check_vk_result(error);
 #endif
 		}
+	}
+
+	void VulkanRendererAPI::Shutdown() {
+		vkDestroyInstance(instance, allocator);
 	}
 
 	void VulkanRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {

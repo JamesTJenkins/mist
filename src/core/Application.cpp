@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
-#include "Application.hpp"
+#include "core/Application.hpp"
 #include <SDL.h>
+#include "renderer/Renderer.hpp"
 
 namespace mist {
     Application* Application::instance = nullptr;
@@ -10,9 +11,12 @@ namespace mist {
         SDL_Init(SDL_INIT_VIDEO);
 
         window = std::unique_ptr<Window>(Window::Create(WindowProperties()));
+
+        Renderer::Initialize();
     }
 
     Application::~Application() {
+        Renderer::Shutdown();
         SDL_Quit();
     }
 
