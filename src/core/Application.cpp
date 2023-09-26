@@ -1,6 +1,5 @@
-#include "Application.hpp"
-
 #define SDL_MAIN_HANDLED
+#include "Application.hpp"
 #include <SDL.h>
 
 namespace mist {

@@ -1,9 +1,0 @@
-[submodule "mist/vendor/SDL2"]
-	path = mist/vendor/SDL2
-	url = git@github.com:libsdl-org/SDL.git
-[submodule "mist/vendor/glm"]
-	path = mist/vendor/glm
-	url = git@github.com:g-truc/glm.git
-[submodule "mist/vendor/Vulkan-Headers"]
-	path = mist/vendor/Vulkan-Headers
-	url = git@github.com:KhronosGroup/Vulkan-Headers.git

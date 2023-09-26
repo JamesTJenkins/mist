@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer/RendererAPI.hpp"
+#include <vulkan/vulkan.hpp>
 
 namespace mist {
     class VulkanRendererAPI : public RendererAPI {

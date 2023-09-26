@@ -1,6 +1,8 @@
 #include "VulkanRendererAPI.hpp"
-#include <vulkan/vulkan.h>
+#include <vector>
+#include <SDL2/SDL_vulkan.h>
 #include "VulkanDebug.hpp"
+#include "core/Application.hpp"
 
 namespace mist {
 	void VulkanRendererAPI::Initialize() {
@@ -12,21 +14,29 @@ namespace mist {
 			appInfo.pEngineName = "mist";
 			appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 			appInfo.apiVersion = VK_API_VERSION_1_0;
-
+#ifdef DEBUG
+			std::vector<const char*> sdlExtensions = {
+				VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+			};
+#else
+			std::vector<const char*> sdlExtensions = {};
+#endif
+			unsigned int count = sdlExtensions.size();
+			SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, sdlExtensions.data());
+#ifdef DEBUG
+			// Additional debugging extensions
+			sdlExtensions.push_back("VK_LAYER_KHRONOS_validation");
+			sdlExtensions.push_back("VK_EXT_debug_report");
+#endif
 			VkInstanceCreateInfo createInfo = {};
 			createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 			createInfo.pApplicationInfo = &appInfo;
-#if DEBUG
-			const char* layers[] = { "VK_LAYER_KHRONOS_validation", "VK_EXT_debug_report" };
-			createInfo.ppEnabledExtensionNames = layers;
-			createInfo.enabledExtensionCount = 2;
-#else
-			createInfo.ppEnabledExtensionNames = {};
-			createInfo.enabledExtensionCount = 0;
-#endif
+			createInfo.ppEnabledExtensionNames = sdlExtensions.data();
+			createInfo.enabledExtensionCount = static_cast<uint32_t>(sdlExtensions.size());
+
 			VkResult error = vkCreateInstance(&createInfo, allocator, &instance);
 			check_vk_result(error);
-#if DEBUG
+#ifdef DEBUG
 			auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
 			VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
 			debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
