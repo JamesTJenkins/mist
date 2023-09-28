@@ -105,7 +105,8 @@ namespace mist {
 		{
 			Window& window = Application::Get().GetWindow();
 			VkSurfaceKHR context;
-			SDL_Vulkan_CreateSurface((SDL_Window*)window.GetNativeWindow(), instance, &context);
+			if (!SDL_Vulkan_CreateSurface((SDL_Window*)window.GetNativeWindow(), instance, &context))
+				printf("[VULKAN] surface failed to be created");
 			window.SetGraphicsContext(context);
 		}
 		// SELECT GPU
