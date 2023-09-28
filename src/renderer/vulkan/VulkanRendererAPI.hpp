@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer/RendererAPI.hpp"
+#include <SDL2/SDL_vulkan.h>
 #include <vulkan/vulkan.hpp>
 
 namespace mist {
@@ -13,9 +14,13 @@ namespace mist {
         virtual void SetClearColor(glm::vec4& color) override;
         virtual void Clear() override;
     private:
-        VkInstance instance;
-        VkPhysicalDevice physicalDevice;
         VkAllocationCallbacks* allocator = NULL;
-        VkDebugReportCallbackEXT debugReport;
+        VkInstance instance = VK_NULL_HANDLE;
+        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        VkDevice device = VK_NULL_HANDLE;
+        VkQueue graphicsQueue = VK_NULL_HANDLE;
+        VkQueue presentQueue = VK_NULL_HANDLE;
+        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+        VkDebugReportCallbackEXT debugReport = VK_NULL_HANDLE;
     };
 }

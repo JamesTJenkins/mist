@@ -1,10 +1,46 @@
 #include "renderer/vulkan/VulkanRendererAPI.hpp"
 #include <vector>
+#include <optional>
+#include <set>
 #include <SDL2/SDL_vulkan.h>
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "core/Application.hpp"
 
 namespace mist {
+	struct QueueFamilyIndices {
+		std::optional<uint32_t> graphicsFamily;
+		std::optional<uint32_t> presentFamily;
+
+		bool Valid() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+	};
+
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) {
+		QueueFamilyIndices indices;
+
+		uint32_t count = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, NULL);
+		VkQueueFamilyProperties* queues = (VkQueueFamilyProperties*)malloc(sizeof(VkQueueFamilyProperties) * count);
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, queues);
+
+		VkSurfaceKHR surface = (VkSurfaceKHR)Application::Get().GetWindow().GetGraphicsContext();
+
+		for (uint32_t i = 0; i < count; i++) {
+			if (queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				indices.graphicsFamily = i;
+
+			VkBool32 presentSupport = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+
+			if (presentSupport)
+				indices.presentFamily = i;
+
+			if (indices.Valid())
+				break;
+		}
+		
+		return indices;
+	}
+
 	void VulkanRendererAPI::Initialize() {
 		VkResult error;
 
@@ -65,6 +101,13 @@ namespace mist {
 			CheckVkResult(error);
 #endif
 		}
+		// SURFACE
+		{
+			Window& window = Application::Get().GetWindow();
+			VkSurfaceKHR context;
+			SDL_Vulkan_CreateSurface((SDL_Window*)window.GetNativeWindow(), instance, &context);
+			window.SetGraphicsContext(context);
+		}
 		// SELECT GPU
 		{
 			uint32_t gpuCount;
@@ -90,9 +133,67 @@ namespace mist {
 			physicalDevice = gpus[gpuIdx];
 			free(gpus);
 		}
+		// Queues and device
+		{
+			QueueFamilyIndices indicies = FindQueueFamilies(physicalDevice);
+			std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+			std::set<uint32_t> uniqueQueueFamilies = { indicies.graphicsFamily.value(), indicies.presentFamily.value() };
+
+			float queuePriority = 1.0f;
+			for (uint32_t queueFamily : uniqueQueueFamilies) {
+				VkDeviceQueueCreateInfo createInfo{};
+				createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				createInfo.queueFamilyIndex = queueFamily;
+				createInfo.queueCount = 1;
+				createInfo.pQueuePriorities = &queuePriority;
+				queueCreateInfos.push_back(createInfo);
+			}
+			
+			std::vector<const char*> deviceExtensions = {
+				VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			};
+
+			VkDeviceCreateInfo deviceCreateInfo{};
+			deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+			deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+			deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
+			error = vkCreateDevice(physicalDevice, &deviceCreateInfo, allocator, &device);
+			CheckVkResult(error);
+			vkGetDeviceQueue(device, indicies.graphicsFamily.value(), 0, &graphicsQueue);
+			vkGetDeviceQueue(device, indicies.presentFamily.value(), 0, &presentQueue);
+		}
+		// Create descriptor
+		{
+			VkDescriptorPoolSize poolSize[] = {
+				{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+			};
+			VkDescriptorPoolCreateInfo poolCreateInfo{};
+			poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			poolCreateInfo.maxSets = 1000 * sizeof(VkDescriptorPoolSize);
+			poolCreateInfo.pPoolSizes = poolSize;
+			error = vkCreateDescriptorPool(device, &poolCreateInfo, allocator, &descriptorPool);
+			CheckVkResult(error);
+		}
 	}
 
 	void VulkanRendererAPI::Shutdown() {
+		vkDestroyDescriptorPool(device, descriptorPool, allocator);
+		vkDestroyDevice(device, allocator);
+		vkDestroySurfaceKHR(instance, (VkSurfaceKHR)Application::Get().GetWindow().GetGraphicsContext(), allocator);
 		vkDestroyInstance(instance, allocator);
 	}
 

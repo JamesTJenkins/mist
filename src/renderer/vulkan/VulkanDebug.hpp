@@ -1,7 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 static void CheckVkResult(VkResult error) {
     if (error == 0)
