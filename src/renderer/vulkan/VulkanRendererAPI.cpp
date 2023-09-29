@@ -112,8 +112,6 @@ namespace mist {
 		{
 			uint32_t gpuCount;
 			error = vkEnumeratePhysicalDevices(instance, &gpuCount, NULL);
-			CheckVkResult(error);
-
 			VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpuCount);
 			error = vkEnumeratePhysicalDevices(instance, &gpuCount, gpus);
 			CheckVkResult(error);
