@@ -2,7 +2,6 @@
 #include <vector>
 #include <optional>
 #include <set>
-#include <SDL2/SDL_vulkan.h>
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "core/Application.hpp"
 
@@ -195,6 +194,10 @@ namespace mist {
 		vkDestroyDescriptorPool(device, descriptorPool, allocator);
 		vkDestroyDevice(device, allocator);
 		vkDestroySurfaceKHR(instance, (VkSurfaceKHR)Application::Get().GetWindow().GetGraphicsContext(), allocator);
+#ifdef DEBUG
+		auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+		vkDestroyDebugReportCallbackEXT(instance, debugReport, allocator);
+#endif
 		vkDestroyInstance(instance, allocator);
 	}
 

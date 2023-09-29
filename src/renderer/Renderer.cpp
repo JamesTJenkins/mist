@@ -9,6 +9,6 @@ namespace mist {
     }
 
     void Renderer::Shutdown() {
-        
+        rendererAPI->Shutdown();
     }
 }
