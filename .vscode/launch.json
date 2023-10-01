@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/mist",
+            "program": "${workspaceFolder}/build/bin/editor",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

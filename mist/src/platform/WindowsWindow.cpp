@@ -12,6 +12,8 @@ namespace mist {
             case RendererAPI::API::Vulkan:
                 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN;
                 break;
+            default:
+                break;
         }
 
         window = SDL_CreateWindow(

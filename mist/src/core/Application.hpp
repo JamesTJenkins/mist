@@ -1,11 +1,12 @@
 #pragma once
 #include <memory>
+#include "core/Core.hpp"
 #include "core/Window.hpp"
 
 namespace mist {
 	class Application {
 	public:
-		Application();
+		Application(const char* name = "Untitled");
 		virtual ~Application();
 
 		void Run();
@@ -17,6 +18,6 @@ namespace mist {
 		bool running = true;
 
 		std::unique_ptr<Window> window;
-		static Application *instance;
+		static Application* instance;
 	};
 }
