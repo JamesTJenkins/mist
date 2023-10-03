@@ -1,8 +1,8 @@
 #pragma once
 #include <SDL.h>
 #include <vulkan/vulkan.hpp>
-#include "core/Window.hpp"
-#include "core/Application.hpp"
+#include "Window.hpp"
+#include "Application.hpp"
 
 // TODO: Update to properly support multiple render APIs rather than just having VkSurface in here
 

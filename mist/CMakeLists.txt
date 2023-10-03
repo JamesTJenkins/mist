@@ -7,7 +7,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fstack-protector-all -g3 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -g0 -DNDEBUG")
 
-set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall")
+set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -fms-extensions")
 # For more aggressive compilation warning/error checking
 #set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -Wextra -pedantic -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-private-field -Wno-ignored-attributes -Wno-language-extension-token")
 
@@ -19,6 +19,7 @@ add_library(mist SHARED ${SOURCES})
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/
 )
 
 target_link_libraries(${PROJECT_NAME}

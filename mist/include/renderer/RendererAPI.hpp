@@ -1,8 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "Core.hpp"
 
 namespace mist {
-    class RendererAPI {
+    class MIST_API RendererAPI {
     public:
         enum class API {
             None = 0,

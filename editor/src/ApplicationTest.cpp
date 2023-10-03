@@ -1,4 +1,4 @@
-#include <core/Application.hpp>
+#include <Application.hpp>
 
 int main() {
     mist::Application appTest("TestApp");

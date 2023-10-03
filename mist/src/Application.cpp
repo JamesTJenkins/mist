@@ -1,6 +1,6 @@
 #define SDL_MAIN_HANDLED
 
-#include "core/Application.hpp"
+#include "Application.hpp"
 #include <SDL.h>
 #include "renderer/Renderer.hpp"
 

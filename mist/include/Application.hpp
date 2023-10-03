@@ -1,10 +1,10 @@
 #pragma once
 #include <memory>
-#include "core/Core.hpp"
-#include "core/Window.hpp"
+#include "Core.hpp"
+#include "Window.hpp"
 
 namespace mist {
-	class Application {
+	class MIST_API Application {
 	public:
 		Application(const char* name = "Untitled");
 		virtual ~Application();
@@ -13,11 +13,11 @@ namespace mist {
 		void Quit();
 
 		inline Window& GetWindow() { return *window; }
-		inline static Application &Get() { return *instance; }
+		inline static Application &Get() { return *instance; }	// Make this not exist if you can and that make craig happy
 	private:
 		bool running = true;
 
 		std::unique_ptr<Window> window;
-		static Application* instance;
+		static Application* instance;	// Make this not exist also
 	};
 }
