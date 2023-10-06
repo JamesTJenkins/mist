@@ -4,8 +4,6 @@
 #include "Window.hpp"
 #include "Application.hpp"
 
-// TODO: Update to properly support multiple render APIs rather than just having VkSurface in here
-
 namespace mist {
     class WindowsWindow : public Window {
     public:
