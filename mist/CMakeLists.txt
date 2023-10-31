@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -fms-extensions")
 find_package(glm CONFIG REQUIRED)
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(Vulkan REQUIRED)
+find_package(spdlog REQUIRED)
 
 add_library(mist SHARED ${SOURCES})
 
@@ -25,6 +26,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     PRIVATE Vulkan::Vulkan
+    PRIVATE spdlog::spdlog_header_only
 )
 
 target_compile_definitions(${PROJECT_NAME} 
@@ -33,6 +35,3 @@ target_compile_definitions(${PROJECT_NAME}
 )
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
-add_custom_command(TARGET mist POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>
-)
