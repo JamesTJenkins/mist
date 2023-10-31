@@ -7,7 +7,7 @@ namespace mist {
         static void Initialize();
         static void Shutdown();
         
-        inline static RendererAPI* GetRendererAPI() { return rendererAPI; }
+        inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
     private:
         static RendererAPI* rendererAPI;
     };
