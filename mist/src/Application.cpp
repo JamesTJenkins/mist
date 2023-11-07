@@ -2,7 +2,7 @@
 
 #include "Application.hpp"
 #include <SDL.h>
-#include "renderer/Renderer.hpp"
+#include "renderer/RenderCommand.hpp"
 
 namespace mist {
     Application* Application::instance{};
@@ -16,11 +16,11 @@ namespace mist {
 
         window = std::unique_ptr<Window>(Window::Create(WindowProperties(name)));
 
-        Renderer::Initialize();
+        RenderCommand::Initialize();
     }
 
     Application::~Application() {
-        Renderer::Shutdown();
+        RenderCommand::Shutdown();
         SDL_Quit();
     }
 

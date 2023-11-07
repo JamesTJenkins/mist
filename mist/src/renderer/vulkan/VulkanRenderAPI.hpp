@@ -1,11 +1,10 @@
 #pragma once
-#include "renderer/RendererAPI.hpp"
-#include <SDL2/SDL_vulkan.h>
-#include <vulkan/vulkan.hpp>
+#include "renderer/vulkan/IVulkanRenderAPI.hpp"
 
 namespace mist {
-    class VulkanRendererAPI : public RendererAPI {
+    class VulkanRenderAPI : public IVulkanRenderAPI {
     public:
+        // Render API overrides
         virtual void Initialize() override;
         virtual void Shutdown() override;
 
@@ -13,6 +12,13 @@ namespace mist {
 
         virtual void SetClearColor(glm::vec4& color) override;
         virtual void Clear() override;
+
+        virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
+        
+        // IVulkanRenderAPI overrides
+        virtual VkInstance GetInstance() override { return instance; }
+        virtual VkDevice GetDevice() override { return device; }
+        virtual VkPhysicalDevice GetPhysicalDevice() override { return physicalDevice; }
     private:
         VkAllocationCallbacks* allocator = NULL;
         VkInstance instance = VK_NULL_HANDLE;

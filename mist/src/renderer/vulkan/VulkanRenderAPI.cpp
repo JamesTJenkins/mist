@@ -1,7 +1,8 @@
-#include "renderer/vulkan/VulkanRendererAPI.hpp"
+#include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include <vector>
 #include <optional>
 #include <set>
+#include <SDL2/SDL_vulkan.h>
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "Application.hpp"
 
@@ -40,7 +41,7 @@ namespace mist {
 		return indices;
 	}
 
-	void VulkanRendererAPI::Initialize() {
+	void VulkanRenderAPI::Initialize() {
 		VkResult error;
 
 		// VULKAN INSTANCE
@@ -188,7 +189,7 @@ namespace mist {
 		}
 	}
 
-	void VulkanRendererAPI::Shutdown() {
+	void VulkanRenderAPI::Shutdown() {
 		vkDestroyDescriptorPool(device, descriptorPool, allocator);
 		vkDestroyDevice(device, allocator);
 		vkDestroySurfaceKHR(instance, (VkSurfaceKHR)Application::Get().GetWindow().GetGraphicsContext(), allocator);
@@ -199,15 +200,15 @@ namespace mist {
 		vkDestroyInstance(instance, allocator);
 	}
 
-	void VulkanRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+	void VulkanRenderAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
 		
 	}
 
-	void VulkanRendererAPI::SetClearColor(glm::vec4& color) {
+	void VulkanRenderAPI::SetClearColor(glm::vec4& color) {
 
 	}
 
-	void VulkanRendererAPI::Clear() {
+	void VulkanRenderAPI::Clear() {
 
 	}
 }

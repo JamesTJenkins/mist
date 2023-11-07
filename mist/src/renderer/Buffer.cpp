@@ -1,15 +1,15 @@
 #include "renderer/Buffer.hpp"
 #include "Debug.hpp"
-#include "renderer/Renderer.hpp"
+#include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanBuffer.hpp"
 
 namespace mist {
     Ref<VertexBuffer> VertexBuffer::Create(uint32_t size) {
-        switch (Renderer::GetAPI()) {
-        case RendererAPI::API::None:
+        switch (RenderCommand::GetAPI()) {
+        case RenderAPI::API::None:
             MIST_ASSERT(false, "None render API not supported");
             return nullptr;
-        case RendererAPI::API::Vulkan:
+        case RenderAPI::API::Vulkan:
             return CreateRef<VulkanVertexBuffer>(size);
         default:
             MIST_ASSERT(false, "Unknown render API");
@@ -18,12 +18,12 @@ namespace mist {
     }
 
     Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size) {
-        switch (Renderer::GetAPI())
+        switch (RenderCommand::GetAPI())
         {
-        case RendererAPI::API::None:
+        case RenderAPI::API::None:
             MIST_ASSERT(false, "None render API not supported");
             return nullptr;
-        case RendererAPI::API::Vulkan:
+        case RenderAPI::API::Vulkan:
             return CreateRef<VulkanVertexBuffer>(vertices, size);
         default:
             MIST_ASSERT(false, "Unknown renderer API");
@@ -32,12 +32,12 @@ namespace mist {
     }
 
     Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t size) {
-        switch (Renderer::GetAPI())
+        switch (RenderCommand::GetAPI())
         {
-        case RendererAPI::API::None:
+        case RenderAPI::API::None:
             MIST_ASSERT(false, "None render API not supported");
             return nullptr;
-        case RendererAPI::API::Vulkan:
+        case RenderAPI::API::Vulkan:
             return CreateRef<VulkanIndexBuffer>(indices, size);
         default:
             MIST_ASSERT(false, "Unknown renderer API");

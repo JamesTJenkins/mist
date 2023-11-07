@@ -1,5 +1,5 @@
 #include "platform/WindowsWindow.hpp"
-#include "renderer/RendererAPI.hpp"
+#include "renderer/RenderCommand.hpp"
 
 namespace mist {
     Window* Window::Create(const WindowProperties& properties) {
@@ -8,8 +8,8 @@ namespace mist {
 
     WindowsWindow::WindowsWindow(const WindowProperties& properties) : properties(properties) {
         uint32_t flags = 0;
-        switch (RendererAPI::GetAPI()) {
-            case RendererAPI::API::Vulkan:
+        switch (RenderCommand::GetAPI()) {
+            case RenderAPI::API::Vulkan:
                 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN;
                 break;
             default:

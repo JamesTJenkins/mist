@@ -1,6 +1,7 @@
 #include "renderer/vulkan/VulkanBuffer.hpp"
 
 #include <vulkan/vulkan.h>
+#include <renderer/vulkan/VulkanRenderAPI.hpp>
 
 namespace mist {
     VulkanVertexBuffer::VulkanVertexBuffer(uint32_t size) {
@@ -8,7 +9,13 @@ namespace mist {
     }
 
     VulkanVertexBuffer::VulkanVertexBuffer(float* vertices, uint32_t size) {
+        VkBufferCreateInfo bufferInfo {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        //bufferInfo.usage = VkBufferUsageFlags
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+        // TODO: some how do vkCreateBuffer without it being messy
     }
 
     VulkanVertexBuffer::~VulkanVertexBuffer() {

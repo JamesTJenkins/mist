@@ -3,13 +3,12 @@
 #include "Core.hpp"
 
 namespace mist {
-    class MIST_API RendererAPI {
+    class MIST_API RenderAPI {
     public:
-        enum class API {
-            None = 0,
-            Vulkan = 1
-        };
-    public:
+        enum API { None, Vulkan };
+
+        virtual ~RenderAPI() {}
+
         virtual void Initialize() = 0;
         virtual void Shutdown() = 0;
 
@@ -18,8 +17,6 @@ namespace mist {
         virtual void SetClearColor(glm::vec4& color) = 0;
         virtual void Clear() = 0;
 
-        inline static API GetAPI() { return api; }
-    private:
-        static API api;
+        virtual API GetAPI() = 0;
     };
 }
