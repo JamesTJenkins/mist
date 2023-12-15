@@ -16,9 +16,10 @@ namespace mist {
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
         
         // IVulkanRenderAPI overrides
-        virtual VkInstance GetInstance() override { return instance; }
-        virtual VkDevice GetDevice() override { return device; }
-        virtual VkPhysicalDevice GetPhysicalDevice() override { return physicalDevice; }
+        inline virtual const VkInstance GetInstance() const override { return instance; }
+        inline virtual const VkDevice GetDevice() const override { return device; }
+        inline virtual const VkPhysicalDevice GetPhysicalDevice() const override { return physicalDevice; }
+        inline virtual const VkAllocationCallbacks* GetAllocationCallbacks() const override { return allocator; }
     private:
         VkAllocationCallbacks* allocator = NULL;
         VkInstance instance = VK_NULL_HANDLE;

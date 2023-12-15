@@ -2,5 +2,5 @@
 #include "renderer/vulkan/VulkanRenderAPI.hpp"
 
 namespace mist {
-    RenderAPI* RenderCommand::renderAPI = new VulkanRenderAPI();
+    Scope<RenderAPI> RenderCommand::renderAPI = CreateScope<VulkanRenderAPI>(new VulkanRenderAPI());
 }

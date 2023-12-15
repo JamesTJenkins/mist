@@ -19,7 +19,8 @@ namespace mist {
 
         virtual void SetData(const void* data, uint32_t size) override;
     private:
-        uint32_t rendererID;
+        VkBuffer buffer;
+        VkDeviceMemory bufferMemory;
         BufferLayout layout;
     };
 
@@ -33,7 +34,8 @@ namespace mist {
 
         virtual uint32_t GetCount() const override { return count; }
     private:
-        uint32_t rendererID;
+        VkBuffer buffer;
+        VkDeviceMemory bufferMemory;
         uint32_t count;
     };
 }

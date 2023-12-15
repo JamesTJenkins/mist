@@ -4,8 +4,9 @@
 
 namespace mist {
     class IVulkanRenderAPI : public RenderAPI {
-        virtual VkInstance GetInstance() = 0;
-        virtual VkDevice GetDevice() = 0;
-        virtual VkPhysicalDevice GetPhysicalDevice() = 0;
+        inline virtual const VkInstance GetInstance() const = 0;
+        inline virtual const VkDevice GetDevice() const = 0;
+        inline virtual const VkPhysicalDevice GetPhysicalDevice() const = 0;
+        inline virtual const VkAllocationCallbacks* GetAllocationCallbacks() const = 0;
     };
 }
