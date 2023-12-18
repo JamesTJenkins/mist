@@ -1,7 +1,15 @@
 #pragma once
+#include <optional>
 #include "renderer/vulkan/IVulkanRenderAPI.hpp"
 
 namespace mist {
+    struct QueueFamilyIndices {
+		std::optional<uint32_t> graphicsFamily;
+		std::optional<uint32_t> presentFamily;
+
+		bool Valid() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+	};
+
     class VulkanRenderAPI : public IVulkanRenderAPI {
     public:
         // Render API overrides
@@ -15,6 +23,8 @@ namespace mist {
 
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
         
+        const QueueFamilyIndices FindQueueFamilies() const;
+
         // IVulkanRenderAPI overrides
         inline virtual const VkInstance GetInstance() const override { return instance; }
         inline virtual const VkDevice GetDevice() const override { return device; }

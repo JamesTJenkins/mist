@@ -1,20 +1,13 @@
 #include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include <vector>
-#include <optional>
 #include <set>
 #include <SDL2/SDL_vulkan.h>
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "Application.hpp"
+#include "VulkanRenderAPI.hpp"
 
 namespace mist {
-	struct QueueFamilyIndices {
-		std::optional<uint32_t> graphicsFamily;
-		std::optional<uint32_t> presentFamily;
-
-		bool Valid() { return graphicsFamily.has_value() && presentFamily.has_value(); }
-	};
-
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) {
+	const QueueFamilyIndices VulkanRenderAPI::FindQueueFamilies() const {
 		QueueFamilyIndices indices;
 
 		uint32_t count = 0;
@@ -134,7 +127,7 @@ namespace mist {
 		}
 		// Queues and device
 		{
-			QueueFamilyIndices indicies = FindQueueFamilies(physicalDevice);
+			QueueFamilyIndices indicies = FindQueueFamilies();
 			std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 			std::set<uint32_t> uniqueQueueFamilies = { indicies.graphicsFamily.value(), indicies.presentFamily.value() };
 
