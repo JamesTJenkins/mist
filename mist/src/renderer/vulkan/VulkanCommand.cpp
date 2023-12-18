@@ -68,4 +68,15 @@ namespace mist {
     void EndCommandBuffer(VkCommandBuffer commandBuffer) {
         CheckVkResult(vkEndCommandBuffer(commandBuffer));
     }
+
+    void SubmitCommandBuffers(VkCommandBuffer* commandBuffers, uint32_t count) {
+        VkSubmitInfo info {};
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.commandBufferCount = count;
+        info.pCommandBuffers = commandBuffers;
+
+        const VulkanRenderAPI* api = dynamic_cast<VulkanRenderAPI*>(RenderCommand::GetAPI().get());
+        vkQueueSubmit(api->GetGraphicsQueue(), 1, &info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(api->GetGraphicsQueue());
+    }
 }

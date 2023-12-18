@@ -13,4 +13,6 @@ namespace mist {
     VkCommandBuffer BeginSingleTimeCommand(VkCommandPool pool);
     void BeginCommandBuffer(VkCommandBuffer commandBuffer);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
+
+    void SubmitCommandBuffers(VkCommandBuffer* commandBuffers, uint32_t count);
 }

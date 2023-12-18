@@ -7,6 +7,8 @@ namespace mist {
         inline virtual const VkInstance GetInstance() const = 0;
         inline virtual const VkDevice GetDevice() const = 0;
         inline virtual const VkPhysicalDevice GetPhysicalDevice() const = 0;
+        inline virtual const VkQueue GetGraphicsQueue() const = 0;
+        inline virtual const VkQueue GetPresentQueue() const = 0;
         inline virtual const VkAllocationCallbacks* GetAllocationCallbacks() const = 0;
     };
 }

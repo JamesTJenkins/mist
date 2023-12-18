@@ -29,6 +29,8 @@ namespace mist {
         inline virtual const VkInstance GetInstance() const override { return instance; }
         inline virtual const VkDevice GetDevice() const override { return device; }
         inline virtual const VkPhysicalDevice GetPhysicalDevice() const override { return physicalDevice; }
+        inline virtual const VkQueue GetGraphicsQueue() const override { return graphicsQueue; }
+        inline virtual const VkQueue GetPresentQueue() const override { return presentQueue; }
         inline virtual const VkAllocationCallbacks* GetAllocationCallbacks() const override { return allocator; }
     private:
         VkAllocationCallbacks* allocator = NULL;

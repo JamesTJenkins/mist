@@ -51,6 +51,7 @@ namespace mist {
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
         EndCommandBuffer(commandBuffer);
+        SubmitCommandBuffers(&commandBuffer, 1);
 
         FreeCommandBuffer(pool, commandBuffer);
         DestroyCommandPool(pool);
