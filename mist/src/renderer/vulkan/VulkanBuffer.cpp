@@ -1,8 +1,7 @@
 #include "renderer/vulkan/VulkanBuffer.hpp"
-
-#include <vulkan/vulkan.h>
-#include <renderer/vulkan/VulkanRenderAPI.hpp>
+#include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include "renderer/RenderCommand.hpp"
+#include "renderer/vulkan/VulkanCommand.hpp"
 #include "VulkanDebug.hpp"
 #include "Log.hpp"
 
@@ -44,16 +43,17 @@ namespace mist {
     }
 
     void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-        /*  TODO: Implement command buffers
-        VkCommandBuffer commandBuffer = BeginSingleTimeCommand();
+        VkCommandPool pool = CreateCommandPool();
+        VkCommandBuffer commandBuffer = BeginSingleTimeCommand(pool);
         
         VkBufferCopy copyRegion {};
         copyRegion.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-        commandBuffer.EndSingleTimeCommand(commandBuffer);
-        */
+        EndCommandBuffer(commandBuffer);
 
+        FreeCommandBuffer(pool, commandBuffer);
+        DestroyCommandPool(pool);
     }
 
     void SetBufferData(const void* data, uint32_t size, VkBuffer& buffer) {
