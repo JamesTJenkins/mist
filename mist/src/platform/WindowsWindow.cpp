@@ -8,7 +8,7 @@ namespace mist {
 
     WindowsWindow::WindowsWindow(const WindowProperties& properties) : properties(properties) {
         uint32_t flags = 0;
-        switch (RenderCommand::GetAPI()) {
+        switch (RenderCommand::GetAPIType()) {
             case RenderAPI::API::Vulkan:
                 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN;
                 break;
