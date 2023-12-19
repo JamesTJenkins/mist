@@ -1,7 +1,8 @@
 #pragma once
+#include "renderer/RenderAPI.hpp"
+#include <vulkan/vulkan.h>
 #include <optional>
 #include <vector>
-#include "renderer/vulkan/IVulkanRenderAPI.hpp"
 
 namespace mist {
     struct QueueFamilyIndices {
@@ -17,7 +18,7 @@ namespace mist {
         std::vector<VkPresentModeKHR> presentMode;
     };
 
-    class VulkanRenderAPI : public IVulkanRenderAPI {
+    class VulkanRenderAPI : public RenderAPI {
     public:
         // Render API overrides
         virtual void Initialize() override;
@@ -33,16 +34,17 @@ namespace mist {
         const QueueFamilyIndices FindQueueFamilies() const;
         const SwapchainSupportDetails QuerySwapchainSupport() const;
 
+        void CreateInstance();
+        void CreateSurface();
         void CreateSwapchain();
 
-        // IVulkanRenderAPI overrides
-        inline virtual const VkInstance GetInstance() const override { return instance; }
-        inline virtual const VkSurfaceKHR GetSurface() const override { return surface; }
-        inline virtual const VkDevice GetDevice() const override { return device; }
-        inline virtual const VkPhysicalDevice GetPhysicalDevice() const override { return physicalDevice; }
-        inline virtual const VkQueue GetGraphicsQueue() const override { return graphicsQueue; }
-        inline virtual const VkQueue GetPresentQueue() const override { return presentQueue; }
-        inline virtual const VkAllocationCallbacks* GetAllocationCallbacks() const override { return allocator; }
+        inline const VkInstance GetInstance() const { return instance; }
+        inline const VkSurfaceKHR GetSurface() const { return surface; }
+        inline const VkDevice GetDevice() const { return device; }
+        inline const VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
+        inline const VkQueue GetGraphicsQueue() const { return graphicsQueue; }
+        inline const VkQueue GetPresentQueue() const { return presentQueue; }
+        inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocator; }
     private:
         VkAllocationCallbacks* allocator = NULL;
         VkInstance instance = VK_NULL_HANDLE;

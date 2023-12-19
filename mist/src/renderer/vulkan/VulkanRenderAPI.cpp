@@ -89,68 +89,9 @@ namespace mist {
 		VkResult error;
 
 		// VULKAN INSTANCE
-		{
-			// APP INFO
-			VkApplicationInfo appInfo = {};
-			appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-			appInfo.pApplicationName = "Untitled";
-			appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-			appInfo.pEngineName = "mist";
-			appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-			appInfo.apiVersion = VK_API_VERSION_1_0;
-
-			// EXTENSIONS
-#ifdef DEBUG
-			std::vector<const char*> extensions = {
-				VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-			};
-#else
-			std::vector<const char*> extensions = {};
-#endif
-
-			// GET SDL EXTENSIONS
-			unsigned int count = 0;
-			SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, nullptr);
-			size_t additionalExtensionCount = extensions.size();
-			extensions.resize(additionalExtensionCount + count);
-			SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, extensions.data() + additionalExtensionCount);
-			
-			// CREATE INFO
-			VkInstanceCreateInfo createInfo = {};
-			createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-			createInfo.pApplicationInfo = &appInfo;
-			createInfo.ppEnabledExtensionNames = extensions.data();
-			createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-			
-#ifdef DEBUG
-			// VALIDATION LAYERS
-			const char* layers[] = {
-				"VK_LAYER_KHRONOS_validation"
-			};
-			createInfo.ppEnabledLayerNames = layers;
-			createInfo.enabledLayerCount = 1;
-#endif
-
-			error = vkCreateInstance(&createInfo, allocator, &instance);
-			CheckVkResult(error);
-
-#ifdef DEBUG
-			auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-			VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
-			debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-			debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-			debug_report_ci.pfnCallback = DebugReport;
-			debug_report_ci.pUserData = NULL;
-			error = vkCreateDebugReportCallbackEXT(instance, &debug_report_ci, allocator, &debugReport);
-			CheckVkResult(error);
-#endif
-		}
+		CreateInstance();
 		// SURFACE
-		{
-			Window& window = Application::Get().GetWindow();
-			if (!SDL_Vulkan_CreateSurface((SDL_Window*)window.GetNativeWindow(), instance, &surface))
-				printf("[VULKAN] surface failed to be created");
-		}
+		CreateSurface();
 		// SELECT GPU
 		{
 			uint32_t gpuCount;
@@ -231,9 +172,7 @@ namespace mist {
 			CheckVkResult(error);
 		}
 		// SWAPCHAIN
-		{
-			CreateSwapchain();
-		}
+		CreateSwapchain();
 	}
 
 	void VulkanRenderAPI::Shutdown() {
@@ -258,6 +197,62 @@ namespace mist {
 
 	void VulkanRenderAPI::Clear() {
 
+	}
+
+	void VulkanRenderAPI::CreateInstance() {
+		VkApplicationInfo appInfo = {};
+		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		appInfo.pApplicationName = "Untitled";
+		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+		appInfo.pEngineName = "mist";
+		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+		appInfo.apiVersion = VK_API_VERSION_1_0;
+
+#ifdef DEBUG
+		std::vector<const char*> extensions = {
+			VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+		};
+#else
+		std::vector<const char*> extensions = {};
+#endif
+
+		unsigned int count = 0;
+		SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, nullptr);
+		size_t additionalExtensionCount = extensions.size();
+		extensions.resize(additionalExtensionCount + count);
+		SDL_Vulkan_GetInstanceExtensions((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), &count, extensions.data() + additionalExtensionCount);
+			
+		VkInstanceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		createInfo.pApplicationInfo = &appInfo;
+		createInfo.ppEnabledExtensionNames = extensions.data();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+			
+#ifdef DEBUG
+		const char* layers[] = {
+			"VK_LAYER_KHRONOS_validation"
+		};
+
+		createInfo.ppEnabledLayerNames = layers;
+		createInfo.enabledLayerCount = 1;
+#endif
+
+		CheckVkResult(vkCreateInstance(&createInfo, allocator, &instance));
+
+#ifdef DEBUG
+		auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+		VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
+		debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+		debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+		debug_report_ci.pfnCallback = DebugReport;
+		debug_report_ci.pUserData = NULL;
+		CheckVkResult(vkCreateDebugReportCallbackEXT(instance, &debug_report_ci, allocator, &debugReport));
+#endif
+	}
+
+	void VulkanRenderAPI::CreateSurface() {
+		if (!SDL_Vulkan_CreateSurface((SDL_Window*)Application::Get().GetWindow().GetNativeWindow(), instance, &surface))
+			printf("[VULKAN] surface failed to be created");
 	}
 
 	void VulkanRenderAPI::CreateSwapchain() {
