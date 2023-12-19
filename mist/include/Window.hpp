@@ -15,10 +15,7 @@ namespace mist {
 	public:
 		virtual ~Window(){};
 
-		inline virtual void SetGraphicsContext(void* graphicsContext) = 0;
-
 		virtual void* GetNativeWindow() const = 0;
-		virtual void* GetGraphicsContext() const = 0;
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;

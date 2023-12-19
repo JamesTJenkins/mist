@@ -5,6 +5,7 @@
 namespace mist {
     class IVulkanRenderAPI : public RenderAPI {
         inline virtual const VkInstance GetInstance() const = 0;
+        inline virtual const VkSurfaceKHR GetSurface() const = 0;
         inline virtual const VkDevice GetDevice() const = 0;
         inline virtual const VkPhysicalDevice GetPhysicalDevice() const = 0;
         inline virtual const VkQueue GetGraphicsQueue() const = 0;

@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include <vector>
 #include "renderer/vulkan/IVulkanRenderAPI.hpp"
 
 namespace mist {
@@ -9,6 +10,12 @@ namespace mist {
 
 		bool Valid() { return graphicsFamily.has_value() && presentFamily.has_value(); }
 	};
+
+    struct SwapchainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentMode;
+    };
 
     class VulkanRenderAPI : public IVulkanRenderAPI {
     public:
@@ -24,9 +31,13 @@ namespace mist {
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
         
         const QueueFamilyIndices FindQueueFamilies() const;
+        const SwapchainSupportDetails QuerySwapchainSupport() const;
+
+        void CreateSwapchain();
 
         // IVulkanRenderAPI overrides
         inline virtual const VkInstance GetInstance() const override { return instance; }
+        inline virtual const VkSurfaceKHR GetSurface() const override { return surface; }
         inline virtual const VkDevice GetDevice() const override { return device; }
         inline virtual const VkPhysicalDevice GetPhysicalDevice() const override { return physicalDevice; }
         inline virtual const VkQueue GetGraphicsQueue() const override { return graphicsQueue; }
@@ -35,11 +46,16 @@ namespace mist {
     private:
         VkAllocationCallbacks* allocator = NULL;
         VkInstance instance = VK_NULL_HANDLE;
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkDevice device = VK_NULL_HANDLE;
         VkQueue graphicsQueue = VK_NULL_HANDLE;
         VkQueue presentQueue = VK_NULL_HANDLE;
         VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
         VkDebugReportCallbackEXT debugReport = VK_NULL_HANDLE;
+        VkSwapchainKHR swapchain;
+        std::vector<VkImage> swapchainImages;
+        VkFormat swapchainImageFormat;
+        VkExtent2D swapchainExtent;
     };
 }
