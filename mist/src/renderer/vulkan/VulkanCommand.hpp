@@ -3,16 +3,24 @@
 #include <vulkan/vulkan.h>
 
 namespace mist {
-    VkCommandPool CreateCommandPool();
-    void DestroyCommandPool(VkCommandPool pool);
+    class VulkanCommand {
+    public:
+        VulkanCommand() {}
+        ~VulkanCommand() {}
 
-    std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool pool, uint32_t count);
-    void FreeCommandBuffer(VkCommandPool pool, VkCommandBuffer commandBuffer);
-    void FreeCommandBuffers(VkCommandPool pool, std::vector<VkCommandBuffer> commandBuffers);
+        void CreateCommandPool();
+        void DestroyCommandPool();
+
+        std::vector<VkCommandBuffer> AllocateCommandBuffers(uint32_t count);
+        void FreeCommandBuffer(VkCommandBuffer commandBuffer);
+        void FreeCommandBuffers(std::vector<VkCommandBuffer> commandBuffers);
     
-    VkCommandBuffer BeginSingleTimeCommand(VkCommandPool pool);
-    void BeginCommandBuffer(VkCommandBuffer commandBuffer);
-    void EndCommandBuffer(VkCommandBuffer commandBuffer);
+        VkCommandBuffer BeginSingleTimeCommand();
+        void BeginCommandBuffer(VkCommandBuffer commandBuffer);
+        void EndCommandBuffer(VkCommandBuffer commandBuffer);
 
-    void SubmitCommandBuffers(VkCommandBuffer* commandBuffers, uint32_t count);
+        void SubmitCommandBuffers(VkCommandBuffer* commandBuffers, uint32_t count);
+    private:
+        VkCommandPool pool = VK_NULL_HANDLE;
+    };
 }

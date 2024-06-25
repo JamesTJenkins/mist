@@ -1,9 +1,9 @@
 #include "renderer/vulkan/VulkanBuffer.hpp"
-#include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanCommand.hpp"
 #include "VulkanDebug.hpp"
 #include "Log.hpp"
+#include "renderer/vulkan/VulkanContext.hpp"
 
 namespace mist {
     uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFiler, VkMemoryPropertyFlags flags) {
@@ -20,7 +20,7 @@ namespace mist {
     }
 
     void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags flags, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-        const VulkanRenderAPI* api = dynamic_cast<VulkanRenderAPI*>(RenderCommand::GetAPI().get());
+        VulkanContext& context = VulkanContext::GetContext();
 
         VkBufferCreateInfo bufferInfo {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -28,51 +28,51 @@ namespace mist {
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        CheckVkResult(vkCreateBuffer(api->GetDevice(), &bufferInfo, api->GetAllocationCallbacks(), &buffer));
+        CheckVkResult(vkCreateBuffer(context.GetDevice(), &bufferInfo, context.GetAllocationCallbacks(), &buffer));
 
         VkMemoryRequirements requirements;
-        vkGetBufferMemoryRequirements(api->GetDevice(), buffer, &requirements);
+        vkGetBufferMemoryRequirements(context.GetDevice(), buffer, &requirements);
 
         VkMemoryAllocateInfo memoryAllocInfo = {};
         memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocInfo.allocationSize = requirements.size;
-        memoryAllocInfo.memoryTypeIndex = FindMemoryType(api->GetPhysicalDevice(), requirements.memoryTypeBits, flags);
+        memoryAllocInfo.memoryTypeIndex = FindMemoryType(context.GetPhysicalDevice(), requirements.memoryTypeBits, flags);
 
-        CheckVkResult(vkAllocateMemory(api->GetDevice(), &memoryAllocInfo, api->GetAllocationCallbacks(), &bufferMemory));
-        vkBindBufferMemory(api->GetDevice(), buffer, bufferMemory, 0);
+        CheckVkResult(vkAllocateMemory(context.GetDevice(), &memoryAllocInfo, context.GetAllocationCallbacks(), &bufferMemory));
+        vkBindBufferMemory(context.GetDevice(), buffer, bufferMemory, 0);
     }
 
     void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-        VkCommandPool pool = CreateCommandPool();
-        VkCommandBuffer commandBuffer = BeginSingleTimeCommand(pool);
+        VulkanContext& context = VulkanContext::GetContext();
+
+        VkCommandBuffer commandBuffer = context.commands.BeginSingleTimeCommand();
         
         VkBufferCopy copyRegion {};
         copyRegion.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-        EndCommandBuffer(commandBuffer);
-        SubmitCommandBuffers(&commandBuffer, 1);
+        context.commands.EndCommandBuffer(commandBuffer);
+        context.commands.SubmitCommandBuffers(&commandBuffer, 1);
 
-        FreeCommandBuffer(pool, commandBuffer);
-        DestroyCommandPool(pool);
+        context.commands.FreeCommandBuffer(commandBuffer);
     }
 
     void SetBufferData(const void* data, uint32_t size, VkBuffer& buffer) {
-        const VulkanRenderAPI* api = dynamic_cast<VulkanRenderAPI*>(RenderCommand::GetAPI().get());
+        VulkanContext& context = VulkanContext::GetContext();
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingMemory;
         CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory);
 
         void* mappedData;
-        vkMapMemory(api->GetDevice(), stagingMemory, 0, size, 0, &mappedData);
+        vkMapMemory(context.GetDevice(), stagingMemory, 0, size, 0, &mappedData);
         std::memcpy(mappedData, data, size);
-        vkUnmapMemory(api->GetDevice(), stagingMemory);
+        vkUnmapMemory(context.GetDevice(), stagingMemory);
 
         CopyBuffer(stagingBuffer, buffer, size);
 
-        vkDestroyBuffer(api->GetDevice(), stagingBuffer, api->GetAllocationCallbacks());
-        vkFreeMemory(api->GetDevice(), stagingMemory, api->GetAllocationCallbacks());
+        vkDestroyBuffer(context.GetDevice(), stagingBuffer, context.GetAllocationCallbacks());
+        vkFreeMemory(context.GetDevice(), stagingMemory, context.GetAllocationCallbacks());
     }
 
     VulkanVertexBuffer::VulkanVertexBuffer(uint32_t size) {
@@ -85,17 +85,20 @@ namespace mist {
     }
 
     VulkanVertexBuffer::~VulkanVertexBuffer() {
-        const VulkanRenderAPI* api = dynamic_cast<VulkanRenderAPI*>(RenderCommand::GetAPI().get());
-        vkDestroyBuffer(api->GetDevice(), buffer, api->GetAllocationCallbacks());
-        vkFreeMemory(api->GetDevice(), bufferMemory, api->GetAllocationCallbacks());
+        VulkanContext& context = VulkanContext::GetContext();
+        vkDestroyBuffer(context.GetDevice(), buffer, context.GetAllocationCallbacks());
+        vkFreeMemory(context.GetDevice(), bufferMemory, context.GetAllocationCallbacks());
     }
 
     void VulkanVertexBuffer::Bind() const {
-
+        VulkanContext& context = VulkanContext::GetContext();
+        vkCmdBindVertexBuffers(assignedBuffer, 0, 1, &buffer, 0);
     }
 
     void VulkanVertexBuffer::Unbind() const {
-
+        VkBuffer nullBuffer = VK_NULL_HANDLE;
+        VkDeviceSize nullOffset = 0;
+        vkCmdBindVertexBuffers(assignedBuffer, 0, 1, &nullBuffer, &nullOffset);
     }
 
     void VulkanVertexBuffer::SetData(const void* data, uint32_t size) {
@@ -109,16 +112,19 @@ namespace mist {
     }
 
     VulkanIndexBuffer::~VulkanIndexBuffer() {
-        const VulkanRenderAPI* api = dynamic_cast<VulkanRenderAPI*>(RenderCommand::GetAPI().get());
-        vkDestroyBuffer(api->GetDevice(), buffer, api->GetAllocationCallbacks());
-        vkFreeMemory(api->GetDevice(), bufferMemory, api->GetAllocationCallbacks());
+        VulkanContext& context = VulkanContext::GetContext();
+        vkDestroyBuffer(context.GetDevice(), buffer, context.GetAllocationCallbacks());
+        vkFreeMemory(context.GetDevice(), bufferMemory, context.GetAllocationCallbacks());
     }
 
     void VulkanIndexBuffer::Bind() const {
-
+        VulkanContext& context = VulkanContext::GetContext();
+        vkCmdBindVertexBuffers(assignedBuffer, 0, 1, &buffer, 0);
     }
 
     void VulkanIndexBuffer::Unbind() const {
-
+        VkBuffer nullBuffer = VK_NULL_HANDLE;
+        VkDeviceSize nullOffset = 0;
+        vkCmdBindVertexBuffers(assignedBuffer, 0, 1, &nullBuffer, &nullOffset);
     }
 }

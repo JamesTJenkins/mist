@@ -19,7 +19,10 @@ namespace mist {
         virtual void SetLayout(const BufferLayout& layout) override { this->layout = layout; }
 
         virtual void SetData(const void* data, uint32_t size) override;
+
+        void SetAssignedCommandBuffer(const VkCommandBuffer buffer) { assignedBuffer = buffer; }
     private:
+        VkCommandBuffer assignedBuffer;
         VkBuffer buffer;
         VkDeviceMemory bufferMemory;
         BufferLayout layout;
@@ -34,7 +37,10 @@ namespace mist {
         virtual void Unbind() const override;
 
         virtual uint32_t GetCount() const override { return count; }
+
+        void SetAssignedCommandBuffer(const VkCommandBuffer buffer) { assignedBuffer = buffer; }
     private:
+        VkCommandBuffer assignedBuffer;
         VkBuffer buffer;
         VkDeviceMemory bufferMemory;
         uint32_t count;
