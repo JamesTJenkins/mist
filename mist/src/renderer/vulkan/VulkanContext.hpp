@@ -46,6 +46,8 @@ namespace mist {
 		inline const VkQueue GetPresentQueue() const { return presentQueue; }
         inline const VkSwapchainKHR GetSwapchain() const { return swapchain; }
         inline const std::vector<VkImage> GetSwapchainImages() const { return swapchainImages; }
+		inline const std::vector<VulkanImageView> GetSwapchainImageViews() const { return swapchainImageViews; }
+		inline const VkRenderPass GetRenderPass() const { return renderpass; }
         inline const VkDebugReportCallbackEXT GetDebugCallback() const { return debugReport; }
 		inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocator; }
 
