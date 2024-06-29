@@ -74,6 +74,8 @@
         "xstddef": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "expected": "cpp",
+        "text_encoding": "cpp"
     }
 }
