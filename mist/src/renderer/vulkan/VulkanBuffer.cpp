@@ -6,9 +6,11 @@
 #include "renderer/vulkan/VulkanContext.hpp"
 
 namespace mist {
-    uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFiler, VkMemoryPropertyFlags flags) {
+    uint32_t FindMemoryType(uint32_t typeFiler, VkMemoryPropertyFlags flags) {
+        VulkanContext& context = VulkanContext::GetContext();
+
         VkPhysicalDeviceMemoryProperties properties;
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &properties);
+        vkGetPhysicalDeviceMemoryProperties(context.GetPhysicalDevice(), &properties);
 
         for (uint32_t i = 0; i < properties.memoryTypeCount; i++) {
             if (typeFiler & (1 << i) && (properties.memoryTypes[i].propertyFlags & flags) == flags)
@@ -36,7 +38,7 @@ namespace mist {
         VkMemoryAllocateInfo memoryAllocInfo = {};
         memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocInfo.allocationSize = requirements.size;
-        memoryAllocInfo.memoryTypeIndex = FindMemoryType(context.GetPhysicalDevice(), requirements.memoryTypeBits, flags);
+        memoryAllocInfo.memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, flags);
 
         CheckVkResult(vkAllocateMemory(context.GetDevice(), &memoryAllocInfo, context.GetAllocationCallbacks(), &bufferMemory));
         vkBindBufferMemory(context.GetDevice(), buffer, bufferMemory, 0);
@@ -91,7 +93,6 @@ namespace mist {
     }
 
     void VulkanVertexBuffer::Bind() const {
-        VulkanContext& context = VulkanContext::GetContext();
         vkCmdBindVertexBuffers(assignedBuffer, 0, 1, &buffer, 0);
     }
 
@@ -118,7 +119,6 @@ namespace mist {
     }
 
     void VulkanIndexBuffer::Bind() const {
-        VulkanContext& context = VulkanContext::GetContext();
         vkCmdBindVertexBuffers(assignedBuffer, 0, 1, &buffer, 0);
     }
 
