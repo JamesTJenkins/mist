@@ -19,15 +19,27 @@ find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(Vulkan REQUIRED)
 find_package(spdlog REQUIRED)
 
-add_library(mist SHARED ${SOURCES})
+set(IMGUI ${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui)
+
+add_library(mist SHARED 
+    ${SOURCES}
+    ${IMGUI}/imgui.cpp
+	${IMGUI}/imgui_draw.cpp
+	${IMGUI}/imgui_tables.cpp
+	${IMGUI}/imgui_widgets.cpp
+	${IMGUI}/backends/imgui_impl_sdl2.cpp
+	${IMGUI}/backends/imgui_impl_vulkan.cpp
+)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    PUBLIC ${IMGUI}/
+    PUBLIC ${IMGUI}/backends/
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    PUBLIC $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     PRIVATE Vulkan::Vulkan
     PRIVATE spdlog::spdlog_header_only
 )
