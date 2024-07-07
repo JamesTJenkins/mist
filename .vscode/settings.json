@@ -76,6 +76,7 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "expected": "cpp",
-        "text_encoding": "cpp"
+        "text_encoding": "cpp",
+        "*.inc": "cpp"
     }
 }
