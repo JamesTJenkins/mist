@@ -40,4 +40,14 @@ namespace mist {
     void Application::Quit() {
         running = false;
     }
+
+    void Application::PushLayer(Layer* layer) {
+        layerStack.PushLayer(layer);
+        layer->OnAttach();
+    }
+
+    void Application::PopLayer(Layer* layer) {
+        layer->OnDetach();
+        layerStack.PopLayer(layer);
+    }
 }
