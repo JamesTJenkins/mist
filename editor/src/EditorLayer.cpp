@@ -1,6 +1,7 @@
 #include "EditorLayer.hpp"
 #include <imgui.h>
 #include <Application.hpp>
+#include <renderer/RenderCommand.hpp>
 
 namespace mistEditor {
     EditorLayer::EditorLayer() : Layer("EditorLayer") {
@@ -12,7 +13,7 @@ namespace mistEditor {
     }
 
     void EditorLayer::OnAttach() {
-        
+        mist::RenderCommand::Clear();
     }
 
     void EditorLayer::OnDetach() {
