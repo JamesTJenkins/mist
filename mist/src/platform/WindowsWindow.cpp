@@ -10,7 +10,7 @@ namespace mist {
         uint32_t flags = 0;
         switch (RenderCommand::GetAPIType()) {
             case RenderAPI::API::Vulkan:
-                flags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN;
+                flags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
                 break;
             default:
                 break;
@@ -28,5 +28,15 @@ namespace mist {
 
     WindowsWindow::~WindowsWindow() {
         SDL_DestroyWindow(window);
+    }
+
+    void WindowsWindow::OnUpdate() {
+        
+    }
+
+    glm::vec2 WindowsWindow::GetWindowPosition() const {
+        int x, y;
+        SDL_GetWindowPosition(window, &x, &y);
+        return glm::vec2(x, y);
     }
 }

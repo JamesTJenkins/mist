@@ -13,8 +13,13 @@ namespace mist {
         WindowsWindow(const WindowsWindow& other) = delete;
         WindowsWindow& operator=(const WindowsWindow& other) = delete;
 
-        inline unsigned int GetWidth() const override { return properties.width; }
-		inline unsigned int GetHeight() const override { return properties.height; }
+        virtual void OnUpdate() override;
+
+        inline virtual glm::vec2 GetWindowPosition() const override;
+        inline virtual uint32_t GetXPosition() const override { return GetWindowPosition().x; }
+        inline virtual uint32_t GetYPosition() const override { return GetWindowPosition().y; }
+        inline virtual uint32_t GetWidth() const override { return properties.width; }
+		inline virtual uint32_t GetHeight() const override { return properties.height; }
 
         inline virtual void* GetNativeWindow() const override { return window; }
     private:
