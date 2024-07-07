@@ -2,7 +2,7 @@
 #include "Layer.hpp"
 
 namespace mist {
-    class ImguiLayer : public Layer {
+    class MIST_API ImguiLayer : public Layer {
     public:
         ImguiLayer();
         ~ImguiLayer();

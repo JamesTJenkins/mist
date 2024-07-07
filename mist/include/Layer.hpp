@@ -3,7 +3,7 @@
 #include <SDL.h>
 
 namespace mist {
-    class Layer {
+    class MIST_API Layer {
     public:
         Layer(const std::string& name = "Layer") : name(name) {}
         virtual ~Layer() {};

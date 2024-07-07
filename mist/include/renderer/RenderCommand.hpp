@@ -2,7 +2,7 @@
 #include "renderer/RenderAPI.hpp"
 
 namespace mist {
-    class RenderCommand {
+    class MIST_API RenderCommand {
     public:
         inline static void Initialize() { renderAPI->Initialize(); }
         inline static void Shutdown() { renderAPI->Shutdown(); }
