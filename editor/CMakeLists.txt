@@ -12,6 +12,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -fms-extensions -Wno-unused-function -municode")
 #set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -Wextra -pedantic -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-private-field -Wno-ignored-attributes -Wno-language-extension-token")
 
+set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/mist/vendor" ${CMAKE_PREFIX_PATH})
+find_package(glm CONFIG REQUIRED)
+
 set(IMGUI ${CMAKE_SOURCE_DIR}/mist/vendor/imgui)
 
 add_executable(${PROJECT_NAME} 
@@ -23,7 +26,9 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PUBLIC ${CMAKE_SOURCE_DIR}/mist/include
+    PUBLIC ${IMGUI}/
 )
 
 target_link_libraries(${PROJECT_NAME}

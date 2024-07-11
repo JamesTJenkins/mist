@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL.h>
 #include <Layer.hpp>
+#include "Editor/SceneWindow.hpp"
 
 namespace mistEditor {
 	class EditorLayer : public mist::Layer {
@@ -20,5 +21,7 @@ namespace mistEditor {
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
+
+		SceneWindow sceneWindow;
 	};
 }

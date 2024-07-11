@@ -77,6 +77,8 @@
         "xutility": "cpp",
         "expected": "cpp",
         "text_encoding": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "forward_list": "cpp",
+        "ranges": "cpp"
     }
 }

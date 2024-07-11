@@ -10,9 +10,9 @@ namespace mist {
 
         void CreateEmptyDescriptorSetLayout();
         void CreateDescriptorSetLayout();
-        void CreateEmptyDescriptorPool();
+        void CreateEmptyDescriptorPool(uint32_t swapchainImageCount);
         void CreateDescriptorPool();
-        void CreateDescriptorSets();
+        void CreateDescriptorSets(uint32_t swapchainImagesCount);
 
         void ClearPool();
         void Cleanup();

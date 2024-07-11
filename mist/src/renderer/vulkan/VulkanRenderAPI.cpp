@@ -1,33 +1,20 @@
 #include "VulkanRenderAPI.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
+#include <Log.hpp>
 
 namespace mist {
 	void VulkanRenderAPI::Initialize() {
 		VulkanContext& context = VulkanContext::GetContext();
 
-		// VULKAN Instance
 		context.CreateInstance();
-		// SURFACE
 		context.CreateSurface();
-		// SELECT GPU
 		context.CreatePhysicalDevice();
-		// Queues and device
 		context.CreateDevice();
-		// Create descriptor
-		context.descriptors.CreateEmptyDescriptorPool();
-		// SWAPCHAIN
-		context.CreateSwapchain();
-		// SWAPCHAIN IMAGE VIEWS
-		context.CreateSwapchainImageViews();
-		// Create renderpass
-		context.CreateRenderPass();
 	}
 
 	void VulkanRenderAPI::Shutdown() {
 		VulkanContext& context = VulkanContext::GetContext();
 
-		vkDestroySwapchainKHR(context.GetDevice(), context.GetSwapchain(), context.GetAllocationCallbacks());
-		context.descriptors.ClearPool();
 		vkDestroyDevice(context.GetDevice(), context.GetAllocationCallbacks());
 		vkDestroySurfaceKHR(context.GetInstance(), context.GetSurface(), context.GetAllocationCallbacks());
 #ifdef DEBUG

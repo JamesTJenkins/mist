@@ -30,15 +30,16 @@ namespace mist {
         uint32_t width, height;
         FrameBufferAttachmentProperties attachment;
         uint32_t samples = 1;
-        uint8_t swapchainId = 0;
     };
 
     class MIST_API FrameBuffer {
     public:
+        virtual void Resize(uint32_t width, uint32_t height) = 0;
+
         virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const = 0;
         virtual const FrameBufferProperties& GetProperties() const = 0;
 
-        static Ref<FrameBuffer> Create(const FrameBufferProperties& properties);
+        static Ref<FrameBuffer> Create(const FrameBufferProperties& properties, const uint32_t swapchainInstance = 0);
         static bool IsDepthFormat(FrameBufferTextureFormat format);
     };
 }

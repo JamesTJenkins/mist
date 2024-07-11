@@ -2,9 +2,9 @@
 #include <vulkan/vulkan.h>
 #include <optional>
 #include <vector>
-#include "renderer/vulkan/VulkanImageView.hpp"
 #include "renderer/vulkan/VulkanDescriptors.hpp"
 #include "renderer/vulkan/VulkanCommand.hpp"
+#include "renderer/vulkan/VulkanSwapchainInstance.hpp"
 
 namespace mist {
 	struct QueueFamilyIndices {
@@ -12,12 +12,6 @@ namespace mist {
 		std::optional<uint32_t> presentFamily;
 
 		bool Valid() { return graphicsFamily.has_value() && presentFamily.has_value(); }
-	};
-
-	struct SwapchainSupportDetails {
-		VkSurfaceCapabilitiesKHR capabilities;
-		std::vector<VkSurfaceFormatKHR> formats;
-		std::vector<VkPresentModeKHR> presentMode;
 	};
 
 	class VulkanContext {
@@ -31,12 +25,10 @@ namespace mist {
         void CreateSurface();
         void CreatePhysicalDevice();
         void CreateDevice();
-        void CreateSwapchain();
-        void CreateSwapchainImageViews();
-        void CreateRenderPass();
+		void CreateSwapchainInstance(const FrameBufferProperties& properties);
 
 		const QueueFamilyIndices FindQueueFamilies() const;
-        const SwapchainSupportDetails QuerySwapchainSupport() const;
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags flags);
 
 		inline const VkInstance GetInstance() const { return instance; }
 		inline const VkSurfaceKHR GetSurface() const { return surface; }
@@ -44,12 +36,10 @@ namespace mist {
 		inline const VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
 		inline const VkQueue GetGraphicsQueue() const { return graphicsQueue; }
 		inline const VkQueue GetPresentQueue() const { return presentQueue; }
-        inline const VkSwapchainKHR GetSwapchain() const { return swapchain; }
-        inline const std::vector<VkImage> GetSwapchainImages() const { return swapchainImages; }
-		inline const std::vector<VulkanImageView> GetSwapchainImageViews() const { return swapchainImageViews; }
-		inline const VkRenderPass GetRenderPass() const { return renderpass; }
+		inline const Ref<VulkanSwapchainInstance> GetSwapchainInstance(uint32_t index = 0) { return swapchainInstances[index]; }
         inline const VkDebugReportCallbackEXT GetDebugCallback() const { return debugReport; }
 		inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocator; }
+		inline const uint32_t GetSwapchainInstanceCount() const { return swapchainInstances.size(); }
 
 		VulkanDescriptor descriptors;
         VulkanCommand commands;
@@ -67,12 +57,7 @@ namespace mist {
 		VkDevice device = VK_NULL_HANDLE;
 		VkQueue graphicsQueue = VK_NULL_HANDLE;
 		VkQueue presentQueue = VK_NULL_HANDLE;
+		std::vector<Ref<VulkanSwapchainInstance>> swapchainInstances;
 		VkDebugReportCallbackEXT debugReport = VK_NULL_HANDLE;
-		VkSwapchainKHR swapchain;
-		std::vector<VkImage> swapchainImages;
-		VkFormat swapchainImageFormat;
-		VkExtent2D swapchainExtent;
-		std::vector<VulkanImageView> swapchainImageViews;
-		VkRenderPass renderpass = VK_NULL_HANDLE;
 	};
 }

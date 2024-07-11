@@ -1,26 +1,36 @@
 #pragma once
-#include "renderer/FrameBuffer.hpp"
-#include <Debug.hpp>
 #include <vulkan/vulkan.h>
+#include "renderer/FrameBuffer.hpp"
+#include "renderer/vulkan/VulkanImage.hpp"
+#include "renderer/vulkan/VulkanImageView.hpp"
 
 namespace mist {
     class VulkanFrameBuffer : public FrameBuffer {
     public:
-        VulkanFrameBuffer(const FrameBufferProperties& properties);
+        VulkanFrameBuffer();
+        VulkanFrameBuffer(const FrameBufferProperties& properties, uint32_t swapchainInstanceIndex, VulkanImage swapchainImage, VulkanImageView swapchainImageView);
         virtual ~VulkanFrameBuffer();
 
         VulkanFrameBuffer(const VulkanFrameBuffer& other) = delete;
         VulkanFrameBuffer& operator=(const VulkanFrameBuffer& other) = delete;
 
-        VulkanFrameBuffer(VulkanFrameBuffer&& other) noexcept = default;
-        VulkanFrameBuffer& operator=(VulkanFrameBuffer&& other) noexcept = default;
-
+        void Create(VulkanImage swapchainImage, VulkanImageView swapchainImageView);
         void Destroy();
 
-        virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const override { MIST_ASSERT("Out of bounds", index < colorAttachments.size()); return colorAttachments[index]; };
+        virtual void Resize(uint32_t width, uint32_t height) override;
+
+        virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const override;
         virtual const FrameBufferProperties& GetProperties() const override { return properties; };
+
+        inline const std::vector<VulkanImage> GetImages() const { return attachmentImages; }
+        inline const std::vector<VulkanImageView> GetImageViews() const { return attachmentImageViews; }
     private:
-        VkFramebuffer frameBuffer = VK_NULL_HANDLE;
+        uint32_t swapchainInstanceIndex;
+
+        VkFramebuffer frameBuffer;
+        std::vector<VulkanImage> attachmentImages;
+        std::vector<VulkanImageView> attachmentImageViews;
+
         FrameBufferProperties properties;
         std::vector<FrameBufferTextureProperties> colorAttachmentProperties;
         FrameBufferTextureProperties depthAttachmentProperties = FrameBufferTextureFormat::None;

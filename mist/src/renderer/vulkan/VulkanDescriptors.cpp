@@ -33,9 +33,8 @@ namespace mist {
         // TODO: come back later
     }
 
-    void VulkanDescriptor::CreateEmptyDescriptorPool() {
+    void VulkanDescriptor::CreateEmptyDescriptorPool(uint32_t swapchainImagesCount) {
         VulkanContext& context = VulkanContext::GetContext();
-        uint32_t swapchainImagesCount = static_cast<uint32_t>(context.GetSwapchainImages().size());
 
         std::array<VkDescriptorPoolSize, 2> poolSizes {};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -56,9 +55,8 @@ namespace mist {
         // TODO: come back later
     }
 
-    void VulkanDescriptor::CreateDescriptorSets() {
+    void VulkanDescriptor::CreateDescriptorSets(uint32_t swapchainImagesCount) {
         VulkanContext& context = VulkanContext::GetContext();
-        uint32_t swapchainImagesCount = static_cast<uint32_t>(context.GetSwapchainImages().size());
 
         std::vector<VkDescriptorSetLayout> layouts(swapchainImagesCount, descriptorSetLayout);
 

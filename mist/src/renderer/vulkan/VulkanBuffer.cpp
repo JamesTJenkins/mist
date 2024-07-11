@@ -6,21 +6,6 @@
 #include "renderer/vulkan/VulkanContext.hpp"
 
 namespace mist {
-    uint32_t FindMemoryType(uint32_t typeFiler, VkMemoryPropertyFlags flags) {
-        VulkanContext& context = VulkanContext::GetContext();
-
-        VkPhysicalDeviceMemoryProperties properties;
-        vkGetPhysicalDeviceMemoryProperties(context.GetPhysicalDevice(), &properties);
-
-        for (uint32_t i = 0; i < properties.memoryTypeCount; i++) {
-            if (typeFiler & (1 << i) && (properties.memoryTypes[i].propertyFlags & flags) == flags)
-                return i;
-        }
-
-        MIST_ERROR("Failed to find suitable memory type");
-        return 0;
-    }
-
     void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags flags, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
         VulkanContext& context = VulkanContext::GetContext();
 
@@ -38,7 +23,7 @@ namespace mist {
         VkMemoryAllocateInfo memoryAllocInfo = {};
         memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocInfo.allocationSize = requirements.size;
-        memoryAllocInfo.memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, flags);
+        memoryAllocInfo.memoryTypeIndex = context.FindMemoryType(requirements.memoryTypeBits, flags);
 
         CheckVkResult(vkAllocateMemory(context.GetDevice(), &memoryAllocInfo, context.GetAllocationCallbacks(), &bufferMemory));
         vkBindBufferMemory(context.GetDevice(), buffer, bufferMemory, 0);
