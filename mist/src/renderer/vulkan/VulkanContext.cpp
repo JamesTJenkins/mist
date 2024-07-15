@@ -48,7 +48,7 @@ namespace mist {
 	void VulkanContext::CreateInstance() {
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Untitled";
+		appInfo.pApplicationName = Application::Get().GetApplicationName();
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.pEngineName = "mist";
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
