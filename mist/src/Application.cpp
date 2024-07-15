@@ -7,7 +7,7 @@
 namespace mist {
 	Application* Application::instance{};
 
-	Application::Application(const char* name) {
+	Application::Application(const char* name) : name(name) {
 		if (instance != nullptr)
 			throw std::runtime_error("Created 2 application instances");
 

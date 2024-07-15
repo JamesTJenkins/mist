@@ -19,7 +19,9 @@ namespace mist {
 		inline Window& GetWindow() { return *window; }
 		inline static Application &Get() { return *instance; }
 		ImguiLayer* GetImguiLayer() { return imguiLayer; }
+		inline const char* GetApplicationName() { return name; }
 	private:
+		const char* name;
 		bool running = true;
 		ImguiLayer* imguiLayer;
 		LayerStack layerStack;
