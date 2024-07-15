@@ -3,7 +3,6 @@
 #include <vector>
 #include "Core.hpp"
 #include "renderer/vulkan/VulkanImage.hpp"
-#include "renderer/vulkan/VulkanImageView.hpp"
 #include "renderer/vulkan/VulkanFrameBuffer.hpp"
 
 namespace mist {
@@ -24,12 +23,11 @@ namespace mist {
 		const SwapchainSupportDetails QuerySwapchainSupport() const;
 
 		void CreateSwapchain(const FrameBufferProperties& properties);
-		void CreateRenderPass();
+		void CreateRenderPass(const FrameBufferProperties& properties);
 
 		inline const VkSwapchainKHR GetSwapchain() const { return swapchain; }
 		inline const Ref<VulkanFrameBuffer> GetFrameBuffer() const { return frameBuffers[activeFramebuffer]; }
 		inline const std::vector<VulkanImage> GetSwapchainImages() const { return frameBuffers[activeFramebuffer].get()->GetImages(); }
-		inline const std::vector<VulkanImageView> GetSwapchainImageViews() const { return frameBuffers[activeFramebuffer].get()->GetImageViews(); }
 		inline const VkRenderPass GetRenderPass() const { return renderpass; }
 	private:
 		uint32_t swapchainIndex;
