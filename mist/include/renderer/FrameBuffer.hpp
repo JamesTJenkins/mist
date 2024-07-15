@@ -8,8 +8,14 @@ namespace mist {
         // Color
         RGBA8,
         RINT,
-        // Depth/Stencil
-        DEPTH24STENCIL8
+        // Depth
+        DEPTH16,
+        DEPTH24X8,
+        DEPTH32,
+        // Depth + Stencil
+        DEPTH16STENCIL8,
+        DEPTH24STENCIL8,
+        DEPTH32STENCIL8
     };
 
     struct MIST_API FrameBufferTextureProperties {
@@ -40,6 +46,5 @@ namespace mist {
         virtual const FrameBufferProperties& GetProperties() const = 0;
 
         static Ref<FrameBuffer> Create(const FrameBufferProperties& properties, const uint32_t swapchainInstance = 0);
-        static bool IsDepthFormat(FrameBufferTextureFormat format);
     };
 }

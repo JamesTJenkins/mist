@@ -23,13 +23,4 @@ namespace mist {
             return nullptr;
         }
     }
-
-    bool FrameBuffer::IsDepthFormat(FrameBufferTextureFormat format) {
-        switch (format) {
-            case FrameBufferTextureFormat::DEPTH24STENCIL8:
-                return true;
-            default:
-                return false;
-        }
-    };
 }
