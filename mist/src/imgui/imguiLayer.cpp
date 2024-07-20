@@ -3,6 +3,7 @@
 #include <backends/imgui_impl_vulkan.h>
 #include "Application.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
+#include "renderer/vulkan/VulkanDebug.hpp"
 
 namespace mist {
 	VkCommandBuffer buffer = VK_NULL_HANDLE;
@@ -38,9 +39,24 @@ namespace mist {
 
 		SetDarkThemeColors();
 
+		VulkanContext& context = VulkanContext::GetContext();
 		// Setup Platform/Renderer backends (May need to change from current windows and context in future with multiple windows)
 		ImGui_ImplSDL2_InitForVulkan(SDL_GL_GetCurrentWindow());
-		ImGui_ImplVulkan_InitInfo info = ImGui_ImplVulkan_InitInfo();
+		ImGui_ImplVulkan_InitInfo info {};
+		info.Instance = context.GetInstance();
+		info.PhysicalDevice = context.GetPhysicalDevice();
+		info.Device = context.GetDevice();
+		info.QueueFamily = context.FindQueueFamilies().graphicsFamily.value();
+		info.Queue = context.GetGraphicsQueue();
+		info.PipelineCache = VK_NULL_HANDLE;
+		info.DescriptorPool = context.descriptors.GetDescriptorPool();
+		info.Subpass = 0;
+		info.MinImageCount = 2;
+		info.ImageCount = context.GetSwapchainInstance(0).get()->GetSwapchainImageCount();
+		info.RenderPass = context.GetSwapchainInstance(0).get()->GetRenderPass();
+		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		info.Allocator = context.GetAllocationCallbacks();
+		info.CheckVkResultFn = CheckVkResult;
 		ImGui_ImplVulkan_Init(&info);
 
 		// Fonts

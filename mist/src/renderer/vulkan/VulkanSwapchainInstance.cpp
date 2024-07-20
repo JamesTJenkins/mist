@@ -92,10 +92,10 @@ namespace mist {
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchainSupport.presentMode);
 		VkExtent2D extent = ChooseSwapExtent(swapchainSupport.capabilities, Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight());
 
-		uint32_t imageCount = swapchainSupport.capabilities.minImageCount + 1;
+		swapchainImageCount = swapchainSupport.capabilities.minImageCount + 1;
 
-		if (swapchainSupport.capabilities.maxImageCount > 0 && imageCount > swapchainSupport.capabilities.maxImageCount)
-			imageCount = swapchainSupport.capabilities.maxImageCount;
+		if (swapchainSupport.capabilities.maxImageCount > 0 && swapchainImageCount > swapchainSupport.capabilities.maxImageCount)
+			swapchainImageCount = swapchainSupport.capabilities.maxImageCount;
 
 		VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
@@ -104,7 +104,7 @@ namespace mist {
 		VkSwapchainCreateInfoKHR info {};
 		info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		info.surface = context.GetSurface();
-		info.minImageCount = imageCount;
+		info.minImageCount = swapchainImageCount;
 		info.imageFormat = surfaceFormat.format;
 		info.imageColorSpace = surfaceFormat.colorSpace;
 		info.imageExtent = extent;
@@ -139,9 +139,9 @@ namespace mist {
 		newProps.attachment.attachments[0].textureFormat = VulkanHelper::GetFrameBufferTextureFormat(swapchainImageFormat);
 		CreateRenderPass(newProps);
 
-		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &imageCount, nullptr);
-		std::vector<VkImage> swapchainImages(imageCount);
-		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &imageCount, swapchainImages.data());
+		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &swapchainImageCount, nullptr);
+		std::vector<VkImage> swapchainImages(swapchainImageCount);
+		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &swapchainImageCount, swapchainImages.data());
 
 		VulkanImageProperties imageProps(
 			swapchainImageFormat,
@@ -156,16 +156,16 @@ namespace mist {
 			true
 		);
 
-		std::vector<VulkanImage> images(imageCount);
-		for (size_t i = 0; i < imageCount; ++i) {
+		std::vector<VulkanImage> images(swapchainImageCount);
+		for (size_t i = 0; i < swapchainImageCount; ++i) {
 			VulkanImage image(swapchainImages[i], imageProps);
 			image.CreateImageView();
 			images[i] = image;
 		}
 
 		frameBuffers.clear();
-		frameBuffers.resize(imageCount);
-		for (size_t i = 0; i < imageCount; ++i) {
+		frameBuffers.resize(swapchainImageCount);
+		for (size_t i = 0; i < swapchainImageCount; ++i) {
 			frameBuffers[i] = CreateRef<VulkanFrameBuffer>(
 				newProps, 
 				renderpass, 
