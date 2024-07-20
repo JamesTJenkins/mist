@@ -6,8 +6,8 @@ namespace mistEditor {
 		mist::FrameBufferProperties properties;
 		properties.attachment = { 
 			mist::FrameBufferTextureFormat::RGBA8,
-			mist::FrameBufferTextureFormat::RINT,
-			mist::FrameBufferTextureFormat::DEPTH24STENCIL8
+			mist::FrameBufferTextureFormat::R8,
+			mist::FrameBufferTextureFormat::DEPTH24_STENCIL8
 		};
 		properties.width = 1280;
 		properties.height = 720;

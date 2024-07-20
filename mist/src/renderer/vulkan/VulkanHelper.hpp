@@ -12,5 +12,6 @@ namespace mist {
         static bool IsDepthFormat(FrameBufferTextureFormat format);
         static bool IsDepthFormat(VkFormat format);
         static VkFormat GetVkFormat(FrameBufferTextureFormat format);
+        static FrameBufferTextureFormat GetFrameBufferTextureFormat(VkFormat format);
     };
 }
