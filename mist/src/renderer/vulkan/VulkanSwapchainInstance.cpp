@@ -157,6 +157,7 @@ namespace mist {
 		for (size_t i = 0; i < imageCount; ++i) {
 			VulkanImage image(swapchainImages[i], imageProps);
 			image.CreateImageView();
+			images[i] = image;
 		}
 
 		frameBuffers.clear();
