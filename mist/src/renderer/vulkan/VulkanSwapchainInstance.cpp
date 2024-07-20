@@ -134,7 +134,10 @@ namespace mist {
 		swapchainImageFormat = surfaceFormat.format;
 		swapchainExtent = extent;
 
-		CreateRenderPass(properties);
+		// Update properties to account for the swapchain image format being possibly converted
+		FrameBufferProperties newProps = properties;
+		newProps.attachment.attachments[0].textureFormat = VulkanHelper::GetFrameBufferTextureFormat(swapchainImageFormat);
+		CreateRenderPass(newProps);
 
 		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &imageCount, nullptr);
 		std::vector<VkImage> swapchainImages(imageCount);
@@ -164,7 +167,7 @@ namespace mist {
 		frameBuffers.resize(imageCount);
 		for (size_t i = 0; i < imageCount; ++i) {
 			frameBuffers[i] = CreateRef<VulkanFrameBuffer>(
-				properties, 
+				newProps, 
 				renderpass, 
 				images[i]
 			);
