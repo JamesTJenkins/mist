@@ -9,7 +9,8 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
-set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -fms-extensions -Wno-unused-function -municode")
+set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -fms-extensions -Wno-unused-function")
+# For more aggressive compilation warning/error checking
 #set(CMAKE_CXX_FLAGS "-std=gnu++2a -fmessage-length=0 -Wall -Wextra -pedantic -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-private-field -Wno-ignored-attributes -Wno-language-extension-token")
 
 set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/mist/vendor" ${CMAKE_PREFIX_PATH})
