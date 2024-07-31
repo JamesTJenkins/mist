@@ -4,7 +4,7 @@
 #include <renderer/RenderCommand.hpp>
 
 namespace mistEditor {
-    EditorLayer::EditorLayer() : Layer("EditorLayer") {
+    EditorLayer::EditorLayer() : ImguiLayer("EditorLayer") {
 
     }
 
@@ -14,6 +14,7 @@ namespace mistEditor {
 
     void EditorLayer::OnAttach() {
         mist::RenderCommand::Clear();
+		ImguiLayer::OnAttach();
     }
 
     void EditorLayer::OnDetach() {

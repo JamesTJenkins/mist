@@ -4,7 +4,7 @@
 namespace mist {
     class MIST_API ImguiLayer : public Layer {
     public:
-        ImguiLayer();
+        ImguiLayer(const std::string& name = "Layer");
         ~ImguiLayer();
 
         ImguiLayer(const ImguiLayer& other) = delete;

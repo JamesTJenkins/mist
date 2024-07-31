@@ -8,7 +8,7 @@
 namespace mist {
 	VkCommandBuffer buffer = VK_NULL_HANDLE;
 
-    ImguiLayer::ImguiLayer() : Layer("imguiLayer") {
+    ImguiLayer::ImguiLayer(const std::string& name) : Layer(name) {
 
     }
 
@@ -49,7 +49,8 @@ namespace mist {
 		info.QueueFamily = context.FindQueueFamilies().graphicsFamily.value();
 		info.Queue = context.GetGraphicsQueue();
 		info.PipelineCache = VK_NULL_HANDLE;
-		info.DescriptorPool = context.descriptors.GetDescriptorPool();
+		// TODO: Create a descriptor pool for imgui and just use that
+		info.DescriptorPool = context.descriptors.GetDescriptorPool(0);
 		info.Subpass = 0;
 		info.MinImageCount = 2;
 		info.ImageCount = context.GetSwapchainInstance(0).get()->GetSwapchainImageCount();
