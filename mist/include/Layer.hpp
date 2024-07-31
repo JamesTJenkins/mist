@@ -1,6 +1,6 @@
 #pragma once
 #include "Core.hpp"
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 namespace mist {
     class MIST_API Layer {
