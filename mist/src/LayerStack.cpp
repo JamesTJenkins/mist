@@ -1,4 +1,5 @@
 #include "LayerStack.hpp"
+#include <algorithm>
 
 namespace mist {
     LayerStack::LayerStack() {}
