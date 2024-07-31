@@ -20,7 +20,8 @@ find_package(spdlog REQUIRED)
 find_package(glslang CONFIG REQUIRED)
 
 set(IMGUI ${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui)
-set(VULKAN_SDK_PATH "C:/VulkanSDK/1.3.290.0")
+set(VULKAN_SDK_PATH $ENV{VULKAN_SDK})
+file(TO_CMAKE_PATH "${VULKAN_SDK_PATH}" VULKAN_SDK_PATH)
 
 #find_package(SPIRV-Tools CONFIG REQUIRED)
 # The following libraries are static and depend on SPIRV-Tools-static.
