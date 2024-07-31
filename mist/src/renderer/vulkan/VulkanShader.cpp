@@ -160,6 +160,8 @@ namespace mist {
 		glslang::FinalizeProcess();
 	}
 
+	VulkanShader::~VulkanShader() {}
+
 	std::string VulkanShader::ReadFile(const std::string& path) {
 		std::string result;
 		std::ifstream in(path, std::ios::in | std::ios::binary);
@@ -228,29 +230,40 @@ namespace mist {
 	}
 
 	void VulkanShader::Compile(std::vector<uint32_t> spirv, EShLanguage stage) {
-		spirv_cross::CompilerGLSL compiler(spirv);
-		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
-		for (const spirv_cross::Resource& ubo : resources.uniform_buffers) {
-			shaderResources[ubo.name] = {
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				compiler.get_decoration(ubo.id, spv::DecorationBinding),
-				1,
-				EShLanguageToVkStageFlags(stage)
-			};
-		}
-
-		for (const spirv_cross::Resource& sampled : resources.sampled_images) {
-			shaderResources[sampled.name] = {
-				VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-				compiler.get_decoration(sampled.id, spv::DecorationBinding),
-				1,
-				EShLanguageToVkStageFlags(stage)
-			};
-		}
+		//spirv_cross::CompilerGLSL compiler(spirv);
+		//spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+		//
+		//for (const spirv_cross::Resource& ubo : resources.uniform_buffers) {
+		//	ShaderResource res;
+		//	res.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		//	res.binding = compiler.get_decoration(ubo.id, spv::DecorationBinding);
+		//	res.count = 1;
+		//	res.flags = EShLanguageToVkStageFlags(stage);
+		//
+		//	shaderResources[ubo.name] = res;
+		//}
+		//
+		//for (const spirv_cross::Resource& sampled : resources.sampled_images) {
+		//	ShaderResource res;
+		//	res.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		//	res.binding = compiler.get_decoration(sampled.id, spv::DecorationBinding);
+		//	res.count = 1;
+		//	res.flags = EShLanguageToVkStageFlags(stage);
+		//
+		//	shaderResources[sampled.name] = res;
+		//}
 	}
 
 	ShaderResource& VulkanShader::GetResource(const std::string& name) {
 		return shaderResources[name];
 	}
+
+	void VulkanShader::Bind() const {}
+	void VulkanShader::Unbind() const {}
+	void VulkanShader::SetUniformInt(const std::string& name, int value) {}
+	void VulkanShader::SetUniformIntArray(const std::string& name, int* values, uint32_t count) {}
+	void VulkanShader::SetUniformMat4(const std::string& name, const glm::mat4& value) {}
+	void VulkanShader::SetUniformVec4(const std::string& name, const glm::vec4& value) {}
+	void VulkanShader::SetUniformVec3(const std::string& name, const glm::vec3& value) {}
+	void VulkanShader::SetUniformVec2(const std::string& name, const glm::vec2& value) {}
 }

@@ -9,8 +9,6 @@ namespace mist {
         uint32_t binding;
         uint32_t count;
         VkShaderStageFlags flags;
-
-        ShaderResource(VkDescriptorType type, uint32_t binding, uint32_t count, VkShaderStageFlags flags) : type(type), binding(binding), count(count), flags(flags) {}
     };
 
     class VulkanShader : public Shader {
