@@ -3,8 +3,38 @@
 #include "renderer/vulkan/VulkanContext.hpp"
 
 namespace mist {
-    void VulkanDescriptor::CreateEmptyDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayout {};
+	void VulkanDescriptor::CreateDescriptorPool() {
+		// Initial pool sizes
+		std::vector<VkDescriptorPoolSize> poolSize = {
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 200 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 200 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 200 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 200 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 200 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 200 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 200 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 200 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 200 },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 200 }
+		};
+
+		VkDescriptorPoolCreateInfo info {};
+		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		info.poolSizeCount = static_cast<uint32_t>(poolSize.size());
+		info.pPoolSizes = poolSize.data();
+		info.maxSets = 1000 * (pools.size() + 1);	// Doubles the max pool size each time a new one is made
+		info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+		VulkanContext& context = VulkanContext::GetContext();
+		VkDescriptorPool pool;
+		CheckVkResult(vkCreateDescriptorPool(context.GetDevice(), &info, context.GetAllocationCallbacks(), &pool));
+
+		pools.push_back(pool);
+	}
+
+	void VulkanDescriptor::CreateDescriptorSetLayout() {
+		VkDescriptorSetLayoutBinding uboLayout {};
         uboLayout.binding = 0;
         uboLayout.descriptorCount = 1;
         uboLayout.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -24,92 +54,65 @@ namespace mist {
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
         layoutInfo.pBindings = bindings.data();
+		
+		VulkanContext& context = VulkanContext::GetContext();
+		VkDescriptorSetLayout layout;
+        CheckVkResult(vkCreateDescriptorSetLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &layout));
 
-        VulkanContext& context = VulkanContext::GetContext();
-        CheckVkResult(vkCreateDescriptorSetLayout(context.GetDevice(), &layoutInfo, nullptr, &descriptorSetLayout));
-    }
+		descriptorSetLayouts.push_back(layout);
+	}
 
-    void VulkanDescriptor::CreateDescriptorSetLayout() {
-        // TODO: come back later
-    }
+	VkDescriptorSet& VulkanDescriptor::CreateDescriptorSet() {
+		VkDescriptorSet descriptorSet;
+		VulkanContext& context = VulkanContext::GetContext();
 
-    void VulkanDescriptor::CreateEmptyDescriptorPool(uint32_t swapchainImagesCount) {
-        VulkanContext& context = VulkanContext::GetContext();
+		// Try to place in existing pool
+		for (VkDescriptorPool& pool : pools) {
+			VkDescriptorSetAllocateInfo alloctionInfo {};
+			alloctionInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			alloctionInfo.descriptorPool = pool;
+			alloctionInfo.descriptorSetCount = 1;
+			//alloctionInfo.pSetLayouts = &descriptorSetLayout; // TODO: fix once shaders implemented
 
-        std::array<VkDescriptorPoolSize, 2> poolSizes {};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = swapchainImagesCount;
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = swapchainImagesCount;
+			VkResult result = vkAllocateDescriptorSets(context.GetDevice(), &alloctionInfo, &descriptorSet);
+			switch(result) {
+			case VK_SUCCESS:
+				descriptorSets.push_back(descriptorSet);
+				return descriptorSets[descriptorSets.size() - 1];
+			case VK_ERROR_FRAGMENTED_POOL:
+			case VK_ERROR_OUT_OF_POOL_MEMORY:
+				continue;
+			default:
+				CheckVkResult(result);
+			};
+		}
 
-        VkDescriptorPoolCreateInfo poolInfo {};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = swapchainImagesCount;
+		// Create new pool
+		CreateDescriptorPool();
+		
+		VkDescriptorSetAllocateInfo alloctionInfo {};
+		alloctionInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		alloctionInfo.descriptorPool = GetDescriptorPool(pools.size() - 1);
+		alloctionInfo.descriptorSetCount = 1;
+		//alloctionInfo.pSetLayouts = &descriptorSetLayout; // TODO: fix once shaders implemented
 
-        CheckVkResult(vkCreateDescriptorPool(context.GetDevice(), &poolInfo, nullptr, &pool));
-    }
+		CheckVkResult(vkAllocateDescriptorSets(context.GetDevice(), &alloctionInfo, &descriptorSet));
 
-    void VulkanDescriptor::CreateDescriptorPool() {
-        // TODO: come back later
-    }
+		descriptorSets.push_back(descriptorSet);
+		return descriptorSets[descriptorSets.size() - 1];
+	}
 
-    void VulkanDescriptor::CreateDescriptorSets(uint32_t swapchainImagesCount) {
-        VulkanContext& context = VulkanContext::GetContext();
+	void VulkanDescriptor::ClearPool() {
+		VulkanContext& context = VulkanContext::GetContext();
+		for (VkDescriptorPool& pool : pools) {
+			vkDestroyDescriptorPool(context.GetDevice(), pool, context.GetAllocationCallbacks());
+		}
+	}
 
-        std::vector<VkDescriptorSetLayout> layouts(swapchainImagesCount, descriptorSetLayout);
-
-        VkDescriptorSetAllocateInfo allocInfo {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = pool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapchainImagesCount);
-        allocInfo.pSetLayouts = layouts.data();
-
-        descriptorSets.resize(swapchainImagesCount);
-        CheckVkResult(vkAllocateDescriptorSets(context.GetDevice(), &allocInfo, descriptorSets.data()));
-
-        for (size_t i = 0; i < swapchainImagesCount; i++) {
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites {};
-
-            VkDescriptorBufferInfo uboInfo {};
-            // TODO: set uniform buffers up
-
-            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[0].dstSet = descriptorSets[i];
-            descriptorWrites[0].dstBinding = 0;
-            descriptorWrites[0].dstArrayElement = 0;
-            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pBufferInfo = &uboInfo;
-
-            std::vector<VkDescriptorImageInfo> imageInfos {};
-            // TODO: set texture and sampler bindings in imageInfos
-
-            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[1].dstSet = descriptorSets[i];
-            descriptorWrites[1].dstBinding = 1;
-            descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[1].descriptorCount = imageInfos.size();
-            descriptorWrites[1].pBufferInfo = 0;
-            descriptorWrites[1].pImageInfo = imageInfos.data();
-
-            vkUpdateDescriptorSets(context.GetDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-        }
-    }
-
-    void VulkanDescriptor::ClearPool() {
-        if (pool != VK_NULL_HANDLE) {
-            VulkanContext& context = VulkanContext::GetContext();
-            vkDestroyDescriptorPool(context.GetDevice(), pool, nullptr);
-        }
-    }
-
-    void VulkanDescriptor::Cleanup() {
-        if (descriptorSetLayout != VK_NULL_HANDLE) {
-            VulkanContext& context = VulkanContext::GetContext();
-            vkDestroyDescriptorSetLayout(context.GetDevice(), descriptorSetLayout, nullptr);
-        }
-    }
+	void VulkanDescriptor::Cleanup() {
+		VulkanContext& context = VulkanContext::GetContext();
+		for (VkDescriptorSetLayout& layout : descriptorSetLayouts) {
+			vkDestroyDescriptorSetLayout(context.GetDevice(), layout, nullptr);
+		}
+	}
 }
