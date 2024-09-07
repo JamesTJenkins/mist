@@ -4,6 +4,8 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+.vs/*
 
 # Ingore builds folder
 build/*
+out/*
