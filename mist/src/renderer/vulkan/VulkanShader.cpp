@@ -1,7 +1,7 @@
 #include "VulkanShader.hpp"
 #include <glslang/SPIRV/GlslangToSpv.h>
-#include <spirv_cross/spirv_cross.hpp>
-#include <spirv_cross/spirv_glsl.hpp>
+#include <spirv_cross.hpp>
+#include <spirv_glsl.hpp>
 #include "Debug.hpp"
 
 namespace mist {
@@ -230,28 +230,28 @@ namespace mist {
 	}
 
 	void VulkanShader::Compile(std::vector<uint32_t> spirv, EShLanguage stage) {
-		//spirv_cross::CompilerGLSL compiler(spirv);
-		//spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-		//
-		//for (const spirv_cross::Resource& ubo : resources.uniform_buffers) {
-		//	ShaderResource res;
-		//	res.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		//	res.binding = compiler.get_decoration(ubo.id, spv::DecorationBinding);
-		//	res.count = 1;
-		//	res.flags = EShLanguageToVkStageFlags(stage);
-		//
-		//	shaderResources[ubo.name] = res;
-		//}
-		//
-		//for (const spirv_cross::Resource& sampled : resources.sampled_images) {
-		//	ShaderResource res;
-		//	res.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		//	res.binding = compiler.get_decoration(sampled.id, spv::DecorationBinding);
-		//	res.count = 1;
-		//	res.flags = EShLanguageToVkStageFlags(stage);
-		//
-		//	shaderResources[sampled.name] = res;
-		//}
+		spirv_cross::CompilerGLSL compiler(spirv);
+		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+		
+		for (const spirv_cross::Resource& ubo : resources.uniform_buffers) {
+			ShaderResource res;
+			res.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			res.binding = compiler.get_decoration(ubo.id, spv::DecorationBinding);
+			res.count = 1;
+			res.flags = EShLanguageToVkStageFlags(stage);
+		
+			shaderResources[ubo.name] = res;
+		}
+		
+		for (const spirv_cross::Resource& sampled : resources.sampled_images) {
+			ShaderResource res;
+			res.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			res.binding = compiler.get_decoration(sampled.id, spv::DecorationBinding);
+			res.count = 1;
+			res.flags = EShLanguageToVkStageFlags(stage);
+		
+			shaderResources[sampled.name] = res;
+		}
 	}
 
 	ShaderResource& VulkanShader::GetResource(const std::string& name) {

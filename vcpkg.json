@@ -3,7 +3,6 @@
     "glm",
     "vulkan",
     "glslang",
-    "spirv-cross",
     "spdlog",
     {
       "name": "sdl2",

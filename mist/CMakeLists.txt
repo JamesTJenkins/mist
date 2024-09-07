@@ -34,7 +34,8 @@ find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(glslang CONFIG REQUIRED)
-#find_package(spirv-cross REQUIRED)
+
+add_subdirectory(vendor/spirv-cross)
 
 add_library(mist SHARED ${SOURCES})
 
@@ -44,12 +45,12 @@ target_include_directories(mist
 )
 
 target_link_libraries(mist
+    PRIVATE spirv-cross-core spirv-cross-glsl spirv-cross-hlsl spirv-cross-reflect
 	PUBLIC glm::glm
 	PRIVATE spdlog::spdlog
 	PRIVATE Vulkan::Vulkan
 	PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 	PUBLIC imgui::imgui
-    #PRIVATE spirv-cross-cpp spirv-cross-core spirv-cross-glsl spirv-cross-hlsl spirv-cross-reflect
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
 )
 
