@@ -1,3 +1,0 @@
-[submodule "mist/vendor/imgui"]
-	path = mist/vendor/imgui
-	url = git@github.com:ocornut/imgui.git
