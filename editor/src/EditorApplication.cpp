@@ -12,24 +12,24 @@
 // Now its getting even more spec with winmains
 
 void Run() {
-    mist::Application editor("Mist Editor");
+    mist::Application editor = mist::Application("Editor");
     editor.PushLayer(new mistEditor::EditorLayer());
     editor.Run();
 }
 
-#if defined(_WIN32)
+//#if defined(_WIN32)
 //int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 //    Run();
 //    return 0;
 //}
 
-int WinMain() {
+//int WinMain() {
+//    Run();
+//    return 0;
+//}
+//#else
+int main(int argc, char* argv[]) {
     Run();
     return 0;
 }
-#else
-int main() {
-    Run();
-    return 0;
-}
-#endif
+//#endif

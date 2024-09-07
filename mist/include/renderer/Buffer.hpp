@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.hpp"
 #include <vector>
+#include <string>
 
 namespace mist {
 	enum class ShaderDataType {

@@ -48,7 +48,7 @@ namespace mist {
     void VulkanCommand::FreeCommandBuffers(std::vector<VkCommandBuffer> commandBuffers) {
         VulkanContext& context = VulkanContext::GetContext();
 
-        vkFreeCommandBuffers(context.GetDevice(), pool, commandBuffers.size(), commandBuffers.data());
+        vkFreeCommandBuffers(context.GetDevice(), pool, (uint32_t)commandBuffers.size(), commandBuffers.data());
     }
 
     VkCommandBuffer VulkanCommand::BeginSingleTimeCommand() {

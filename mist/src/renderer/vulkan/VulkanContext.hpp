@@ -39,7 +39,7 @@ namespace mist {
 		inline const Ref<VulkanSwapchainInstance>& GetSwapchainInstance(uint32_t index = 0) { return swapchainInstances[index]; }
         inline const VkDebugReportCallbackEXT GetDebugCallback() const { return debugReport; }
 		inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocator; }
-		inline const uint32_t GetSwapchainInstanceCount() const { return swapchainInstances.size(); }
+		inline const size_t GetSwapchainInstanceCount() const { return swapchainInstances.size(); }
 
 		VulkanDescriptor descriptors;
         VulkanCommand commands;

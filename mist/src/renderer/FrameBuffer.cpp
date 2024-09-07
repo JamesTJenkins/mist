@@ -22,5 +22,7 @@ namespace mist {
             MIST_ASSERT(false, "Running headless");
             return nullptr;
         }
+
+        return nullptr;
     }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.hpp"
+#include <string>
 #include <SDL2/SDL.h>
 
 namespace mist {

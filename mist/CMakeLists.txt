@@ -1,5 +1,12 @@
-cmake_minimum_required(VERSION 3.5)
-project(mist LANGUAGES C CXX VERSION 1.0.0)
+﻿cmake_minimum_required (VERSION 3.8)
+
+# Enable Hot Reload for MSVC compilers if supported.
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
+
+project ("mist")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,76 +14,46 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-add_compile_options(
-    "$<$<CONFIG:DEBUG>:-O0;-fstack-protector-all;-g3;-ggdb;-fPIC>"
-    "$<$<CONFIG:RELEASE>:-O3;-g0;-fPIC;-DNDEBUG>"
-    "-std=gnu++2a;-fmessage-length=0;-Wall;-fms-extensions;-Wno-unused-function"
-)
+if(CLANG)
+    add_compile_options(
+        "$<$<CONFIG:DEBUG>:-O0;-fstack-protector-all;-g3;-ggdb;-fPIC>"
+        "$<$<CONFIG:RELEASE>:-O3;-g0;-fPIC;-DNDEBUG>"
+        "-std=gnu++2a;-fmessage-length=0;-Wall;-fms-extensions;-Wno-unused-function"
+    )
+elseif(MSVC)
+    add_compile_options(
+        "$<$<CONFIG:DEBUG>:/Od;/GS;/Zi>"
+        "$<$<CONFIG:RELEASE>:/O2;/DEBUG:NONE;-DNDEBUG>"
+        "/W4;/wd4505;/wd4100"
+    )
+endif()
 
 find_package(glm CONFIG REQUIRED)
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+find_package(spdlog CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
-find_package(spdlog REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 find_package(glslang CONFIG REQUIRED)
+#find_package(spirv-cross REQUIRED)
 
-set(IMGUI ${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui)
-set(VULKAN_SDK_PATH $ENV{VULKAN_SDK})
-file(TO_CMAKE_PATH "${VULKAN_SDK_PATH}" VULKAN_SDK_PATH)
+add_library(mist SHARED ${SOURCES})
 
-#find_package(SPIRV-Tools CONFIG REQUIRED)
-# The following libraries are static and depend on SPIRV-Tools-static.
-#find_package(SPIRV-Tools-link CONFIG REQUIRED)
-#find_package(SPIRV-Tools-lint CONFIG REQUIRED)
-#find_package(SPIRV-Tools-opt CONFIG REQUIRED)
-
-#find_package(spirv_cross_core REQUIRED)
-#find_package(spirv_cross_glsl REQUIRED)
-
-add_library(mist SHARED 
-    ${SOURCES}
-    ${IMGUI}/imgui.cpp
-	${IMGUI}/imgui_draw.cpp
-	${IMGUI}/imgui_tables.cpp
-	${IMGUI}/imgui_widgets.cpp
-	${IMGUI}/backends/imgui_impl_sdl2.cpp
-	${IMGUI}/backends/imgui_impl_vulkan.cpp
+target_include_directories(mist
+	PRIVATE "src/"
+	PUBLIC "include/"
 )
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    PUBLIC ${IMGUI}/
-    PUBLIC ${IMGUI}/backends/
-    PUBLIC ${VULKAN_SDK_PATH}/Include/spirv_cross/
-)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE glm::glm
-    PRIVATE $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-    PRIVATE Vulkan::Vulkan
-    PRIVATE spdlog::spdlog_header_only
-    PRIVATE ${VULKAN_SDK_PATH}/Lib/spirv-cross-core.lib
-    PRIVATE ${VULKAN_SDK_PATH}/Lib/spirv-cross-glsl.lib
-    PRIVATE ${VULKAN_SDK_PATH}/Lib/spirv-cross-cpp.lib
-    PRIVATE ${VULKAN_SDK_PATH}/Lib/spirv-cross-msl.lib
-    PRIVATE ${VULKAN_SDK_PATH}/Lib/spirv-cross-reflect.lib
-    PRIVATE ${VULKAN_SDK_PATH}/Lib/spirv-cross-util.lib
+target_link_libraries(mist
+	PUBLIC glm::glm
+	PRIVATE spdlog::spdlog
+	PRIVATE Vulkan::Vulkan
+	PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+	PUBLIC imgui::imgui
+    #PRIVATE spirv-cross-cpp spirv-cross-core spirv-cross-glsl spirv-cross-hlsl spirv-cross-reflect
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
-    #PRIVATE spirv-cross-glsl
-    #PRIVATE SPIRV-Tools
-    #PRIVATE SPIRV-Tools-opt
-    #PRIVATE SPIRV-Tools-link
-    #PRIVATE SPIRV-Tools-lint
 )
 
 target_compile_definitions(${PROJECT_NAME} 
     PRIVATE $<$<CONFIG:Debug>:DEBUG>
     PRIVATE $<$<PLATFORM_ID:Windows>:MIST_DLL>
 )
-
-if (MINGW OR MSYS)
-    set(CMAKE_CXX_LINK_FLAGS "-Wl,--enable-auto-import")
-    target_link_libraries(mist PRIVATE stdc++fs)
-endif()
-
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)

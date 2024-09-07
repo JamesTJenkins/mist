@@ -2,26 +2,35 @@
 
 #include "Application.hpp"
 #include <SDL.h>
+#include <stdexcept>
 #include "renderer/RenderCommand.hpp"
+#include "renderer/vulkan/VulkanRenderAPI.hpp"
 
 namespace mist {
-	Application* Application::instance{};
+	Application* Application::instance = nullptr;
 
-	Application::Application(const char* name) : name(name) {
+	Application::Application(const char* name) {
 		if (instance != nullptr)
 			throw std::runtime_error("Created 2 application instances");
 
 		instance = this;
+		appName = name;
+		renderAPI = std::unique_ptr<VulkanRenderAPI>(new VulkanRenderAPI());
 		SDL_Init(SDL_INIT_VIDEO);
-
 		window = std::unique_ptr<Window>(Window::Create(WindowProperties(name)));
-
 		RenderCommand::Initialize();
 	}
 
 	Application::~Application() {
 		RenderCommand::Shutdown();
 		SDL_Quit();
+	}
+
+	Application& Application::Get() {
+		if (instance == nullptr)
+			instance = new Application();
+		
+		return *instance;
 	}
 
 	void Application::Run() {

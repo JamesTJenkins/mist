@@ -13,7 +13,7 @@ namespace mistEditor {
     }
 
     void EditorLayer::OnAttach() {
-        mist::RenderCommand::Clear();
+        //mist::RenderCommand::Clear();
 		ImguiLayer::OnAttach();
     }
 

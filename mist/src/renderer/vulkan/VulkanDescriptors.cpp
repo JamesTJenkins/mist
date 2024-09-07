@@ -23,7 +23,7 @@ namespace mist {
 		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		info.poolSizeCount = static_cast<uint32_t>(poolSize.size());
 		info.pPoolSizes = poolSize.data();
-		info.maxSets = 1000 * (pools.size() + 1);	// Doubles the max pool size each time a new one is made
+		info.maxSets = (uint32_t)(1000 * (pools.size() + 1));	// Doubles the max pool size each time a new one is made
 		info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
 		VulkanContext& context = VulkanContext::GetContext();
@@ -92,7 +92,7 @@ namespace mist {
 		
 		VkDescriptorSetAllocateInfo alloctionInfo {};
 		alloctionInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		alloctionInfo.descriptorPool = GetDescriptorPool(pools.size() - 1);
+		alloctionInfo.descriptorPool = GetDescriptorPool((int)pools.size() - 1);
 		alloctionInfo.descriptorSetCount = 1;
 		//alloctionInfo.pSetLayouts = &descriptorSetLayout; // TODO: fix once shaders implemented
 

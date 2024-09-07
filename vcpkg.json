@@ -1,0 +1,17 @@
+{
+  "dependencies": [
+    "glm",
+    "vulkan",
+    "glslang",
+    "spirv-cross",
+    "spdlog",
+    {
+      "name": "sdl2",
+      "features": [ "vulkan" ]
+    },
+    {
+      "name": "imgui",
+      "features": [ "vulkan-binding", "sdl2-binding", "docking-experimental" ]
+    }
+  ]
+}

@@ -103,24 +103,26 @@ namespace mist {
 
 	void VulkanContext::CreatePhysicalDevice() {
 		uint32_t gpuCount;
-			CheckVkResult(vkEnumeratePhysicalDevices(instance, &gpuCount, NULL));
-			VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpuCount);
-			CheckVkResult(vkEnumeratePhysicalDevices(instance, &gpuCount, gpus));
+		CheckVkResult(vkEnumeratePhysicalDevices(instance, &gpuCount, NULL));
+		MIST_ASSERT(gpuCount > 0, "Failed to find any GPUs");
 
-			// TODO: Add support for multi dedicated GPUs
-			// Finds a discrete GPU
-			uint32_t gpuIdx = 0;
-			for (uint32_t i = 0; i < gpuCount; i++) {
-				VkPhysicalDeviceProperties properties;
-				vkGetPhysicalDeviceProperties(gpus[i], &properties);
-				if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-					gpuIdx = i;
-					break;
-				}
+		VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpuCount);
+		CheckVkResult(vkEnumeratePhysicalDevices(instance, &gpuCount, gpus));
+
+		// TODO: Add support for multi dedicated GPUs
+		// Finds a discrete GPU
+		uint32_t gpuIdx = 0;
+		for (uint32_t i = 0; i < gpuCount; i++) {
+			VkPhysicalDeviceProperties properties;
+			vkGetPhysicalDeviceProperties(gpus[i], &properties);
+			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+				gpuIdx = i;
+				break;
 			}
+		}
 
-			physicalDevice = gpus[gpuIdx];
-			free(gpus);
+		physicalDevice = gpus[gpuIdx];
+		free(gpus);
 	}
 
 	void VulkanContext::CreateDevice() {

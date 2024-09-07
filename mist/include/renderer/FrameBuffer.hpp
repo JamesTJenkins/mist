@@ -78,7 +78,7 @@ namespace mist {
 	};
 
     struct MIST_API FrameBufferProperties {
-        uint32_t width, height;
+        uint32_t width = 1, height = 1;
         FrameBufferAttachmentProperties attachment;
         uint32_t samples = 1;
     };

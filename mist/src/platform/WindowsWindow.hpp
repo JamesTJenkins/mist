@@ -16,8 +16,8 @@ namespace mist {
         virtual void OnUpdate() override;
 
         inline virtual glm::vec2 GetWindowPosition() const override;
-        inline virtual uint32_t GetXPosition() const override { return GetWindowPosition().x; }
-        inline virtual uint32_t GetYPosition() const override { return GetWindowPosition().y; }
+        inline virtual uint32_t GetXPosition() const override { return (uint32_t)GetWindowPosition().x; }
+        inline virtual uint32_t GetYPosition() const override { return (uint32_t)GetWindowPosition().y; }
         inline virtual uint32_t GetWidth() const override { return properties.width; }
 		inline virtual uint32_t GetHeight() const override { return properties.height; }
 
