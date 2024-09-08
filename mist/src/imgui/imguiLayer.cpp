@@ -41,7 +41,7 @@ namespace mist {
 
 		VulkanContext& context = VulkanContext::GetContext();
 		// Setup Platform/Renderer backends (May need to change from current windows and context in future with multiple windows)
-		ImGui_ImplSDL2_InitForVulkan(SDL_GL_GetCurrentWindow());
+		ImGui_ImplSDL2_InitForVulkan(Application::Get().GetWindow().GetNativeWindow());
 		ImGui_ImplVulkan_InitInfo info {};
 		info.Instance = context.GetInstance();
 		info.PhysicalDevice = context.GetPhysicalDevice();
@@ -49,12 +49,12 @@ namespace mist {
 		info.QueueFamily = context.FindQueueFamilies().graphicsFamily.value();
 		info.Queue = context.GetGraphicsQueue();
 		info.PipelineCache = VK_NULL_HANDLE;
-		// TODO: Create a descriptor pool for imgui and just use that
+		context.descriptors.CreateDescriptorPool();
 		info.DescriptorPool = context.descriptors.GetDescriptorPool(0);
 		info.Subpass = 0;
-		info.MinImageCount = 2;
-		info.ImageCount = context.GetSwapchainInstance(0).get()->GetSwapchainImageCount();
-		info.RenderPass = context.GetSwapchainInstance(0).get()->GetRenderPass();
+		info.MinImageCount = context.GetSwapchainInstance(0)->GetSwapchainMinImageCount();
+		info.ImageCount = context.GetSwapchainInstance(0)->GetSwapchainImageCount();
+		info.RenderPass = context.GetSwapchainInstance(0)->GetRenderPass();
 		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		info.Allocator = context.GetAllocationCallbacks();
 		info.CheckVkResultFn = CheckVkResult;
@@ -67,6 +67,8 @@ namespace mist {
     }
 
     void ImguiLayer::OnDetach() {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDeviceWaitIdle(context.GetDevice());
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 		ImGui::DestroyContext();
@@ -92,20 +94,21 @@ namespace mist {
     void ImguiLayer::End() {
 		ImGuiIO& io = ImGui::GetIO();
 		Application& application = Application::Get();
-		io.DisplaySize = ImVec2((float)application.GetWindow().GetWidth(), (float)application.GetWindow().GetHeight());
+		uint32_t width = application.GetWindow().GetWidth();
+		uint32_t height = application.GetWindow().GetHeight();
+		io.DisplaySize = ImVec2((float)width, (float)height);
+		
+		// When window is minimized or closed just simply bail out and dont bother rendering
+		if (width == 0 || height == 0)
+			return;
 
 		ImGui::Render();
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), buffer);
 
 		// Update and Render additional Platform Windows
-		// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
-		//  For this specific demo app we could also call SDL_GL_MakeCurrent(window, gl_context) directly)
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
-			SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
-			//ImGui::UpdatePlatformWindows();
-			//ImGui::RenderPlatformWindowsDefault();
-			SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
 		}
     }
 

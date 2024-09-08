@@ -21,7 +21,7 @@ namespace mist {
         inline virtual uint32_t GetWidth() const override { return properties.width; }
 		inline virtual uint32_t GetHeight() const override { return properties.height; }
 
-        inline virtual void* GetNativeWindow() const override { return window; }
+        inline virtual SDL_Window* GetNativeWindow() const override { return window; }
     private:
         SDL_Window* window;
         WindowProperties properties;

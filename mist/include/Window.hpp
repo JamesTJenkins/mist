@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string>
 #include <glm/glm.hpp>
+#include <SDL.h>
 #include "Core.hpp"
 
 namespace mist {
@@ -16,7 +17,7 @@ namespace mist {
 	public:
 		virtual ~Window(){};
 
-		virtual void* GetNativeWindow() const = 0;
+		virtual SDL_Window* GetNativeWindow() const = 0;
 
 		virtual void OnUpdate() = 0;
 
