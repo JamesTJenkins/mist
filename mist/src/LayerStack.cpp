@@ -4,7 +4,10 @@
 namespace mist {
     LayerStack::LayerStack() {}
 
-    LayerStack::~LayerStack() {}
+    LayerStack::~LayerStack() {
+        for (Layer* layer : layers)
+            delete layer;
+    }
 
     void LayerStack::PushLayer(Layer* layer) {
         layers.emplace(layers.begin() + layerInsert, layer);
