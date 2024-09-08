@@ -92,7 +92,8 @@ namespace mist {
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchainSupport.presentMode);
 		VkExtent2D extent = ChooseSwapExtent(swapchainSupport.capabilities, Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight());
 
-		swapchainImageCount = swapchainSupport.capabilities.minImageCount + 1;
+		swapchainMinImageCount = swapchainSupport.capabilities.minImageCount;
+		swapchainImageCount = swapchainMinImageCount + 1;
 
 		if (swapchainSupport.capabilities.maxImageCount > 0 && swapchainImageCount > swapchainSupport.capabilities.maxImageCount)
 			swapchainImageCount = swapchainSupport.capabilities.maxImageCount;
