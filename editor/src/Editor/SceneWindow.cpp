@@ -3,15 +3,15 @@
 
 namespace mistEditor {
 	SceneWindow::SceneWindow() {
-		mist::FrameBufferProperties properties;
+		mist::FramebufferProperties properties;
 		properties.attachment = { 
-			mist::FrameBufferTextureFormat::RGBA8,
-			mist::FrameBufferTextureFormat::R8,
-			mist::FrameBufferTextureFormat::DEPTH24_STENCIL8
+			mist::FramebufferTextureFormat::RGBA8,
+			mist::FramebufferTextureFormat::R8,
+			mist::FramebufferTextureFormat::DEPTH24_STENCIL8
 		};
 		properties.width = 1280;
 		properties.height = 720;
-		frameBuffer = mist::FrameBuffer::Create(properties);
+		framebuffer = mist::Framebuffer::Create(properties);
 	}
 
 	void SceneWindow::OnEditorUpdate() {
@@ -24,10 +24,10 @@ namespace mistEditor {
 		focused = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
 		ImVec2 imguiViewportSize = ImGui::GetContentRegionAvail();
 		if (viewportSize != *((glm::vec2*)&imguiViewportSize)) {
-			frameBuffer->Resize(imguiViewportSize.x, imguiViewportSize.y);
+			framebuffer->Resize(imguiViewportSize.x, imguiViewportSize.y);
 			viewportSize = { imguiViewportSize.x, imguiViewportSize.y };
 		}
-		ImGui::Image((void*)frameBuffer->GetColorAttachmentRenderID(), imguiViewportSize, ImVec2{0, 1}, ImVec2{1, 0});
+		ImGui::Image((void*)framebuffer->GetColorAttachmentRenderID(), imguiViewportSize, ImVec2{0, 1}, ImVec2{1, 0});
 		
 		ImVec2 offset = ImGui::GetWindowPos();
 		ImVec2 minRegion = ImGui::GetWindowContentRegionMin();

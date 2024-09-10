@@ -38,7 +38,7 @@ namespace mist {
 		return size;
 	}
 
-	VkAttachmentDescription CreateAttachmentDescription(FrameBufferTextureProperties textureProperties) {
+	VkAttachmentDescription CreateAttachmentDescription(FramebufferTextureProperties textureProperties) {
 		VkAttachmentDescription attachment {};
 		attachment.format = VulkanHelper::IsDepthFormat(textureProperties.textureFormat) ? VulkanHelper::FindSupportedDepthFormat(VulkanHelper::GetVkFormat(textureProperties.textureFormat), VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) : VulkanHelper::GetVkFormat(textureProperties.textureFormat);
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -52,7 +52,7 @@ namespace mist {
 		return attachment;
 	}
 
-	VulkanSwapchainInstance::VulkanSwapchainInstance(const uint32_t swapchainIndex, const FrameBufferProperties& properties) : swapchainIndex(swapchainIndex) {
+	VulkanSwapchainInstance::VulkanSwapchainInstance(const uint32_t swapchainIndex, const FramebufferProperties& properties) : swapchainIndex(swapchainIndex) {
 		CreateSwapchain(properties);
 	}
 
@@ -85,7 +85,7 @@ namespace mist {
 		return details;
 	}
 
-	void VulkanSwapchainInstance::CreateSwapchain(const FrameBufferProperties& properties) {
+	void VulkanSwapchainInstance::CreateSwapchain(const FramebufferProperties& properties) {
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
 
 		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats);
@@ -136,8 +136,8 @@ namespace mist {
 		swapchainExtent = extent;
 
 		// Update properties to account for the swapchain image format being possibly converted
-		FrameBufferProperties newProps = properties;
-		newProps.attachment.attachments[0].textureFormat = VulkanHelper::GetFrameBufferTextureFormat(swapchainImageFormat);
+		FramebufferProperties newProps = properties;
+		newProps.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(swapchainImageFormat);
 		CreateRenderPass(newProps);
 
 		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &swapchainImageCount, nullptr);
@@ -164,10 +164,10 @@ namespace mist {
 			images[i] = image;
 		}
 
-		frameBuffers.clear();
-		frameBuffers.resize(swapchainImageCount);
+		framebuffers.clear();
+		framebuffers.resize(swapchainImageCount);
 		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			frameBuffers[i] = CreateRef<VulkanFrameBuffer>(
+			framebuffers[i] = CreateRef<VulkanFramebuffer>(
 				newProps, 
 				renderpass, 
 				images[i]
@@ -175,7 +175,7 @@ namespace mist {
 		}
 	}
 
-	void VulkanSwapchainInstance::CreateRenderPass(const FrameBufferProperties& properties) {
+	void VulkanSwapchainInstance::CreateRenderPass(const FramebufferProperties& properties) {
 		std::vector<VkAttachmentDescription> attachments;
 		std::vector<VkAttachmentReference> colorAttachmentRefs;
 		std::vector<VkAttachmentReference> depthAttachmentRefs;
@@ -212,5 +212,25 @@ namespace mist {
 			VulkanContext& context = VulkanContext::GetContext();
 			CheckVkResult(vkCreateRenderPass(context.GetDevice(), &renderpassInfo, context.GetAllocationCallbacks(), &renderpass));
 		}
+	}
+
+	void VulkanSwapchainInstance::BeginRenderPass(VkCommandBuffer commandBuffer) {
+		VkRenderPassBeginInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = renderpass;
+		renderPassInfo.framebuffer = framebuffers[activeFramebuffer].get()->GetFramebuffer();
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		FramebufferProperties props = framebuffers[activeFramebuffer].get()->GetProperties();
+		renderPassInfo.renderArea.extent = { props.width, props.height };
+		renderPassInfo.clearValueCount = 1;
+		glm::vec4 color = Application::Get().GetRenderAPI().GetClearColor();
+		VkClearValue clearColor = { color.r, color.g, color.b, color.a };
+		renderPassInfo.pClearValues = &clearColor;
+
+		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	}
+
+	void VulkanSwapchainInstance::EndRenderPass(VkCommandBuffer commandBuffer) {
+		vkCmdEndRenderPass(commandBuffer);
 	}
 }

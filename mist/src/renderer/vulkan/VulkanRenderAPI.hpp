@@ -12,8 +12,13 @@ namespace mist {
         virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
         virtual void SetClearColor(glm::vec4& color) override;
+        virtual glm::vec4 GetClearColor() override { return clearColor; }
         virtual void Clear() override;
 
+        virtual void Draw() override;
+
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
+    private:
+        glm::vec4 clearColor;   // RGBA
     };
 }

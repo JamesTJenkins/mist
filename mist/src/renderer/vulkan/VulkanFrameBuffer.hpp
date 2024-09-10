@@ -1,17 +1,17 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include "renderer/FrameBuffer.hpp"
+#include "renderer/Framebuffer.hpp"
 #include "renderer/vulkan/VulkanImage.hpp"
 
 namespace mist {
-    class VulkanFrameBuffer : public FrameBuffer {
+    class VulkanFramebuffer : public Framebuffer {
     public:
-        VulkanFrameBuffer();
-        VulkanFrameBuffer(const FrameBufferProperties& properties, VkRenderPass renderpass, VulkanImage swapchainImage);
-        virtual ~VulkanFrameBuffer();
+        VulkanFramebuffer();
+        VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, VulkanImage swapchainImage);
+        virtual ~VulkanFramebuffer();
 
-        VulkanFrameBuffer(const VulkanFrameBuffer& other) = delete;
-        VulkanFrameBuffer& operator=(const VulkanFrameBuffer& other) = delete;
+        VulkanFramebuffer(const VulkanFramebuffer& other) = delete;
+        VulkanFramebuffer& operator=(const VulkanFramebuffer& other) = delete;
 
         void Create(VkRenderPass renderpass, VulkanImage swapchainImage);
         void Destroy();
@@ -19,16 +19,17 @@ namespace mist {
         virtual void Resize(uint32_t width, uint32_t height) override;
 
         virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const override;
-        virtual const FrameBufferProperties& GetProperties() const override { return properties; };
+        virtual const FramebufferProperties& GetProperties() const override { return properties; };
 
         inline const std::vector<VulkanImage> GetImages() const { return attachmentImages; }
+        inline const VkFramebuffer GetFramebuffer() const { return framebuffer; }
     private:
-        VkFramebuffer frameBuffer = VK_NULL_HANDLE;
+        VkFramebuffer framebuffer = VK_NULL_HANDLE;
         std::vector<VulkanImage> attachmentImages;
 
-        FrameBufferProperties properties;
-        std::vector<FrameBufferTextureProperties> colorAttachmentProperties;
-        std::vector<FrameBufferTextureProperties> depthAttachmentProperties;
+        FramebufferProperties properties;
+        std::vector<FramebufferTextureProperties> colorAttachmentProperties;
+        std::vector<FramebufferTextureProperties> depthAttachmentProperties;
         std::vector<uint32_t> colorAttachments;
         std::vector<uint32_t> depthAttachment;
     };

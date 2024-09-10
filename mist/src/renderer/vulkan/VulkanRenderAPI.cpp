@@ -6,6 +6,8 @@ namespace mist {
 	void VulkanRenderAPI::Initialize() {
 		VulkanContext& context = VulkanContext::GetContext();
 
+		glm::vec4 initialClearColor = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // RGBA: Pink
+		SetClearColor(initialClearColor);
 		context.CreateInstance();
 		context.CreateSurface();
 		context.CreatePhysicalDevice();
@@ -29,10 +31,14 @@ namespace mist {
 	}
 
 	void VulkanRenderAPI::SetClearColor(glm::vec4& color) {
-
+		clearColor = color;
 	}
 
 	void VulkanRenderAPI::Clear() {
+		// Does nothing since handles by renderpasses
+	}
 
+	void VulkanRenderAPI::Draw() {
+		
 	}
 }

@@ -1,10 +1,10 @@
-#include "renderer/FrameBuffer.hpp"
+#include "renderer/Framebuffer.hpp"
 #include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "Debug.hpp"
 
 namespace mist {
-    Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferProperties& properties, const uint32_t swapchainInstance) {
+    Ref<Framebuffer> Framebuffer::Create(const FramebufferProperties& properties, const uint32_t swapchainInstance) {
         switch (RenderCommand::GetAPIType()) {
         case RenderAPI::API::Vulkan:
         {

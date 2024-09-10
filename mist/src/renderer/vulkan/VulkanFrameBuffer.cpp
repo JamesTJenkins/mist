@@ -1,15 +1,15 @@
-#include "VulkanFrameBuffer.hpp"
+#include "VulkanFramebuffer.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "renderer/vulkan/VulkanHelper.hpp"
 #include "Debug.hpp"
 
 namespace mist {
-	VulkanFrameBuffer::VulkanFrameBuffer() {
+	VulkanFramebuffer::VulkanFramebuffer() {
 
 	}
 
-	VulkanFrameBuffer::VulkanFrameBuffer(const FrameBufferProperties& properties, VkRenderPass renderpass, VulkanImage swapchainImage) : properties(properties) {
+	VulkanFramebuffer::VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, VulkanImage swapchainImage) : properties(properties) {
 		if (properties.width == 0 || properties.height == 0) {
 			MIST_WARN("Tried to size framebuffer to {0} {1}", properties.width, properties.height);
 			return;
@@ -18,18 +18,18 @@ namespace mist {
 		Create(renderpass, swapchainImage);
 	}
 
-	VulkanFrameBuffer::~VulkanFrameBuffer() {
+	VulkanFramebuffer::~VulkanFramebuffer() {
 		Destroy();
 	}
 
-	void VulkanFrameBuffer::Create(VkRenderPass renderpass, VulkanImage swapchainImage) {
+	void VulkanFramebuffer::Create(VkRenderPass renderpass, VulkanImage swapchainImage) {
 		VulkanContext& context = VulkanContext::GetContext();
 
 		attachmentImages.resize(properties.attachment.attachments.size());
 
 		bool overridedColorBit = false;
 		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
-			FrameBufferTextureProperties format = properties.attachment.attachments[i];
+			FramebufferTextureProperties format = properties.attachment.attachments[i];
 			bool isDepthFormat = VulkanHelper::IsDepthFormat(format.textureFormat);
 			
 			if (isDepthFormat) {
@@ -78,22 +78,22 @@ namespace mist {
 		info.height = properties.height;
 		info.layers = 1;
 
-		CheckVkResult(vkCreateFramebuffer(context.GetDevice(), &info, context.GetAllocationCallbacks(), &frameBuffer));
+		CheckVkResult(vkCreateFramebuffer(context.GetDevice(), &info, context.GetAllocationCallbacks(), &framebuffer));
 	}
 
-	void VulkanFrameBuffer::Destroy() {
-		if (frameBuffer == VK_NULL_HANDLE) {
+	void VulkanFramebuffer::Destroy() {
+		if (framebuffer == VK_NULL_HANDLE) {
 			attachmentImages.clear();
 			VulkanContext& context = VulkanContext::GetContext();
-			vkDestroyFramebuffer(context.GetDevice(), frameBuffer, context.GetAllocationCallbacks());
+			vkDestroyFramebuffer(context.GetDevice(), framebuffer, context.GetAllocationCallbacks());
 		}
 	}
 
-	void VulkanFrameBuffer::Resize(uint32_t width, uint32_t height) {
+	void VulkanFramebuffer::Resize(uint32_t width, uint32_t height) {
 		// TODO: might not be needed as this could just handled via swapchain resize
 	}
 
-	uint32_t VulkanFrameBuffer::GetColorAttachmentRenderID(uint32_t index) const {
+	uint32_t VulkanFramebuffer::GetColorAttachmentRenderID(uint32_t index) const {
 		MIST_ASSERT("Out of bounds", index < colorAttachments.size());
 		return colorAttachments[index];
 	}

@@ -3,7 +3,7 @@
 #include <vector>
 
 namespace mist {
-    enum class FrameBufferTextureFormat {
+    enum class FramebufferTextureFormat {
         None = 0,
         // Color formats
         RGBA8,
@@ -63,33 +63,33 @@ namespace mist {
         STENCIL8
     };
 
-    struct MIST_API FrameBufferTextureProperties {
-        FrameBufferTextureProperties() = default;
-        FrameBufferTextureProperties(FrameBufferTextureFormat format) : textureFormat(format) {}
+    struct MIST_API FramebufferTextureProperties {
+        FramebufferTextureProperties() = default;
+        FramebufferTextureProperties(FramebufferTextureFormat format) : textureFormat(format) {}
 
-        FrameBufferTextureFormat textureFormat = FrameBufferTextureFormat::None;
+        FramebufferTextureFormat textureFormat = FramebufferTextureFormat::None;
     };
 
-    struct MIST_API FrameBufferAttachmentProperties {
-		FrameBufferAttachmentProperties() = default;
-		FrameBufferAttachmentProperties(std::initializer_list<FrameBufferTextureProperties> attachments) : attachments(attachments) {}
+    struct MIST_API FramebufferAttachmentProperties {
+		FramebufferAttachmentProperties() = default;
+		FramebufferAttachmentProperties(std::initializer_list<FramebufferTextureProperties> attachments) : attachments(attachments) {}
 
-		std::vector<FrameBufferTextureProperties> attachments;
+		std::vector<FramebufferTextureProperties> attachments;
 	};
 
-    struct MIST_API FrameBufferProperties {
+    struct MIST_API FramebufferProperties {
         uint32_t width = 1, height = 1;
-        FrameBufferAttachmentProperties attachment;
+        FramebufferAttachmentProperties attachment;
         uint32_t samples = 1;
     };
 
-    class MIST_API FrameBuffer {
+    class MIST_API Framebuffer {
     public:
         virtual void Resize(uint32_t width, uint32_t height) = 0;
 
         virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const = 0;
-        virtual const FrameBufferProperties& GetProperties() const = 0;
+        virtual const FramebufferProperties& GetProperties() const = 0;
 
-        static Ref<FrameBuffer> Create(const FrameBufferProperties& properties, const uint32_t swapchainInstance = 0);
+        static Ref<Framebuffer> Create(const FramebufferProperties& properties, const uint32_t swapchainInstance = 0);
     };
 }

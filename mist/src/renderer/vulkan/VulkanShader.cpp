@@ -104,10 +104,10 @@ namespace mist {
 	}
 
 	static EShLanguage ShaderTypeFromString(const std::string& type) {
-		// TODO: add all types
 		if (type == "vertex" || type == "vert") return EShLangVertex;
 		if (type == "fragment" || type == "frag" || type == "pixel") return EShLangFragment;
-		if (type == "comp" || type == "compute") return EShLangCompute;
+		if (type == "compute" || type == "comp") return EShLangCompute;
+		if (type == "geometry" || type == "geo") return EShLangGeometry;
 
 		MIST_ASSERT(false, "Unknown shader type, defaulting to vertex");
 		return EShLangVertex;
