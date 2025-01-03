@@ -155,6 +155,6 @@ namespace mist {
 	}
 
 	void VulkanContext::CreateSwapchainInstance(const FramebufferProperties& properties) {
-		swapchainInstances.push_back(CreateRef<VulkanSwapchainInstance>(GetSwapchainInstanceCount(), properties));
+		swapchainInstances.push_back(CreateRef<VulkanSwapchainInstance>((const uint32_t)GetSwapchainInstanceCount(), properties));
 	}
 }
