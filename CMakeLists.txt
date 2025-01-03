@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.31.3)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -26,7 +26,7 @@ elseif(MSVC)
     add_compile_options(
         "$<$<CONFIG:DEBUG>:/Od;/GS;/Zi>"
         "$<$<CONFIG:RELEASE>:/O2;/DEBUG:NONE;-DNDEBUG>"
-        "/W4;/wd4505;/wd4100"
+        "/W3;/wd4505;/wd4100"
     )
 endif()
 

@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.31.3)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -24,7 +24,7 @@ elseif(MSVC)
     add_compile_options(
         "$<$<CONFIG:DEBUG>:/Od;/GS;/Zi>"
         "$<$<CONFIG:RELEASE>:/O2;/DEBUG:NONE;-DNDEBUG>"
-        "/W4;/wd4505;/wd4100"
+        "/W3;/wd4505;/wd4100"
     )
 endif()
 
@@ -52,6 +52,13 @@ target_link_libraries(mist
 	PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 	PUBLIC imgui::imgui
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
+)
+
+# Stop warnings from spirv-cross
+target_compile_options(spirv-cross PRIVATE
+    $<$<CXX_COMPILER_ID:GNU>:-w>
+    $<$<CXX_COMPILER_ID:Clang>:-w>
+    $<$<CXX_COMPILER_ID:MSVC>:/W0>
 )
 
 target_compile_definitions(${PROJECT_NAME} 
