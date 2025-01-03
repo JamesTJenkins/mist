@@ -8,13 +8,9 @@
 namespace mist {
 	VkCommandBuffer buffer = VK_NULL_HANDLE;
 
-    ImguiLayer::ImguiLayer(const std::string& name) : Layer(name) {
+    ImguiLayer::ImguiLayer(const char* name) : Layer(name) {}
 
-    }
-
-    ImguiLayer::~ImguiLayer() {
-
-    }
+    ImguiLayer::~ImguiLayer() {}
 
     void ImguiLayer::OnAttach() {
 		IMGUI_CHECKVERSION();
