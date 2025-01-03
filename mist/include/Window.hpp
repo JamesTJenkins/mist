@@ -7,10 +7,10 @@
 
 namespace mist {
 	struct MIST_API WindowProperties {
-		std::string title;
+		const char* title;
 		uint32_t width, height;
 
-		WindowProperties(const std::string &title = "Untitled Window", uint32_t width = 1280, uint32_t height = 720) : title(title), width(width), height(height) {}
+		WindowProperties(const char* _title = "Untitled Window", uint32_t width = 1280, uint32_t height = 720) : title(_title), width(width), height(height) {}
 	};
 
 	class MIST_API Window {

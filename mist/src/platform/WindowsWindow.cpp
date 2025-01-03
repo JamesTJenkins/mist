@@ -17,7 +17,7 @@ namespace mist {
         }
 
         window = SDL_CreateWindow(
-            properties.title.c_str(),
+            properties.title,
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
             properties.width,
