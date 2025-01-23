@@ -9,6 +9,7 @@ namespace mist {
         uint32_t binding;
         uint32_t count;
         VkShaderStageFlags flags;
+        VkShaderModule shaderModule;
     };
 
     class VulkanShader : public Shader {
