@@ -5,11 +5,14 @@
 #include <stdexcept>
 #include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanRenderAPI.hpp"
+#include "Log.hpp"
 
 namespace mist {
 	Application* Application::instance = nullptr;
 
 	Application::Application(const char* name) {
+		Log::Init();
+
 		if (instance != nullptr)
 			throw std::runtime_error("Created 2 application instances");
 
