@@ -24,7 +24,7 @@ if(CLANG)
     )
 elseif(MSVC)
     add_compile_options(
-        "$<$<CONFIG:DEBUG>:/Od;/GS;/Zi>"
+        "$<$<CONFIG:DEBUG>:/Od;/GS;/ZI>"
         "$<$<CONFIG:RELEASE>:/O2;/DEBUG:NONE;-DNDEBUG>"
         "/W3;/wd4505;/wd4100"
     )
