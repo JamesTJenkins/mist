@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include "Debug.hpp"
+#include "renderer/vulkan/VulkanShader.hpp"
 
 // TODO: Create shader implementation and use SPIRV for reflection which will generate the descriptor set and layout
 // gonna need to implement a way to track which shader to which descriptor layout and which decriptor layout for each sets
@@ -12,7 +13,7 @@ namespace mist {
 		VulkanDescriptor() {}
 		~VulkanDescriptor() {}
 
-		void CreateDescriptorSetLayout();
+		VkDescriptorSetLayout CreateDescriptorSetLayout(const VulkanShader& shader);
 		void CreateDescriptorPool();
 		VkDescriptorSet& CreateDescriptorSet();
 

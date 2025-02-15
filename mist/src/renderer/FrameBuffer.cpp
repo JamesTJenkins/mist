@@ -4,19 +4,19 @@
 #include "Debug.hpp"
 
 namespace mist {
-    Ref<Framebuffer> Framebuffer::Create(const FramebufferProperties& properties, const uint32_t swapchainInstance) {
+    Ref<Framebuffer> Framebuffer::Create(const FramebufferProperties& properties) {
         switch (RenderCommand::GetAPIType()) {
         case RenderAPI::API::Vulkan:
         {
             VulkanContext& context = VulkanContext::GetContext();
-            if (context.GetSwapchainInstanceCount() > swapchainInstance) {
-                context.GetSwapchainInstance(swapchainInstance).get()->CreateSwapchain(properties);
-                return context.GetSwapchainInstance(swapchainInstance).get()->GetFrameBuffer();
+            if (context.GetSwapchain() != nullptr) {
+                context.GetSwapchain()->CreateSwapchain(properties);
+                return context.GetSwapchain()->GetFrameBuffer();
             }
-
-            MIST_ASSERT(context.GetSwapchainInstanceCount() - 1 == swapchainInstance || swapchainInstance == 0, "Instances are an index do 1 more than the current existing swapchains");
-            context.CreateSwapchainInstance(properties);
-            return context.GetSwapchainInstance(swapchainInstance).get()->GetFrameBuffer();
+            
+            MIST_INFO("Creating new swapchain for framebuffer");
+            context.CreateSwapchain(properties);
+            return context.GetSwapchain()->GetFrameBuffer();
         }
         case RenderAPI::API::None:
             MIST_ASSERT(false, "Running headless");

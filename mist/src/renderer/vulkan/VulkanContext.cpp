@@ -154,7 +154,7 @@ namespace mist {
 		vkGetDeviceQueue(device, indicies.presentFamily.value(), 0, &presentQueue);
 	}
 
-	void VulkanContext::CreateSwapchainInstance(const FramebufferProperties& properties) {
-		swapchainInstances.push_back(CreateRef<VulkanSwapchainInstance>((const uint32_t)GetSwapchainInstanceCount(), properties));
+	void VulkanContext::CreateSwapchain(const FramebufferProperties& properties) {
+		swapchain = CreateRef<VulkanSwapchain>(properties);
 	}
 }

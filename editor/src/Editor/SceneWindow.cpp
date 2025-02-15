@@ -24,7 +24,7 @@ namespace mistEditor {
 		focused = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
 		ImVec2 imguiViewportSize = ImGui::GetContentRegionAvail();
 		if (viewportSize != *((glm::vec2*)&imguiViewportSize)) {
-			framebuffer->Resize(imguiViewportSize.x, imguiViewportSize.y);
+			framebuffer->Resize(static_cast<uint32_t>(imguiViewportSize.x), static_cast<uint32_t>(imguiViewportSize.y));
 			viewportSize = { imguiViewportSize.x, imguiViewportSize.y };
 		}
 		ImGui::Image((void*)framebuffer->GetColorAttachmentRenderID(), imguiViewportSize, ImVec2{0, 1}, ImVec2{1, 0});

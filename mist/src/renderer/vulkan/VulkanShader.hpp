@@ -32,6 +32,8 @@ namespace mist {
 		virtual void SetUniformVec2(const std::string& name, const glm::vec2& value) override;
 
 		virtual const std::string& GetName() const override { return name; }
+        
+        const std::unordered_map<std::string, ShaderResource>& GetResources() const { return shaderResources; }
     private:
         std::string ReadFile(const std::string& path);
         std::vector<uint32_t> ConvertGLSLToSPIRV(const std::string& src, EShLanguage stage);

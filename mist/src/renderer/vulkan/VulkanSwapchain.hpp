@@ -12,13 +12,13 @@ namespace mist {
 		std::vector<VkPresentModeKHR> presentMode;
 	};
 
-	class VulkanSwapchainInstance {
+	class VulkanSwapchain {
 	public:
-		VulkanSwapchainInstance(const uint32_t swapchainIndex, const FramebufferProperties& properties);
-		~VulkanSwapchainInstance();
+		VulkanSwapchain(const FramebufferProperties& properties);
+		~VulkanSwapchain();
 
-		VulkanSwapchainInstance(const VulkanSwapchainInstance& other) = delete;
-		VulkanSwapchainInstance& operator=(const VulkanSwapchainInstance& other) = delete;
+		VulkanSwapchain(const VulkanSwapchain& other) = delete;
+		VulkanSwapchain& operator=(const VulkanSwapchain& other) = delete;
 
 		const SwapchainSupportDetails QuerySwapchainSupport() const;
 
@@ -34,7 +34,6 @@ namespace mist {
 		inline const uint32_t GetSwapchainMinImageCount() const { return swapchainMinImageCount; }
 		inline const uint32_t GetSwapchainImageCount() const { return swapchainImageCount; }
 	private:
-		uint32_t swapchainIndex;
 		uint32_t swapchainMinImageCount;
 		uint32_t swapchainImageCount;
 		uint8_t activeFramebuffer = 0;	// Currently rendered image

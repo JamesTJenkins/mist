@@ -17,6 +17,10 @@ namespace mist {
 	void VulkanRenderAPI::Shutdown() {
 		VulkanContext& context = VulkanContext::GetContext();
 
+		context.descriptors.Cleanup();
+		context.descriptors.ClearPool();
+		context.pipeline.Cleanup();
+
 		vkDestroyDevice(context.GetDevice(), context.GetAllocationCallbacks());
 		vkDestroySurfaceKHR(context.GetInstance(), context.GetSurface(), context.GetAllocationCallbacks());
 #ifdef DEBUG

@@ -48,9 +48,9 @@ namespace mist {
 		context.descriptors.CreateDescriptorPool();
 		info.DescriptorPool = context.descriptors.GetDescriptorPool(0);
 		info.Subpass = 0;
-		info.MinImageCount = context.GetSwapchainInstance(0)->GetSwapchainMinImageCount();
-		info.ImageCount = context.GetSwapchainInstance(0)->GetSwapchainImageCount();
-		info.RenderPass = context.GetSwapchainInstance(0)->GetRenderPass();
+		info.MinImageCount = context.GetSwapchain()->GetSwapchainMinImageCount();
+		info.ImageCount = context.GetSwapchain()->GetSwapchainImageCount();
+		info.RenderPass = context.GetSwapchain()->GetRenderPass();
 		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		info.Allocator = context.GetAllocationCallbacks();
 		info.CheckVkResultFn = CheckVkResult;

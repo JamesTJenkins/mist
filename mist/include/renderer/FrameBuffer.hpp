@@ -74,7 +74,7 @@ namespace mist {
 		FramebufferAttachmentProperties() = default;
 		FramebufferAttachmentProperties(std::initializer_list<FramebufferTextureProperties> attachments) : attachments(attachments) {}
 
-		std::vector<FramebufferTextureProperties> attachments;
+		std::vector<FramebufferTextureProperties> attachments;  // This will need sorting at somepoint either via using raw points or wrappers idk
 	};
 
     struct MIST_API FramebufferProperties {
@@ -90,6 +90,6 @@ namespace mist {
         virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const = 0;
         virtual const FramebufferProperties& GetProperties() const = 0;
 
-        static Ref<Framebuffer> Create(const FramebufferProperties& properties, const uint32_t swapchainInstance = 0);
+        static Ref<Framebuffer> Create(const FramebufferProperties& properties);
     };
 }

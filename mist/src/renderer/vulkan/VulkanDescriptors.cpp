@@ -33,33 +33,50 @@ namespace mist {
 		pools.push_back(pool);
 	}
 
-	void VulkanDescriptor::CreateDescriptorSetLayout() {
-		VkDescriptorSetLayoutBinding uboLayout {};
-        uboLayout.binding = 0;
-        uboLayout.descriptorCount = 1;
-        uboLayout.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayout.pImmutableSamplers = nullptr;
-        uboLayout.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const VulkanShader& shader) {
+		std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 
-        VkDescriptorSetLayoutBinding samplerLayout {};
-        samplerLayout.binding = 1;
-        samplerLayout.descriptorCount = 1;
-        samplerLayout.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayout.pImmutableSamplers = nullptr;
-        samplerLayout.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		for (const auto& res : shader.GetResources()) {
+			if (res.second.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
+				VkDescriptorSetLayoutBinding uboLayout {};
+        		uboLayout.binding = res.second.binding;
+        		uboLayout.descriptorCount = res.second.count;
+        		uboLayout.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        		uboLayout.pImmutableSamplers = nullptr;
+        		uboLayout.stageFlags = res.second.flags;
+				layoutBindings.push_back(uboLayout);
+			}
+			
+			if (res.second.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+				VkDescriptorSetLayoutBinding samplerLayout {};
+				samplerLayout.binding = res.second.binding;
+				samplerLayout.descriptorCount = res.second.count;
+				samplerLayout.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				samplerLayout.pImmutableSamplers = nullptr;
+				samplerLayout.stageFlags = res.second.flags;
+				layoutBindings.push_back(samplerLayout);
+			}
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayout, samplerLayout };
+			VkDescriptorSetLayoutBinding layoutBinding{};
+			layoutBinding.binding = res.second.binding;
+			layoutBinding.descriptorType = res.second.type;
+			layoutBinding.descriptorCount = res.second.count;
+			layoutBinding.stageFlags = res.second.flags;
+			layoutBindings.push_back(layoutBinding);
+		}
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo {};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
+		layoutInfo.pBindings = layoutBindings.data();
 		
 		VulkanContext& context = VulkanContext::GetContext();
 		VkDescriptorSetLayout layout;
         CheckVkResult(vkCreateDescriptorSetLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &layout));
 
 		descriptorSetLayouts.push_back(layout);
+
+		return layout;
 	}
 
 	VkDescriptorSet& VulkanDescriptor::CreateDescriptorSet() {

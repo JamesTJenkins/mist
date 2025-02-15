@@ -1,4 +1,4 @@
-#include "VulkanSwapchainInstance.hpp"
+#include "VulkanSwapchain.hpp"
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "renderer/vulkan/VulkanHelper.hpp"
@@ -52,17 +52,17 @@ namespace mist {
 		return attachment;
 	}
 
-	VulkanSwapchainInstance::VulkanSwapchainInstance(const uint32_t swapchainIndex, const FramebufferProperties& properties) : swapchainIndex(swapchainIndex) {
+	VulkanSwapchain::VulkanSwapchain(const FramebufferProperties& properties) {
 		CreateSwapchain(properties);
 	}
 
-	VulkanSwapchainInstance::~VulkanSwapchainInstance() {
+	VulkanSwapchain::~VulkanSwapchain() {
 		VulkanContext& context = VulkanContext::GetContext();
 		vkDestroyRenderPass(context.GetDevice(), renderpass, context.GetAllocationCallbacks());
 		vkDestroySwapchainKHR(context.GetDevice(), swapchain, context.GetAllocationCallbacks());
 	}
 	
-	const SwapchainSupportDetails VulkanSwapchainInstance::QuerySwapchainSupport() const {
+	const SwapchainSupportDetails VulkanSwapchain::QuerySwapchainSupport() const {
 		VulkanContext& context = VulkanContext::GetContext();
 
 		SwapchainSupportDetails details;
@@ -85,7 +85,7 @@ namespace mist {
 		return details;
 	}
 
-	void VulkanSwapchainInstance::CreateSwapchain(const FramebufferProperties& properties) {
+	void VulkanSwapchain::CreateSwapchain(const FramebufferProperties& properties) {
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
 
 		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats);
@@ -175,7 +175,7 @@ namespace mist {
 		}
 	}
 
-	void VulkanSwapchainInstance::CreateRenderPass(const FramebufferProperties& properties) {
+	void VulkanSwapchain::CreateRenderPass(const FramebufferProperties& properties) {
 		std::vector<VkAttachmentDescription> attachments;
 		std::vector<VkAttachmentReference> colorAttachmentRefs;
 		std::vector<VkAttachmentReference> depthAttachmentRefs;
@@ -186,7 +186,7 @@ namespace mist {
 
 			bool depth = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
 			VkAttachmentReference ref {};
-			ref.attachment = i;
+			ref.attachment = static_cast<uint32_t>(i);
 			ref.layout = depth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 			if (depth) {
@@ -194,27 +194,27 @@ namespace mist {
 			} else {
 				colorAttachmentRefs.push_back(ref);
 			}
-
-			// TODO: may need to add support for multiple subpasses at some point but 1 is good enough for now
-			VkSubpassDescription subpassInfo {};
-			subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-			subpassInfo.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
-			subpassInfo.pColorAttachments = colorAttachmentRefs.data();
-			subpassInfo.pDepthStencilAttachment = depthAttachmentRefs.empty() ? nullptr : depthAttachmentRefs.data();
-
-			VkRenderPassCreateInfo renderpassInfo {};
-			renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-			renderpassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			renderpassInfo.pAttachments = attachments.data();
-			renderpassInfo.subpassCount = 1;
-			renderpassInfo.pSubpasses = &subpassInfo;
-
-			VulkanContext& context = VulkanContext::GetContext();
-			CheckVkResult(vkCreateRenderPass(context.GetDevice(), &renderpassInfo, context.GetAllocationCallbacks(), &renderpass));
 		}
+
+		// TODO: may need to add support for multiple subpasses at some point but 1 is good enough for now
+		VkSubpassDescription subpassInfo {};
+		subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassInfo.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+		subpassInfo.pColorAttachments = colorAttachmentRefs.data();
+		subpassInfo.pDepthStencilAttachment = depthAttachmentRefs.empty() ? nullptr : depthAttachmentRefs.data();
+
+		VkRenderPassCreateInfo renderpassInfo {};
+		renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderpassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		renderpassInfo.pAttachments = attachments.data();
+		renderpassInfo.subpassCount = 1;
+		renderpassInfo.pSubpasses = &subpassInfo;
+
+		VulkanContext& context = VulkanContext::GetContext();
+		CheckVkResult(vkCreateRenderPass(context.GetDevice(), &renderpassInfo, context.GetAllocationCallbacks(), &renderpass));
 	}
 
-	void VulkanSwapchainInstance::BeginRenderPass(VkCommandBuffer commandBuffer) {
+	void VulkanSwapchain::BeginRenderPass(VkCommandBuffer commandBuffer) {
 		VkRenderPassBeginInfo renderPassInfo = {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = renderpass;
@@ -230,7 +230,7 @@ namespace mist {
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	}
 
-	void VulkanSwapchainInstance::EndRenderPass(VkCommandBuffer commandBuffer) {
+	void VulkanSwapchain::EndRenderPass(VkCommandBuffer commandBuffer) {
 		vkCmdEndRenderPass(commandBuffer);
 	}
 }
