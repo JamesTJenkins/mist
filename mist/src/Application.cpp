@@ -54,19 +54,19 @@ namespace mist {
 					layer->OnEvent(&event);
 				}
 			}
+			
+			for (Layer* layer : layerStack) {
+				layer->OnUpdate();
+			}
+			
+			imguiLayer->Begin();
+			for (Layer* layer : layerStack) {
+				layer->OnRender();
+			}
+			imguiLayer->End();
+			
+			window->OnUpdate();
 		}
-
-		for (Layer* layer : layerStack) {
-			layer->OnUpdate();
-		}
-
-		imguiLayer->Begin();
-		for (Layer* layer : layerStack) {
-            layer->OnRender();
-        }
-		imguiLayer->End();
-
-		window->OnUpdate();
 	}
 
 	void Application::Quit() {
