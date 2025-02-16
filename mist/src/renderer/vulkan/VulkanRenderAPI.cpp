@@ -12,6 +12,7 @@ namespace mist {
 		context.CreateSurface();
 		context.CreatePhysicalDevice();
 		context.CreateDevice();
+		context.commands.CreateCommandPool(); // TODO: May need to do something more at some point but single pool will do for now
 	}
 
 	void VulkanRenderAPI::Shutdown() {
