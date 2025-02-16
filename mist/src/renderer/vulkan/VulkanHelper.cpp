@@ -65,7 +65,7 @@ namespace mist {
 		}, originalFormat, tiling, formatFlags);
 	}
 
-	bool VulkanHelper::IsColorFormatSupported(const VkFormat format) {
+	bool VulkanHelper::IsColorFormatSupported(const VkFormat& format) {
 	    VkFormatProperties props;
 		VulkanContext& context = VulkanContext::GetContext();
 	    vkGetPhysicalDeviceFormatProperties(context.GetPhysicalDevice(), format, &props);
@@ -73,7 +73,7 @@ namespace mist {
 	    return (props.optimalTilingFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) != 0;
 	}
 
-	bool VulkanHelper::IsDepthStencilFormatSupported(const VkFormat format) {
+	bool VulkanHelper::IsDepthStencilFormatSupported(const VkFormat& format) {
 		VkFormatProperties props;
 		VulkanContext& context = VulkanContext::GetContext();
 	    vkGetPhysicalDeviceFormatProperties(context.GetPhysicalDevice(), format, &props);
@@ -81,7 +81,7 @@ namespace mist {
 	    return (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0;
 	}
 
-	bool VulkanHelper::IsDepthStencilFormat(const VkFormat format) {
+	bool VulkanHelper::IsDepthStencilFormat(const VkFormat& format) {
 		switch (format) {
 		case VK_FORMAT_D16_UNORM_S8_UINT:
 		case VK_FORMAT_D24_UNORM_S8_UINT:
@@ -92,7 +92,7 @@ namespace mist {
 		}
 	}
 
-	bool VulkanHelper::IsDepthStencilFormat(const FramebufferTextureFormat format) {
+	bool VulkanHelper::IsDepthStencilFormat(const FramebufferTextureFormat& format) {
 		switch (format) {
 			case FramebufferTextureFormat::DEPTH16_STENCIL8:
 			case FramebufferTextureFormat::DEPTH24_STENCIL8:
@@ -103,7 +103,7 @@ namespace mist {
 		}
 	};
 	
-	bool VulkanHelper::IsDepthFormat(const VkFormat format) {
+	bool VulkanHelper::IsDepthFormat(const VkFormat& format) {
 		switch (format) {
 		case VK_FORMAT_D16_UNORM:
 		case VK_FORMAT_X8_D24_UNORM_PACK32:
@@ -117,7 +117,7 @@ namespace mist {
 		}
 	}
 
-	bool VulkanHelper::IsDepthFormat(const FramebufferTextureFormat format) {
+	bool VulkanHelper::IsDepthFormat(const FramebufferTextureFormat& format) {
 		switch (format) {
 			case FramebufferTextureFormat::DEPTH16:
 			case FramebufferTextureFormat::DEPTH24X8:
@@ -131,7 +131,7 @@ namespace mist {
 		}
 	};
 
-	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionFinalLayout(const FramebufferTextureFormat& format) {
+	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionLayout(const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
 			//return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -140,7 +140,7 @@ namespace mist {
 		return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	}
 
-	VkFormat VulkanHelper::GetVkFormat(const FramebufferTextureFormat format) {
+	VkFormat VulkanHelper::GetVkFormat(const FramebufferTextureFormat& format) {
 		switch (format) {
 		// Color formats
 		case FramebufferTextureFormat::RGBA8:				return VK_FORMAT_R8G8B8A8_UNORM;
@@ -202,7 +202,7 @@ namespace mist {
 		}
 	}
 
-	FramebufferTextureFormat VulkanHelper::GetFramebufferTextureFormat(const VkFormat format) {
+	FramebufferTextureFormat VulkanHelper::GetFramebufferTextureFormat(const VkFormat& format) {
 		switch (format) {
 		// Color formats
 		case VK_FORMAT_R8G8B8A8_UNORM:					return FramebufferTextureFormat::RGBA8;
