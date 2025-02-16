@@ -38,10 +38,6 @@ namespace mist {
     void VulkanImage::CreateImage(const VulkanImageProperties& properties) {
         imageProperties = properties;
 
-        imageProperties.format = VulkanHelper::IsDepthFormat(imageProperties.format) ? 
-            VulkanHelper::FindSupportedDepthFormat(imageProperties.format, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) : 
-            properties.format;    // There is so fucking many color formats that ima just make you use the correct one
-
         VkImageCreateInfo info {};
         info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         info.imageType = VK_IMAGE_TYPE_2D;
