@@ -4,9 +4,11 @@
 #include "renderer/vulkan/VulkanHelper.hpp"
 #include "glm/glm.hpp"
 #include "Application.hpp"
+#include "renderer/FrameBuffer.hpp"
 
 namespace mist {
-	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+	// TODO: This function does not account for requested color space as currently just tries to get the requested format with VK_COLOR_SPACE_SRGB_NONLINEAR_KHR as the color space
+	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats, const VkFormat requestedFormat) {
 		std::vector<VkSurfaceFormatKHR> preferredFormats = {
 			{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
 			{VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
@@ -14,16 +16,24 @@ namespace mist {
 			{VK_FORMAT_R8G8B8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR}
 		};
 
+		VkSurfaceFormatKHR chosen{};
 		for (const VkSurfaceFormatKHR& preferredFormat : preferredFormats) {
 			for (const VkSurfaceFormatKHR& availableFormat : availableFormats) {
-				if (availableFormat.format == preferredFormat.format &&
-					availableFormat.colorSpace == preferredFormat.colorSpace) {
-					return availableFormat;
+				if (availableFormat.format == preferredFormat.format && availableFormat.colorSpace == preferredFormat.colorSpace) {
+					chosen = availableFormat;
+					if (chosen.format == requestedFormat) {
+						return chosen;
+					}
 				}
 			}
 		}
-	
-		// If none in preferred just return the first available
+
+		if (chosen.format != VK_FORMAT_UNDEFINED) {
+			MIST_WARN(std::string("Cant use requested format, new format selected: ") + FramebufferTextureFormatToString(VulkanHelper::GetFramebufferTextureFormat(chosen.format)));
+			return chosen;
+		}
+
+		MIST_WARN(std::string("Cant use any preferred formats, new format selected: ") + FramebufferTextureFormatToString(VulkanHelper::GetFramebufferTextureFormat(availableFormats[0].format)));
 		return availableFormats[0];
 	}
 
@@ -49,7 +59,7 @@ namespace mist {
 		return size;
 	}
 
-	VkAttachmentDescription CreateAttachmentDescription(FramebufferTextureProperties textureProperties) {
+	VkAttachmentDescription CreateAttachmentDescription(const FramebufferTextureProperties& textureProperties) {
 		VkAttachmentDescription attachment {};
 		attachment.format = VulkanHelper::GetVkFormat(textureProperties.textureFormat);
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT; // TODO: Add sample count to the texture properties then add here
@@ -58,14 +68,12 @@ namespace mist {
 		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachment.finalLayout = VulkanHelper::GetVkAttachmentDescriptionFinalLayout(textureProperties.textureFormat);
+		attachment.finalLayout = VulkanHelper::GetVkAttachmentDescriptionLayout(textureProperties.textureFormat);
 
 		return attachment;
 	}
 
-	VulkanSwapchain::VulkanSwapchain(const FramebufferProperties& properties) {
-		CreateSwapchain(properties);
-	}
+	VulkanSwapchain::VulkanSwapchain() {}
 
 	VulkanSwapchain::~VulkanSwapchain() {
 		VulkanContext& context = VulkanContext::GetContext();
@@ -96,10 +104,15 @@ namespace mist {
 		return details;
 	}
 
-	void VulkanSwapchain::CreateSwapchain(const FramebufferProperties& properties) {
+	void VulkanSwapchain::CreateSwapchain(FramebufferProperties& properties) {
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
 
-		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats);
+		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats, VulkanHelper::GetVkFormat(properties.attachment.attachments[0].textureFormat));
+		// Update properties [0] color format with swapchains newly selected one incase an issue arose
+		if (VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format) != properties.attachment.attachments[0].textureFormat) {
+			properties.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format);
+		}
+
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchainSupport.presentMode);
 		VkExtent2D extent = ChooseSwapExtent(swapchainSupport.capabilities, Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight());
 
@@ -147,7 +160,7 @@ namespace mist {
 		swapchainExtent = extent;
 
 		// Update properties to account for the swapchain image format being possibly converted
-		///FramebufferProperties newProps = properties;
+		//FramebufferProperties newProps = properties;
 		//newProps.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(swapchainImageFormat);
 		CreateRenderPass(properties);
 
@@ -198,7 +211,7 @@ namespace mist {
 			bool depth = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
 			VkAttachmentReference ref {};
 			ref.attachment = static_cast<uint32_t>(i);
-			ref.layout = depth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachment.attachments[i].textureFormat);
 
 			if (depth) {
 				depthAttachmentRefs.push_back(ref);
@@ -207,10 +220,12 @@ namespace mist {
 			}
 		}
 
+		subpassColorAttachmentRefsCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+
 		// TODO: may need to add support for multiple subpasses at some point but 1 is good enough for now
 		VkSubpassDescription subpassInfo {};
 		subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassInfo.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+		subpassInfo.colorAttachmentCount = subpassColorAttachmentRefsCount;
 		subpassInfo.pColorAttachments = colorAttachmentRefs.data();
 		subpassInfo.pDepthStencilAttachment = depthAttachmentRefs.empty() ? nullptr : depthAttachmentRefs.data();
 
