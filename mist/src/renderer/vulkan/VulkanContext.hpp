@@ -26,7 +26,7 @@ namespace mist {
         void CreateSurface();
         void CreatePhysicalDevice();
         void CreateDevice();
-		void CreateSwapchain(const FramebufferProperties& properties);
+		void CreateSwapchain(FramebufferProperties& properties);
 
 		const QueueFamilyIndices FindQueueFamilies() const;
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags flags);

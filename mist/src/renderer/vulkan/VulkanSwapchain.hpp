@@ -14,7 +14,7 @@ namespace mist {
 
 	class VulkanSwapchain {
 	public:
-		VulkanSwapchain(const FramebufferProperties& properties);
+		VulkanSwapchain();
 		~VulkanSwapchain();
 
 		VulkanSwapchain(const VulkanSwapchain& other) = delete;
@@ -22,7 +22,7 @@ namespace mist {
 
 		const SwapchainSupportDetails QuerySwapchainSupport() const;
 
-		void CreateSwapchain(const FramebufferProperties& properties);
+		void CreateSwapchain(FramebufferProperties& properties);
 		void CreateRenderPass(const FramebufferProperties& properties);
 		void BeginRenderPass(VkCommandBuffer commandBuffer);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
@@ -33,6 +33,7 @@ namespace mist {
 		inline const VkRenderPass GetRenderPass() const { return renderpass; }
 		inline const uint32_t GetSwapchainMinImageCount() const { return swapchainMinImageCount; }
 		inline const uint32_t GetSwapchainImageCount() const { return swapchainImageCount; }
+		inline const uint32_t GetSubpassColorAttachmentRefCount() const { return subpassColorAttachmentRefsCount; }
 	private:
 		uint32_t swapchainMinImageCount;
 		uint32_t swapchainImageCount;
@@ -42,5 +43,6 @@ namespace mist {
 		VkFormat swapchainImageFormat;
 		VkExtent2D swapchainExtent;
 		VkRenderPass renderpass = VK_NULL_HANDLE;
+		uint32_t subpassColorAttachmentRefsCount;
 	};
 }
