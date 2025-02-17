@@ -82,9 +82,6 @@ namespace mist {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
-		VulkanContext& context = VulkanContext::GetContext();
-		buffer = context.commands.AllocateCommandBuffers(1)[0];
-		context.commands.BeginCommandBuffer(buffer);
     }
 
     void ImguiLayer::End() {
@@ -98,7 +95,11 @@ namespace mist {
 		if (width == 0 || height == 0)
 			return;
 
+		VulkanContext& context = VulkanContext::GetContext();
+		buffer = context.commands.AllocateCommandBuffers(1)[0];
+		context.commands.BeginCommandBuffer(buffer);
 		ImGui::Render();
+		context.GetSwapchain()->BeginImGuiRenderPass(buffer);
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), buffer);
 
 		// Update and Render additional Platform Windows
@@ -106,6 +107,9 @@ namespace mist {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}
+
+		context.GetSwapchain()->EndRenderPass(buffer);
+		context.commands.EndCommandBuffer(buffer);
     }
 
     void ImguiLayer::SetDarkThemeColors() {

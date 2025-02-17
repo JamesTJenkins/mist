@@ -104,13 +104,77 @@ namespace mist {
 		return details;
 	}
 
+	VkRenderPass CreateNewRenderpass(const FramebufferProperties& properties, uint32_t& colorAttachmentCount) {
+		std::vector<VkAttachmentDescription> attachments;
+		std::vector<VkAttachmentReference> colorAttachmentRefs;
+		std::vector<VkAttachmentReference> depthAttachmentRefs;
+
+		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
+			VkAttachmentDescription attachment = CreateAttachmentDescription(properties.attachment.attachments[i]);
+			attachments.push_back(attachment);
+
+			bool depth = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
+			VkAttachmentReference ref {};
+			ref.attachment = static_cast<uint32_t>(i);
+			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachment.attachments[i].textureFormat);
+
+			if (depth) {
+				depthAttachmentRefs.push_back(ref);
+			} else {
+				colorAttachmentRefs.push_back(ref);
+			}
+		}
+
+		colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+
+		// TODO: may need to add support for multiple subpasses at some point but 1 is good enough for now
+		VkSubpassDescription subpassInfo {};
+		subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassInfo.colorAttachmentCount = colorAttachmentCount;
+		subpassInfo.pColorAttachments = colorAttachmentRefs.data();
+		subpassInfo.pDepthStencilAttachment = depthAttachmentRefs.empty() ? nullptr : depthAttachmentRefs.data();
+
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dependencyFlags = 0;
+
+		VkRenderPassCreateInfo renderpassInfo {};
+		renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderpassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		renderpassInfo.pAttachments = attachments.data();
+		renderpassInfo.subpassCount = 1;
+		renderpassInfo.pSubpasses = &subpassInfo;
+		renderpassInfo.dependencyCount = 1;
+		renderpassInfo.pDependencies = &dependency;
+
+		VulkanContext& context = VulkanContext::GetContext();
+		VkRenderPass renderpass;
+		CheckVkResult(vkCreateRenderPass(context.GetDevice(), &renderpassInfo, context.GetAllocationCallbacks(), &renderpass));
+	
+		return renderpass;
+	}
+
 	void VulkanSwapchain::CreateSwapchain(FramebufferProperties& properties) {
+		mist::FramebufferProperties imguiProperties;
+		imguiProperties.width = properties.width;
+		imguiProperties.height = properties.height;
+		imguiProperties.samples = 1;
+		properties.attachment = { 
+			mist::FramebufferTextureFormat::RGBA8
+		};
+
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
 
 		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats, VulkanHelper::GetVkFormat(properties.attachment.attachments[0].textureFormat));
 		// Update properties [0] color format with swapchains newly selected one incase an issue arose
 		if (VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format) != properties.attachment.attachments[0].textureFormat) {
 			properties.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format);
+			imguiProperties.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format);
 		}
 
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchainSupport.presentMode);
@@ -159,9 +223,7 @@ namespace mist {
 		swapchainImageFormat = surfaceFormat.format;
 		swapchainExtent = extent;
 
-		// Update properties to account for the swapchain image format being possibly converted
-		//FramebufferProperties newProps = properties;
-		//newProps.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(swapchainImageFormat);
+		CreateImGuiRenderPass(imguiProperties);
 		CreateRenderPass(properties);
 
 		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &swapchainImageCount, nullptr);
@@ -188,6 +250,16 @@ namespace mist {
 			images[i] = image;
 		}
 
+		imguiFramebuffers.clear();
+		imguiFramebuffers.resize(swapchainImageCount);
+		for (size_t i = 0; i < swapchainImageCount; ++i) {
+			framebuffers[i] = CreateRef<VulkanFramebuffer>(
+				imguiProperties, 
+				imguiRenderpass, 
+				images[i]
+			);
+		}
+
 		framebuffers.clear();
 		framebuffers.resize(swapchainImageCount);
 		for (size_t i = 0; i < swapchainImageCount; ++i) {
@@ -199,56 +271,28 @@ namespace mist {
 		}
 	}
 
+	void VulkanSwapchain::CreateImGuiRenderPass(const FramebufferProperties& properties) {
+		imguiRenderpass = CreateNewRenderpass(properties, imguiSubpassColorAttachmentRefsCount);
+	}
+
 	void VulkanSwapchain::CreateRenderPass(const FramebufferProperties& properties) {
-		std::vector<VkAttachmentDescription> attachments;
-		std::vector<VkAttachmentReference> colorAttachmentRefs;
-		std::vector<VkAttachmentReference> depthAttachmentRefs;
+		renderpass = CreateNewRenderpass(properties, subpassColorAttachmentRefsCount);
+	}
 
-		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
-			VkAttachmentDescription attachment = CreateAttachmentDescription(properties.attachment.attachments[i]);
-			attachments.push_back(attachment);
+	void VulkanSwapchain::BeginImGuiRenderPass(VkCommandBuffer commandBuffer) {
+		VkRenderPassBeginInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = imguiRenderpass;
+		renderPassInfo.framebuffer = imguiFramebuffers[activeFramebuffer].get()->GetFramebuffer();
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		FramebufferProperties props = imguiFramebuffers[activeFramebuffer].get()->GetProperties();
+		renderPassInfo.renderArea.extent = { props.width, props.height };
+		renderPassInfo.clearValueCount = 1;
+		glm::vec4 color = Application::Get().GetRenderAPI().GetClearColor();
+		VkClearValue clearColor = { color.r, color.g, color.b, color.a };
+		renderPassInfo.pClearValues = &clearColor;
 
-			bool depth = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
-			VkAttachmentReference ref {};
-			ref.attachment = static_cast<uint32_t>(i);
-			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachment.attachments[i].textureFormat);
-
-			if (depth) {
-				depthAttachmentRefs.push_back(ref);
-			} else {
-				colorAttachmentRefs.push_back(ref);
-			}
-		}
-
-		subpassColorAttachmentRefsCount = static_cast<uint32_t>(colorAttachmentRefs.size());
-
-		// TODO: may need to add support for multiple subpasses at some point but 1 is good enough for now
-		VkSubpassDescription subpassInfo {};
-		subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassInfo.colorAttachmentCount = subpassColorAttachmentRefsCount;
-		subpassInfo.pColorAttachments = colorAttachmentRefs.data();
-		subpassInfo.pDepthStencilAttachment = depthAttachmentRefs.empty() ? nullptr : depthAttachmentRefs.data();
-
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependency.dstStageMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependency.dependencyFlags = 0;
-
-		VkRenderPassCreateInfo renderpassInfo {};
-		renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderpassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-		renderpassInfo.pAttachments = attachments.data();
-		renderpassInfo.subpassCount = 1;
-		renderpassInfo.pSubpasses = &subpassInfo;
-		renderpassInfo.dependencyCount = 1;
-		renderpassInfo.pDependencies = &dependency;
-
-		VulkanContext& context = VulkanContext::GetContext();
-		CheckVkResult(vkCreateRenderPass(context.GetDevice(), &renderpassInfo, context.GetAllocationCallbacks(), &renderpass));
+		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	}
 
 	void VulkanSwapchain::BeginRenderPass(VkCommandBuffer commandBuffer) {
