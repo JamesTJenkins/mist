@@ -253,7 +253,7 @@ namespace mist {
 		imguiFramebuffers.clear();
 		imguiFramebuffers.resize(swapchainImageCount);
 		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			framebuffers[i] = CreateRef<VulkanFramebuffer>(
+			imguiFramebuffers[i] = CreateRef<VulkanFramebuffer>(
 				imguiProperties, 
 				imguiRenderpass, 
 				images[i]
