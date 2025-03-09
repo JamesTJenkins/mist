@@ -1,10 +1,10 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include <imgui/imguiLayer.hpp>
+#include <Layer.hpp>
 #include "Editor/SceneWindow.hpp"
 
 namespace mistEditor {
-	class EditorLayer : public mist::ImguiLayer {
+	class EditorLayer : public mist::Layer {
 	public:
 		EditorLayer();
 		virtual ~EditorLayer() override;
@@ -17,11 +17,14 @@ namespace mistEditor {
 		virtual void OnUpdate() override;
 		virtual void OnRender() override;
 		virtual void OnEvent(const SDL_Event* e) override;
+
+		void SetImguiContext();
 	private:
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
 
+		mist::Ref<mist::Framebuffer> framebuffer;
 		SceneWindow sceneWindow;
 	};
 }

@@ -1,6 +1,7 @@
+#define IMGUI_IMPL_VULKAN_USE_LOADER
+
 #include "imgui/imguiLayer.hpp"
 #include <imgui_impl_sdl2.h>
-#include <imgui_impl_vulkan.h>
 #include "Application.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "renderer/vulkan/VulkanDebug.hpp"
@@ -14,9 +15,8 @@ namespace mist {
 
     void ImguiLayer::OnAttach() {
 		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
+		imguiContext = ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
@@ -36,6 +36,24 @@ namespace mist {
 		SetDarkThemeColors();
 
 		VulkanContext& context = VulkanContext::GetContext();
+		window.Surface = context.GetSurface();
+		const VkFormat requestSurfaceFormats[] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM };
+		const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+		window.SurfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(context.GetPhysicalDevice(), context.GetSurface(), requestSurfaceFormats, (size_t)IM_ARRAYSIZE(requestSurfaceFormats), requestSurfaceColorSpace);
+		window.PresentMode = VK_PRESENT_MODE_FIFO_KHR;
+		window.Swapchain = context.GetSwapchain()->GetSwapchain();
+		ImGui_ImplVulkanH_CreateOrResizeWindow(
+			context.GetInstance(),
+			context.GetPhysicalDevice(),
+			context.GetDevice(),
+			&window,
+			context.FindQueueFamilies().graphicsFamily.value(),
+			context.GetAllocationCallbacks(),
+			Application::Get().GetWindow().GetWidth(),
+			Application::Get().GetWindow().GetHeight(),
+			context.GetSwapchain()->GetSwapchainMinImageCount()
+		);
+
 		// Setup Platform/Renderer backends (May need to change from current windows and context in future with multiple windows)
 		ImGui_ImplSDL2_InitForVulkan(Application::Get().GetWindow().GetNativeWindow());
 		ImGui_ImplVulkan_InitInfo info {};
@@ -47,10 +65,10 @@ namespace mist {
 		info.PipelineCache = VK_NULL_HANDLE;
 		context.descriptors.CreateDescriptorPool();
 		info.DescriptorPool = context.descriptors.GetDescriptorPool(0);
+		info.RenderPass = window.RenderPass;
 		info.Subpass = 0;
 		info.MinImageCount = context.GetSwapchain()->GetSwapchainMinImageCount();
 		info.ImageCount = context.GetSwapchain()->GetSwapchainImageCount();
-		info.RenderPass = context.GetSwapchain()->GetRenderPass();
 		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		info.Allocator = context.GetAllocationCallbacks();
 		info.CheckVkResultFn = CheckVkResult;
@@ -60,7 +78,9 @@ namespace mist {
 		io.Fonts->AddFontDefault();
 		//io.Fonts->AddFontFromFileTTF("assets/fonts/roboto/Roboto-Bold.ttf", 16);
 		//io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/roboto/Roboto-Regular.ttf", 16);
-    }
+ 
+		ImGui_ImplVulkan_CreateFontsTexture();
+	}
 
     void ImguiLayer::OnDetach() {
 		VulkanContext& context = VulkanContext::GetContext();
@@ -68,6 +88,7 @@ namespace mist {
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 		ImGui::DestroyContext();
+		ImGui_ImplVulkanH_DestroyWindow(context.GetInstance(), context.GetDevice(), &window, context.GetAllocationCallbacks());
     }
 
     void ImguiLayer::OnUpdate() {
@@ -78,6 +99,10 @@ namespace mist {
 		ImGui_ImplSDL2_ProcessEvent(e);
     }
 
+	void ImguiLayer::OnRender() {
+
+	}
+
     void ImguiLayer::Begin() {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
@@ -85,7 +110,7 @@ namespace mist {
     }
 
     void ImguiLayer::End() {
-		ImGuiIO& io = ImGui::GetIO();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		Application& application = Application::Get();
 		uint32_t width = application.GetWindow().GetWidth();
 		uint32_t height = application.GetWindow().GetHeight();

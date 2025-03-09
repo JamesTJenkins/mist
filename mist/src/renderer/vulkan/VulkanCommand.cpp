@@ -72,7 +72,15 @@ namespace mist {
         CheckVkResult(vkEndCommandBuffer(commandBuffer));
     }
 
-    void VulkanCommand::SubmitCommandBuffers(VkCommandBuffer* commandBuffers, uint32_t count) {
+    void VulkanCommand::SubmitCommandBuffer(VkCommandBuffer* commandBuffer) {
+        submittedBuffers.push_back(commandBuffer);
+    }
+
+    void VulkanCommand::SubmitCommandBuffers(std::vector<VkCommandBuffer*> commandBuffers) {
+        submittedBuffers.append_range(commandBuffers);
+    }
+
+    void VulkanCommand::SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count) {
         VkSubmitInfo info {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         info.commandBufferCount = count;

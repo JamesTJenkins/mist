@@ -1,4 +1,5 @@
 #pragma once
+#include <imgui_impl_vulkan.h>
 #include "Layer.hpp"
 
 namespace mist {
@@ -14,10 +15,16 @@ namespace mist {
         virtual void OnDetach() override;
         virtual void OnUpdate() override;
         virtual void OnEvent(const SDL_Event* e) override;
+        virtual void OnRender() override;
 
         void Begin();
         void End();
+
+        ImGuiContext* GetContext() { return imguiContext; }
     private:
         void SetDarkThemeColors();
+
+        ImGuiContext* imguiContext;
+        ImGui_ImplVulkanH_Window window;
     };
 }

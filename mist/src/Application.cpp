@@ -73,6 +73,11 @@ namespace mist {
 		running = false;
 	}
 
+	void Application::InitImgui() {
+		imguiLayer = new ImguiLayer();
+		PushLayer(imguiLayer);
+	}
+
 	void Application::PushLayer(Layer* layer) {
 		layerStack.PushLayer(layer);
 		layer->OnAttach();

@@ -22,6 +22,8 @@ namespace mist {
 		void PushLayer(Layer* layer);
 		void PopLayer(Layer* layer);
 
+		void InitImgui();
+
 		inline RenderAPI& GetRenderAPI() { return *renderAPI; }
 		inline Window& GetWindow() { return *window; }
 		ImguiLayer* GetImguiLayer() { return imguiLayer; }

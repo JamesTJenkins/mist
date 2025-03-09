@@ -6,6 +6,7 @@
 #include "renderer/vulkan/VulkanCommand.hpp"
 #include "renderer/vulkan/VulkanSwapchain.hpp"
 #include "renderer/vulkan/VulkanPipeline.hpp"
+#include "renderer/vulkan/VulkanSync.hpp"
 
 namespace mist {
 	struct QueueFamilyIndices {
@@ -44,6 +45,7 @@ namespace mist {
 		VulkanDescriptor descriptors;
         VulkanCommand commands;
 		VulkanPipeline pipeline;
+		VulkanSync sync;
 	private:
         VulkanContext() {}
         ~VulkanContext() {}

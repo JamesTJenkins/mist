@@ -4,8 +4,8 @@
 #include <renderer/RenderCommand.hpp>
 
 namespace mistEditor {
-    EditorLayer::EditorLayer() : ImguiLayer("EditorLayer") {
-
+    EditorLayer::EditorLayer() : Layer("EditorLayer") {
+		
     }
 
     EditorLayer::~EditorLayer() {
@@ -13,8 +13,14 @@ namespace mistEditor {
     }
 
     void EditorLayer::OnAttach() {
-        mist::RenderCommand::Clear();
-		ImguiLayer::OnAttach();
+		// Create editor window
+		//mist::FramebufferProperties properties;
+		//properties.attachment = { 
+		//	mist::FramebufferTextureFormat::RGBA8
+		//};
+		//properties.width = 1280;
+		//properties.height = 720;
+		//framebuffer = mist::Framebuffer::Create(properties);
     }
 
     void EditorLayer::OnDetach() {
@@ -67,7 +73,7 @@ namespace mistEditor {
 			ImGui::PopStyleVar(2);
 
 		// Submit the DockSpace
-		ImGuiIO& io = ImGui::GetIO();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
 			ImGuiID dockspace_id = ImGui::GetID("Dockspace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
@@ -101,6 +107,11 @@ namespace mistEditor {
     }
     
     void EditorLayer::OnEvent(const SDL_Event* e) {}
+
+	void EditorLayer::SetImguiContext() {
+		// Sets the imgui context on the exe side otherwise any calls to the imgui context within the exe will cause a crash
+		ImGui::SetCurrentContext(mist::Application::Get().GetImguiLayer()->GetContext());
+	}
 
     void EditorLayer::NewScene() {
         // TODO: make a scene first howaboutthatbitch

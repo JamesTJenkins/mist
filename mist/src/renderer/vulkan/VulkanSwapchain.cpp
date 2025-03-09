@@ -59,7 +59,7 @@ namespace mist {
 		return size;
 	}
 
-	VkAttachmentDescription CreateAttachmentDescription(const FramebufferTextureProperties& textureProperties) {
+	VkAttachmentDescription CreateAttachmentDescription(size_t index, const FramebufferTextureProperties& textureProperties) {
 		VkAttachmentDescription attachment {};
 		attachment.format = VulkanHelper::GetVkFormat(textureProperties.textureFormat);
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT; // TODO: Add sample count to the texture properties then add here
@@ -68,7 +68,7 @@ namespace mist {
 		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachment.finalLayout = VulkanHelper::GetVkAttachmentDescriptionLayout(textureProperties.textureFormat);
+		attachment.finalLayout = VulkanHelper::GetVkAttachmentDescriptionFinalLayout(index, textureProperties.textureFormat);
 
 		return attachment;
 	}
@@ -110,7 +110,7 @@ namespace mist {
 		std::vector<VkAttachmentReference> depthAttachmentRefs;
 
 		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
-			VkAttachmentDescription attachment = CreateAttachmentDescription(properties.attachment.attachments[i]);
+			VkAttachmentDescription attachment = CreateAttachmentDescription(i, properties.attachment.attachments[i]);
 			attachments.push_back(attachment);
 
 			bool depth = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
@@ -159,13 +159,17 @@ namespace mist {
 		return renderpass;
 	}
 
+	void VulkanSwapchain::RecreateSwapchain() {
+		CreateSwapchain(swapchainProperties);
+	}
+
 	void VulkanSwapchain::CreateSwapchain(FramebufferProperties& properties) {
 		mist::FramebufferProperties imguiProperties;
 		imguiProperties.width = properties.width;
 		imguiProperties.height = properties.height;
 		imguiProperties.samples = 1;
 		properties.attachment = { 
-			mist::FramebufferTextureFormat::RGBA8
+			mist::FramebufferTextureFormat::SRGB8_ALPHA8
 		};
 
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
@@ -269,6 +273,8 @@ namespace mist {
 				images[i]
 			);
 		}
+
+		swapchainProperties = properties;
 	}
 
 	void VulkanSwapchain::CreateImGuiRenderPass(const FramebufferProperties& properties) {

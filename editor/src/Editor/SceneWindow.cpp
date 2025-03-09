@@ -1,5 +1,6 @@
 #include "SceneWindow.hpp"
 #include <imgui.h>
+#include <renderer/RenderCommand.hpp>
 
 namespace mistEditor {
 	SceneWindow::SceneWindow() {
@@ -35,11 +36,13 @@ namespace mistEditor {
 		viewportBounds[0] = { minRegion.x + offset.x, minRegion.y + offset.y };
 		viewportBounds[1] = { maxRegion.x + offset.x, maxRegion.y + offset.y };
 
+		SceneWindowDraw();
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
 
 	void SceneWindow::SceneWindowDraw() {
-		// TODO
+		mist::RenderCommand::Draw();
 	}
 }

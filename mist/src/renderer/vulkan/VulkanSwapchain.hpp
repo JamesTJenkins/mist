@@ -22,6 +22,7 @@ namespace mist {
 
 		const SwapchainSupportDetails QuerySwapchainSupport() const;
 
+		void RecreateSwapchain();
 		void CreateSwapchain(FramebufferProperties& properties);
 		void CreateImGuiRenderPass(const FramebufferProperties& properties);
 		void CreateRenderPass(const FramebufferProperties& properties);
@@ -30,8 +31,9 @@ namespace mist {
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 
 		inline const VkSwapchainKHR GetSwapchain() const { return swapchain; }
-		inline const Ref<VulkanFramebuffer> GetFrameBuffer() const { return framebuffers[activeFramebuffer]; }
-		inline const std::vector<VulkanImage> GetSwapchainImages() const { return framebuffers[activeFramebuffer].get()->GetImages(); }
+		inline const uint8_t GetCurrentFrameIndex() const { return activeFramebuffer; }
+		inline const Ref<VulkanFramebuffer> GetFrameBuffer() const { return framebuffers[GetCurrentFrameIndex()]; }
+		inline const std::vector<VulkanImage> GetSwapchainImages() const { return framebuffers[GetCurrentFrameIndex()].get()->GetImages(); }
 		inline const VkRenderPass GetImGuiRenderPass() const { return imguiRenderpass; }
 		inline const VkRenderPass GetRenderPass() const { return renderpass; }
 		inline const uint32_t GetSwapchainMinImageCount() const { return swapchainMinImageCount; }
@@ -51,5 +53,6 @@ namespace mist {
 		VkRenderPass renderpass = VK_NULL_HANDLE;
 		uint32_t imguiSubpassColorAttachmentRefsCount;
 		uint32_t subpassColorAttachmentRefsCount;
+		FramebufferProperties swapchainProperties;
 	};
 }

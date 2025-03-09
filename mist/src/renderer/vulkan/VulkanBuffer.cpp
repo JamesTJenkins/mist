@@ -39,12 +39,12 @@ namespace mist {
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
         context.commands.EndCommandBuffer(commandBuffer);
-        context.commands.SubmitCommandBuffers(&commandBuffer, 1);
+        context.commands.SubmitCommandBuffersImmediately(&commandBuffer, 1);
 
         context.commands.FreeCommandBuffer(commandBuffer);
     }
 
-    void SetBufferData(const void* data, uint32_t size, VkBuffer& buffer) {
+    void SetBufferData(const void* data, VkDeviceSize size, VkBuffer& buffer) {
         VulkanContext& context = VulkanContext::GetContext();
 
         VkBuffer stagingBuffer;
