@@ -14,13 +14,13 @@ namespace mistEditor {
 
     void EditorLayer::OnAttach() {
 		// Create editor window
-		//mist::FramebufferProperties properties;
-		//properties.attachment = { 
-		//	mist::FramebufferTextureFormat::RGBA8
-		//};
-		//properties.width = 1280;
-		//properties.height = 720;
-		//framebuffer = mist::Framebuffer::Create(properties);
+		mist::FramebufferProperties properties;
+		properties.attachment = { 
+			mist::FramebufferTextureFormat::RGBA8
+		};
+		properties.width = 1280;
+		properties.height = 720;
+		framebuffer = mist::Framebuffer::Create(properties);
     }
 
     void EditorLayer::OnDetach() {

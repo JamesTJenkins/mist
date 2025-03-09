@@ -25,6 +25,6 @@ namespace mistEditor {
 		void SaveSceneAs();
 
 		mist::Ref<mist::Framebuffer> framebuffer;
-		SceneWindow sceneWindow;
+		//SceneWindow sceneWindow;
 	};
 }
