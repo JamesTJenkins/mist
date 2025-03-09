@@ -205,13 +205,17 @@ namespace mist {
 		shaderStrings[0] = src.c_str();
 
 		glslang::TShader shader(stage);
+		shader.setEnvInput(glslang::EShSourceGlsl, stage, glslang::EShClientVulkan, 100);
+		shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_0);
+		shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
+
 		shader.setStrings(shaderStrings, 1);
 
 		TBuiltInResource resources = GetDefaultResources();
 		EShMessages messages = EShMsgDefault;
 
 		if (!shader.parse(&resources, 100, false, messages)) {
-			MIST_ASSERT(false, "Failed to parse GLSL: %s", shader.getInfoLog());
+			MIST_ASSERT(false, std::string("Failed to parse GLSL: ") + shader.getInfoLog());
 			return {};
 		}
 
@@ -219,7 +223,7 @@ namespace mist {
 		program.addShader(&shader);
 
 		if (!program.link(messages)) {
-			MIST_ASSERT(false, "Failed to parse GLSL: %s", shader.getInfoLog());
+			MIST_ASSERT(false, std::string("Failed to parse GLSL: ") + shader.getInfoLog());
 			return {};
 		}
 
