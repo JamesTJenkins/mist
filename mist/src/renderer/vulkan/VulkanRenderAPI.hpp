@@ -19,6 +19,6 @@ namespace mist {
 
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
     private:
-        glm::vec4 clearColor;   // RGBA
+        glm::vec4 clearColor = glm::vec4(1,0,0,1);   // RGBA
     };
 }

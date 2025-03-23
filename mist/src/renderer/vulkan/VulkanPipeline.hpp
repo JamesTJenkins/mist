@@ -10,7 +10,7 @@ namespace mist {
 		void Cleanup();
 
 		VkShaderModule CreateShaderModule(const std::vector<uint32_t> spirv);
-		void CreateGraphicsPipeline(const VulkanShader& shaderResources);
+		void CreateGraphicsPipeline(const VulkanShader* shaderResources);
 	private:
 		std::vector<VkPipelineLayout> pipelineLayouts;
 		std::vector<VkPipeline> pipelines;

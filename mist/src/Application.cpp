@@ -59,23 +59,18 @@ namespace mist {
 				layer->OnUpdate();
 			}
 			
-			imguiLayer->Begin();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
 			}
-			imguiLayer->End();
 			
 			window->OnUpdate();
+
+			RenderCommand::Draw();
 		}
 	}
 
 	void Application::Quit() {
 		running = false;
-	}
-
-	void Application::InitImgui() {
-		imguiLayer = new ImguiLayer();
-		PushLayer(imguiLayer);
 	}
 
 	void Application::PushLayer(Layer* layer) {

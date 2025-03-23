@@ -17,14 +17,11 @@ namespace mistEditor {
 		virtual void OnUpdate() override;
 		virtual void OnRender() override;
 		virtual void OnEvent(const SDL_Event* e) override;
-
-		void SetImguiContext();
 	private:
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
 
 		mist::Ref<mist::Framebuffer> framebuffer;
-		//SceneWindow sceneWindow;
 	};
 }

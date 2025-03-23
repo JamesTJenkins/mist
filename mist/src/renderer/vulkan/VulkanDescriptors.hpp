@@ -13,7 +13,7 @@ namespace mist {
 		VulkanDescriptor() {}
 		~VulkanDescriptor() {}
 
-		VkDescriptorSetLayout CreateDescriptorSetLayout(const VulkanShader& shader);
+		VkDescriptorSetLayout CreateDescriptorSetLayout(const VulkanShader* shader);
 		void CreateDescriptorPool();
 		VkDescriptorSet& CreateDescriptorSet();
 
