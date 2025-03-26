@@ -15,6 +15,8 @@ namespace mist {
         virtual glm::vec4 GetClearColor() override { return clearColor; }
         virtual void Clear() override;
 
+        virtual void BeginRenderPass() override;
+        virtual void EndRenderPass() override;
         virtual void Draw() override;
 
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }

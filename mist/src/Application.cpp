@@ -59,12 +59,13 @@ namespace mist {
 				layer->OnUpdate();
 			}
 			
+			window->OnUpdate();
+
+			RenderCommand::BeginRenderPass();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
 			}
-			
-			window->OnUpdate();
-
+			RenderCommand::EndRenderPass();
 			RenderCommand::Draw();
 		}
 	}

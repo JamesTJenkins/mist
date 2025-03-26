@@ -28,7 +28,7 @@ namespace mist {
 		void BeginRenderPass(VkCommandBuffer commandBuffer);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 
-		inline const VkSwapchainKHR GetSwapchain() const { return swapchain; }
+		inline const VkSwapchainKHR& GetSwapchain() { return swapchain; }
 		inline const uint8_t GetCurrentFrameIndex() const { return activeFramebuffer; }
 		inline const Ref<VulkanFramebuffer> GetFrameBuffer() const { return framebuffers[GetCurrentFrameIndex()]; }
 		inline const std::vector<VulkanImage> GetSwapchainImages() const { return framebuffers[GetCurrentFrameIndex()].get()->GetImages(); }

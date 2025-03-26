@@ -14,19 +14,20 @@ namespace mist {
         std::vector<VkCommandBuffer> AllocateCommandBuffers(uint32_t count);
         void FreeCommandBuffer(VkCommandBuffer commandBuffer);
         void FreeCommandBuffers(std::vector<VkCommandBuffer> commandBuffers);
-    
+        
         VkCommandBuffer BeginSingleTimeCommand();
         void BeginCommandBuffer(VkCommandBuffer commandBuffer);
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
-
+        void ResetCommandBuffer(VkCommandBuffer commandBuffer);
+        
         void SubmitCommandBuffer(VkCommandBuffer* commandBuffer);
         void SubmitCommandBuffers(std::vector<VkCommandBuffer*> commandBuffers);
         void SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count);
-
-        VkCommandBuffer* GetSubmittedBuffers() { return *submittedBuffers.data(); }
-        size_t GetSubmittedBufferCount() { return submittedBuffers.size(); }
+        
+        void AllocateRenderBuffer();
+        const VkCommandBuffer& GetRenderBuffer() { return renderBuffer; }
     private:
         VkCommandPool pool = VK_NULL_HANDLE;
-        std::vector<VkCommandBuffer*> submittedBuffers;
+        VkCommandBuffer renderBuffer = VK_NULL_HANDLE;
     };
 }

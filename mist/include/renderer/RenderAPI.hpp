@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "Core.hpp"
+#include "renderer/Buffer.hpp"
 
 namespace mist {
     class MIST_API RenderAPI {
@@ -18,6 +19,8 @@ namespace mist {
         virtual glm::vec4 GetClearColor() = 0;
         virtual void Clear() = 0;
 
+        virtual void BeginRenderPass() = 0;
+        virtual void EndRenderPass() = 0;
         virtual void Draw() = 0;
 
         virtual API GetAPI() = 0;;
