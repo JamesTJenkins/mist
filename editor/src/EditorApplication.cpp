@@ -15,8 +15,6 @@ void Run() {
     mist::Application editor = mist::Application("Editor");
     mistEditor::EditorLayer* editorLayer = new mistEditor::EditorLayer();
     editor.PushLayer(editorLayer);
-    editor.InitImgui();
-    editorLayer->SetImguiContext();
     editor.Run();
 }
 

@@ -27,7 +27,7 @@ namespace mist {
 		return module;
 	}
 
-	void VulkanPipeline::CreateGraphicsPipeline(const VulkanShader& shader) {
+	void VulkanPipeline::CreateGraphicsPipeline(const VulkanShader* shader) {
 		// After handling reflection of shader code pass through to here
 		// going to have to generate all the configurations before they are used so at game launch or creating a cache file where all the shaders and variants are stored after compilation
 		// Hold onto the pipeline in a unorderedmap/dictionary so the pipelines can be loaded when needed
@@ -136,7 +136,7 @@ namespace mist {
 		pipelineLayouts.push_back(pipelineLayout);
 
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		for (const auto& res : shader.GetResources()) {
+		for (const auto& res : shader->GetResources()) {
 			if (res.second.flags & VK_SHADER_STAGE_VERTEX_BIT) {
 				VkPipelineShaderStageCreateInfo shaderStageInfo{};
 				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

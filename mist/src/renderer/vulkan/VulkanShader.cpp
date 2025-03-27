@@ -2,6 +2,7 @@
 #include <glslang/SPIRV/GlslangToSpv.h>
 #include <spirv_cross.hpp>
 #include <spirv_glsl.hpp>
+#include <filesystem>
 #include "Debug.hpp"
 
 namespace mist {
@@ -136,6 +137,7 @@ namespace mist {
 	}
 
 	VulkanShader::VulkanShader(const std::string& path) {
+		name = std::filesystem::path(path).stem().string();
 		std::string src = ReadFile(path);
 		std::unordered_map<EShLanguage, std::string> shaderSources = PreProcess(src);
 
@@ -147,7 +149,7 @@ namespace mist {
 		glslang::FinalizeProcess();
 	}
 
-	VulkanShader::VulkanShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) {
+	VulkanShader::VulkanShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : name(name) {
 		std::unordered_map<EShLanguage, std::string> shaderSources;
 		shaderSources[EShLangVertex] = vertexSrc;
 		shaderSources[EShLangFragment] = fragmentSrc;

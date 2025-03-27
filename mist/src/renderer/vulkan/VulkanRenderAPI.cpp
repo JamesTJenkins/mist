@@ -14,15 +14,24 @@ namespace mist {
 		context.CreatePhysicalDevice();
 		context.CreateDevice();
 		context.commands.CreateCommandPool(); // TODO: May need to do something more at some point but single pool will do for now
+		context.commands.AllocateRenderBuffers();
 		context.sync.CreateSyncObjects();
 	}
 
 	void VulkanRenderAPI::Shutdown() {
 		VulkanContext& context = VulkanContext::GetContext();
+		vkDeviceWaitIdle(context.GetDevice());
 
+		context.commands.FreeRenderBuffers();
+		context.sync.Cleanup();
 		context.descriptors.Cleanup();
 		context.descriptors.ClearPool();
+		context.GetSwapchain()->CleanupFramebuffers();
+		context.GetSwapchain()->CleanupRenderPasses();
 		context.pipeline.Cleanup();
+		// image views, samplers, buffers
+		context.commands.DestroyCommandPool();
+		context.GetSwapchain()->CleanupSwapchain();
 
 		vkDestroyDevice(context.GetDevice(), context.GetAllocationCallbacks());
 		vkDestroySurfaceKHR(context.GetInstance(), context.GetSurface(), context.GetAllocationCallbacks());
@@ -45,10 +54,32 @@ namespace mist {
 		// Does nothing since handles by renderpasses
 	}
 
+	void VulkanRenderAPI::BeginRenderPass() {
+		VulkanContext& context = VulkanContext::GetContext();
+		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
+		
+		// Check GPU finished and only wait if not
+		VkResult fenceStatus = vkGetFenceStatus(context.GetDevice(), context.sync.inFlightFences[currentFrame]);
+		if (fenceStatus != VK_SUCCESS) {
+			CheckVkResult(vkWaitForFences(context.GetDevice(), 1, &context.sync.inFlightFences[currentFrame], VK_TRUE, UINT64_MAX));
+		}
+		CheckVkResult(vkResetFences(context.GetDevice(), 1, &context.sync.inFlightFences[currentFrame]));
+
+		context.commands.ResetCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
+		context.commands.BeginCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
+		context.GetSwapchain()->BeginRenderPass(context.commands.GetRenderBuffer(currentFrame));
+	}
+
+	void VulkanRenderAPI::EndRenderPass() {
+		VulkanContext& context = VulkanContext::GetContext();
+		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
+		context.GetSwapchain()->EndRenderPass(context.commands.GetRenderBuffer(currentFrame));
+		context.commands.EndCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
+	}
+
 	void VulkanRenderAPI::Draw() {
 		VulkanContext& context = VulkanContext::GetContext();
 		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
-		vkWaitForFences(context.GetDevice(), 1, &context.sync.inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
 		VkResult result = vkAcquireNextImageKHR(context.GetDevice(), context.GetSwapchain()->GetSwapchain(), UINT64_MAX, context.sync.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
@@ -61,9 +92,6 @@ namespace mist {
 		}
 
 		if (context.sync.imageAvailableSemaphores[currentFrame] != VK_NULL_HANDLE) {
-			// Update UBOs here
-			// Record command buffer wit stuff being rendered here
-
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			
@@ -72,13 +100,11 @@ namespace mist {
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pWaitSemaphores = waitSemaphores;
 			submitInfo.pWaitDstStageMask = waitStages;
-			submitInfo.commandBufferCount = static_cast<uint32_t>(context.commands.GetSubmittedBufferCount());
-			submitInfo.pCommandBuffers = context.commands.GetSubmittedBuffers();
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &context.commands.GetRenderBuffer(currentFrame);
 			VkSemaphore signalSemaphores[] = {context.sync.renderFinishedSemaphores[currentFrame]};
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = signalSemaphores;
-
-			vkResetFences(context.GetDevice(), 1, &context.sync.inFlightFences[currentFrame]);
 
 			CheckVkResult(vkQueueSubmit(context.GetGraphicsQueue(), 1, &submitInfo, context.sync.inFlightFences[currentFrame]));
 
@@ -86,10 +112,13 @@ namespace mist {
 			presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 			presentInfo.waitSemaphoreCount = 1;
 			presentInfo.pWaitSemaphores = signalSemaphores;
+			presentInfo.swapchainCount = 1;
+			presentInfo.pSwapchains = &context.GetSwapchain()->GetSwapchain();
+			presentInfo.pImageIndices = &imageIndex;
 
 			CheckVkResult(vkQueuePresentKHR(context.GetPresentQueue(), &presentInfo));
 
-			currentFrame = (currentFrame + 1) % context.sync.MAX_FRAMES_IN_FLIGHT;
+			context.GetSwapchain()->SetCurrentFrameIndex((currentFrame + 1) % context.sync.MAX_FRAMES_IN_FLIGHT);
 		}
 	}
 }

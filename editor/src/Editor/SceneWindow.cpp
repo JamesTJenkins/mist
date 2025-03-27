@@ -1,5 +1,4 @@
 #include "SceneWindow.hpp"
-#include <imgui.h>
 #include <renderer/RenderCommand.hpp>
 
 namespace mistEditor {
@@ -12,7 +11,19 @@ namespace mistEditor {
 		};
 		properties.width = 1280;
 		properties.height = 720;
-		framebuffer = mist::Framebuffer::Create(properties);
+		mist::Framebuffer::Create(properties);
+
+		std::vector<float> verts = {
+			-1, 0, 0,
+			0, 1, 0,
+			1, 0, 0
+		};
+		vBuffer = mist::VertexBuffer::Create(verts.data(), (uint32_t)verts.size());
+
+		std::vector<uint32_t> indices = {
+			0, 1, 2
+		};
+		iBuffer = mist::IndexBuffer::Create(indices.data(), (uint32_t)indices.size());
 	}
 
 	void SceneWindow::OnEditorUpdate() {
@@ -20,26 +31,8 @@ namespace mistEditor {
 	}
 
 	void SceneWindow::OnRender() {
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-		ImGui::Begin("Scene");
-		focused = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
-		ImVec2 imguiViewportSize = ImGui::GetContentRegionAvail();
-		if (viewportSize != *((glm::vec2*)&imguiViewportSize)) {
-			framebuffer->Resize(static_cast<uint32_t>(imguiViewportSize.x), static_cast<uint32_t>(imguiViewportSize.y));
-			viewportSize = { imguiViewportSize.x, imguiViewportSize.y };
-		}
-		ImGui::Image((void*)framebuffer->GetColorAttachmentRenderID(), imguiViewportSize, ImVec2{0, 1}, ImVec2{1, 0});
-		
-		ImVec2 offset = ImGui::GetWindowPos();
-		ImVec2 minRegion = ImGui::GetWindowContentRegionMin();
-		ImVec2 maxRegion = ImGui::GetWindowContentRegionMax();
-		viewportBounds[0] = { minRegion.x + offset.x, minRegion.y + offset.y };
-		viewportBounds[1] = { maxRegion.x + offset.x, maxRegion.y + offset.y };
-
-		SceneWindowDraw();
-
-		ImGui::End();
-		ImGui::PopStyleVar();
+		vBuffer->Bind();
+		iBuffer->Bind();
 	}
 
 	void SceneWindow::SceneWindowDraw() {

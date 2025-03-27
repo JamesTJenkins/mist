@@ -33,10 +33,10 @@ namespace mist {
 		pools.push_back(pool);
 	}
 
-	VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const VulkanShader& shader) {
+	VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const VulkanShader* shader) {
 		std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 
-		for (const auto& res : shader.GetResources()) {
+		for (const auto& res : shader->GetResources()) {
 			if (res.second.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
 				VkDescriptorSetLayoutBinding uboLayout {};
         		uboLayout.binding = res.second.binding;

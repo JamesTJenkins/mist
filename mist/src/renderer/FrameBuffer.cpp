@@ -86,7 +86,7 @@ namespace mist {
 		}
 	}
 
-	Ref<Framebuffer> Framebuffer::Create(FramebufferProperties& properties) {
+	void Framebuffer::Create(FramebufferProperties& properties) {
 		switch (RenderCommand::GetAPIType()) {
 		case RenderAPI::API::Vulkan:
 		{
@@ -95,18 +95,17 @@ namespace mist {
 			VulkanContext& context = VulkanContext::GetContext();
 			if (context.GetSwapchain() != nullptr) {
 				context.GetSwapchain()->CreateSwapchain(properties);
-				return context.GetSwapchain()->GetFrameBuffer();
+				context.GetSwapchain()->GetFrameBuffer();
 			}
 			
 			MIST_INFO("Creating new swapchain for framebuffer");
 			context.CreateSwapchain(properties);
-			return context.GetSwapchain()->GetFrameBuffer();
+			context.GetSwapchain()->GetFrameBuffer();
+			break;
 		}
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "Running headless");
-			return nullptr;
+			break;
 		}
-
-		return nullptr;
 	}
 }

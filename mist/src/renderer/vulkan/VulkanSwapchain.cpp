@@ -75,11 +75,7 @@ namespace mist {
 
 	VulkanSwapchain::VulkanSwapchain() {}
 
-	VulkanSwapchain::~VulkanSwapchain() {
-		VulkanContext& context = VulkanContext::GetContext();
-		vkDestroyRenderPass(context.GetDevice(), renderpass, context.GetAllocationCallbacks());
-		vkDestroySwapchainKHR(context.GetDevice(), swapchain, context.GetAllocationCallbacks());
-	}
+	VulkanSwapchain::~VulkanSwapchain() {}
 	
 	const SwapchainSupportDetails VulkanSwapchain::QuerySwapchainSupport() const {
 		VulkanContext& context = VulkanContext::GetContext();
@@ -137,10 +133,10 @@ namespace mist {
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependency.dstStageMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; //| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; //| VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcAccessMask = 0;//VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; //| VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		dependency.dependencyFlags = 0;
 
 		VkRenderPassCreateInfo renderpassInfo {};
@@ -164,21 +160,12 @@ namespace mist {
 	}
 
 	void VulkanSwapchain::CreateSwapchain(FramebufferProperties& properties) {
-		mist::FramebufferProperties imguiProperties;
-		imguiProperties.width = properties.width;
-		imguiProperties.height = properties.height;
-		imguiProperties.samples = 1;
-		properties.attachment = { 
-			mist::FramebufferTextureFormat::SRGB8_ALPHA8
-		};
-
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
 
 		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats, VulkanHelper::GetVkFormat(properties.attachment.attachments[0].textureFormat));
 		// Update properties [0] color format with swapchains newly selected one incase an issue arose
 		if (VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format) != properties.attachment.attachments[0].textureFormat) {
 			properties.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format);
-			imguiProperties.attachment.attachments[0].textureFormat = VulkanHelper::GetFramebufferTextureFormat(surfaceFormat.format);
 		}
 
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchainSupport.presentMode);
@@ -227,7 +214,6 @@ namespace mist {
 		swapchainImageFormat = surfaceFormat.format;
 		swapchainExtent = extent;
 
-		CreateImGuiRenderPass(imguiProperties);
 		CreateRenderPass(properties);
 
 		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &swapchainImageCount, nullptr);
@@ -247,58 +233,23 @@ namespace mist {
 			true
 		);
 
-		std::vector<VulkanImage> images(swapchainImageCount);
-		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			VulkanImage image(swapchainImages[i], imageProps);
-			image.CreateImageView();
-			images[i] = image;
-		}
-
-		imguiFramebuffers.clear();
-		imguiFramebuffers.resize(swapchainImageCount);
-		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			imguiFramebuffers[i] = CreateRef<VulkanFramebuffer>(
-				imguiProperties, 
-				imguiRenderpass, 
-				images[i]
-			);
-		}
-
 		framebuffers.clear();
-		framebuffers.resize(swapchainImageCount);
+		framebuffers.reserve(swapchainImageCount);
 		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			framebuffers[i] = CreateRef<VulkanFramebuffer>(
+			Ref<VulkanImage> image = CreateRef<VulkanImage>(swapchainImages[i], imageProps);
+
+			framebuffers.push_back(CreateRef<VulkanFramebuffer>(
 				properties, 
 				renderpass, 
-				images[i]
-			);
+				image
+			));
 		}
 
 		swapchainProperties = properties;
 	}
 
-	void VulkanSwapchain::CreateImGuiRenderPass(const FramebufferProperties& properties) {
-		imguiRenderpass = CreateNewRenderpass(properties, imguiSubpassColorAttachmentRefsCount);
-	}
-
 	void VulkanSwapchain::CreateRenderPass(const FramebufferProperties& properties) {
 		renderpass = CreateNewRenderpass(properties, subpassColorAttachmentRefsCount);
-	}
-
-	void VulkanSwapchain::BeginImGuiRenderPass(VkCommandBuffer commandBuffer) {
-		VkRenderPassBeginInfo renderPassInfo = {};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = imguiRenderpass;
-		renderPassInfo.framebuffer = imguiFramebuffers[activeFramebuffer].get()->GetFramebuffer();
-		renderPassInfo.renderArea.offset = { 0, 0 };
-		FramebufferProperties props = imguiFramebuffers[activeFramebuffer].get()->GetProperties();
-		renderPassInfo.renderArea.extent = { props.width, props.height };
-		renderPassInfo.clearValueCount = 1;
-		glm::vec4 color = Application::Get().GetRenderAPI().GetClearColor();
-		VkClearValue clearColor = { color.r, color.g, color.b, color.a };
-		renderPassInfo.pClearValues = &clearColor;
-
-		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	}
 
 	void VulkanSwapchain::BeginRenderPass(VkCommandBuffer commandBuffer) {
@@ -319,5 +270,19 @@ namespace mist {
 
 	void VulkanSwapchain::EndRenderPass(VkCommandBuffer commandBuffer) {
 		vkCmdEndRenderPass(commandBuffer);
+	}
+
+	void VulkanSwapchain::CleanupFramebuffers() {
+		framebuffers.clear();
+	}
+
+	void VulkanSwapchain::CleanupRenderPasses() {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDestroyRenderPass(context.GetDevice(), renderpass, context.GetAllocationCallbacks());
+	}
+
+	void VulkanSwapchain::CleanupSwapchain() {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDestroySwapchainKHR(context.GetDevice(), swapchain, context.GetAllocationCallbacks());
 	}
 }

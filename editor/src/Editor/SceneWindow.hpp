@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <Core.hpp>
 #include <renderer/Framebuffer.hpp>
+#include <renderer/Buffer.hpp>
 
 namespace mistEditor {
 	class SceneWindow {
@@ -12,11 +13,9 @@ namespace mistEditor {
 		void OnEditorUpdate();
 		void OnRender();
 		void SceneWindowDraw();
-	
-		glm::vec2 viewportSize = {0,0};
 	private:
 		mist::Ref<mist::Framebuffer> framebuffer;
-		bool focused = false;
-		glm::vec2 viewportBounds[2];
+		mist::Ref<mist::VertexBuffer> vBuffer;
+		mist::Ref<mist::IndexBuffer> iBuffer;
 	};
 }

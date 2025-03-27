@@ -2,8 +2,8 @@
 #include "Core.hpp"
 #include "Window.hpp"
 #include "LayerStack.hpp"
-#include "imgui/imguiLayer.hpp"
 #include <renderer/RenderAPI.hpp>
+#include <renderer/Shader.hpp>
 
 namespace mist {
 	class MIST_API Application {
@@ -22,17 +22,15 @@ namespace mist {
 		void PushLayer(Layer* layer);
 		void PopLayer(Layer* layer);
 
-		void InitImgui();
-
 		inline RenderAPI& GetRenderAPI() { return *renderAPI; }
 		inline Window& GetWindow() { return *window; }
-		ImguiLayer* GetImguiLayer() { return imguiLayer; }
 		inline const char* GetApplicationName() { return appName; }
+		inline ShaderLibrary* GetShaderLibrary() { return &shaderLib; }
 	private:
 		const char* appName = "Untitled";
 		bool running = true;
-		ImguiLayer* imguiLayer;
 		LayerStack layerStack;
+		ShaderLibrary shaderLib;
 		Scope<Window> window;
 		Scope<RenderAPI> renderAPI;
 		static Application* instance;

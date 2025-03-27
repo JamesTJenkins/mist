@@ -72,12 +72,8 @@ namespace mist {
         CheckVkResult(vkEndCommandBuffer(commandBuffer));
     }
 
-    void VulkanCommand::SubmitCommandBuffer(VkCommandBuffer* commandBuffer) {
-        submittedBuffers.push_back(commandBuffer);
-    }
-
-    void VulkanCommand::SubmitCommandBuffers(std::vector<VkCommandBuffer*> commandBuffers) {
-        submittedBuffers.append_range(commandBuffers);
+    void VulkanCommand::ResetCommandBuffer(VkCommandBuffer commandBuffer) {
+        CheckVkResult(vkResetCommandBuffer(commandBuffer, 0));
     }
 
     void VulkanCommand::SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count) {
@@ -89,5 +85,13 @@ namespace mist {
         VulkanContext& context = VulkanContext::GetContext();
         vkQueueSubmit(context.GetGraphicsQueue(), 1, &info, VK_NULL_HANDLE);
         vkQueueWaitIdle(context.GetGraphicsQueue());
+    }
+
+    void VulkanCommand::AllocateRenderBuffers() {
+        renderBuffers = AllocateCommandBuffers(3);
+    }
+
+    void VulkanCommand::FreeRenderBuffers() {
+        FreeCommandBuffers(renderBuffers);
     }
 }

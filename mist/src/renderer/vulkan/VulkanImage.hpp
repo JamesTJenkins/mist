@@ -33,9 +33,19 @@ namespace mist {
         VulkanImage(const VulkanImageProperties& properties);
         VulkanImage(VkImage image, const VulkanImageProperties& properties);
         ~VulkanImage();
+        
+        // Copy
+        VulkanImage(const VulkanImage& other);
+        // Copy assignment
+        VulkanImage& operator=(const VulkanImage& other);
+        // Move constructor
+        VulkanImage(VulkanImage&& other) noexcept;
+        // Move assignment
+        VulkanImage& operator=(VulkanImage&& other) noexcept;
 
         void CreateImage(const VulkanImageProperties& properties);
         void CreateImageView();
+        void Cleanup();
         
         inline const VkImage GetImage() const { return image; }
         inline const VkImageView GetImageView() const { return view; }

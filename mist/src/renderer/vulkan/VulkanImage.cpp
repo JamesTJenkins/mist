@@ -16,27 +16,56 @@ namespace mist {
     VulkanImage::VulkanImage(VkImage image, const VulkanImageProperties& properties) : imageProperties(properties), image(image) {
         // This is typically only used by the swapchain and the imageMemory 
         // will already be allocated and bound so wont require to do again
+        CreateImageView();
     }
 
     VulkanImage::~VulkanImage() {
-        if (!imageProperties.swapchainImage) {
-            VulkanContext& context = VulkanContext::GetContext();
-            if (view != VK_NULL_HANDLE) {
-                vkDestroyImageView(context.GetDevice(), view, context.GetAllocationCallbacks());
-            }
-    
-            if (imageMemory != VK_NULL_HANDLE) {
-                vkFreeMemory(context.GetDevice(), imageMemory, context.GetAllocationCallbacks());
-            }
-    
-            if (image != VK_NULL_HANDLE) {
-                vkDestroyImage(context.GetDevice(), image, context.GetAllocationCallbacks());
-            }
+        Cleanup();
+    }
+
+    VulkanImage::VulkanImage(const VulkanImage& other) : imageProperties(other.imageProperties) {
+        CreateImage(imageProperties);
+        CreateImageView();
+    }
+
+    VulkanImage& VulkanImage::operator=(const VulkanImage& other) {
+        if (this != &other) {
+            Cleanup();
+            imageProperties = other.imageProperties;
+            CreateImage(imageProperties);
+            CreateImageView();
         }
+
+        return *this;
+    }
+
+    VulkanImage::VulkanImage(VulkanImage&& other) noexcept : image(other.image), view(other.view), imageMemory(other.imageMemory), imageProperties(other.imageProperties) {
+        other.image = VK_NULL_HANDLE;
+        other.view = VK_NULL_HANDLE;
+        other.imageMemory = VK_NULL_HANDLE;
+    }
+
+    VulkanImage& VulkanImage::operator=(VulkanImage&& other) noexcept {
+        if (this != &other) {
+            Cleanup();
+            image = other.image;
+            view = other.view;
+            imageMemory = other.imageMemory;
+            imageProperties = other.imageProperties;
+            other.image = VK_NULL_HANDLE;
+            other.view = VK_NULL_HANDLE;
+            other.imageMemory = VK_NULL_HANDLE;
+        }
+
+        return *this;
     }
 
     void VulkanImage::CreateImage(const VulkanImageProperties& properties) {
         imageProperties = properties;
+
+        VulkanContext& context = VulkanContext::GetContext();
+        QueueFamilyIndices indicies = context.FindQueueFamilies();
+		uint32_t queueFamilyIndices[] = { indicies.graphicsFamily.value(), indicies.presentFamily.value() };
 
         VkImageCreateInfo info {};
         info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -52,12 +81,17 @@ namespace mist {
         info.usage = imageProperties.usage;
         info.samples = VK_SAMPLE_COUNT_1_BIT;
         info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        info.queueFamilyIndexCount = 0;
-        info.pQueueFamilyIndices = nullptr;
         info.flags = 0;
         info.pNext = nullptr;
 
-        VulkanContext& context = VulkanContext::GetContext();
+        if (indicies.graphicsFamily != indicies.presentFamily) {
+			info.queueFamilyIndexCount = 2;
+			info.pQueueFamilyIndices = queueFamilyIndices;
+		} else {
+			info.queueFamilyIndexCount = 0;
+			info.pQueueFamilyIndices = nullptr;
+		}
+
         CheckVkResult(vkCreateImage(context.GetDevice(), &info, context.GetAllocationCallbacks(), &image));
 
         VkMemoryRequirements memRequirements;
@@ -87,5 +121,21 @@ namespace mist {
 
         VulkanContext& context = VulkanContext::GetContext();
         CheckVkResult(vkCreateImageView(context.GetDevice(), &viewInfo, context.GetAllocationCallbacks(), &view));
+    }
+
+    void VulkanImage::Cleanup() {
+        VulkanContext& context = VulkanContext::GetContext();
+        if (view != VK_NULL_HANDLE) {
+            vkDestroyImageView(context.GetDevice(), view, context.GetAllocationCallbacks());
+        }
+
+        if (imageMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(context.GetDevice(), imageMemory, context.GetAllocationCallbacks());
+        }
+
+        // Swapchain images can only be destroyed by vkDestroySwapchain
+        if (image != VK_NULL_HANDLE && !imageProperties.swapchainImage) {
+            vkDestroyImage(context.GetDevice(), image, context.GetAllocationCallbacks());
+        }
     }
 }
