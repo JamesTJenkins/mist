@@ -28,6 +28,8 @@ namespace mist {
 		void BeginRenderPass(VkCommandBuffer commandBuffer);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 
+		void SetCurrentFrameIndex(const uint8_t newIndex) { activeFramebuffer = newIndex; }
+
 		inline const VkSwapchainKHR& GetSwapchain() { return swapchain; }
 		inline const uint8_t GetCurrentFrameIndex() const { return activeFramebuffer; }
 		inline const Ref<VulkanFramebuffer> GetFrameBuffer() const { return framebuffers[GetCurrentFrameIndex()]; }

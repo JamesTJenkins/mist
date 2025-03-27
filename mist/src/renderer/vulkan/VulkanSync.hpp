@@ -14,7 +14,7 @@ namespace mist {
 		void CreateSyncObjects();
 		void Cleanup();
 
-		const int MAX_FRAMES_IN_FLIGHT = 2;
+		const int MAX_FRAMES_IN_FLIGHT = 3;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;

@@ -109,7 +109,7 @@ namespace mist {
 
 			CheckVkResult(vkQueuePresentKHR(context.GetPresentQueue(), &presentInfo));
 
-			currentFrame = (currentFrame + 1) % context.sync.MAX_FRAMES_IN_FLIGHT;
+			context.GetSwapchain()->SetCurrentFrameIndex((currentFrame + 1) % context.sync.MAX_FRAMES_IN_FLIGHT);
 		}
 	}
 }
