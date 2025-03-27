@@ -75,11 +75,7 @@ namespace mist {
 
 	VulkanSwapchain::VulkanSwapchain() {}
 
-	VulkanSwapchain::~VulkanSwapchain() {
-		VulkanContext& context = VulkanContext::GetContext();
-		vkDestroyRenderPass(context.GetDevice(), renderpass, context.GetAllocationCallbacks());
-		vkDestroySwapchainKHR(context.GetDevice(), swapchain, context.GetAllocationCallbacks());
-	}
+	VulkanSwapchain::~VulkanSwapchain() {}
 	
 	const SwapchainSupportDetails VulkanSwapchain::QuerySwapchainSupport() const {
 		VulkanContext& context = VulkanContext::GetContext();
@@ -237,21 +233,16 @@ namespace mist {
 			true
 		);
 
-		std::vector<VulkanImage> images(swapchainImageCount);
-		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			VulkanImage image(swapchainImages[i], imageProps);
-			image.CreateImageView();
-			images[i] = image;
-		}
-
 		framebuffers.clear();
-		framebuffers.resize(swapchainImageCount);
+		framebuffers.reserve(swapchainImageCount);
 		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			framebuffers[i] = CreateRef<VulkanFramebuffer>(
+			Ref<VulkanImage> image = CreateRef<VulkanImage>(swapchainImages[i], imageProps);
+
+			framebuffers.push_back(CreateRef<VulkanFramebuffer>(
 				properties, 
 				renderpass, 
-				images[i]
-			);
+				image
+			));
 		}
 
 		swapchainProperties = properties;
@@ -279,5 +270,19 @@ namespace mist {
 
 	void VulkanSwapchain::EndRenderPass(VkCommandBuffer commandBuffer) {
 		vkCmdEndRenderPass(commandBuffer);
+	}
+
+	void VulkanSwapchain::CleanupFramebuffers() {
+		framebuffers.clear();
+	}
+
+	void VulkanSwapchain::CleanupRenderPasses() {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDestroyRenderPass(context.GetDevice(), renderpass, context.GetAllocationCallbacks());
+	}
+
+	void VulkanSwapchain::CleanupSwapchain() {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDestroySwapchainKHR(context.GetDevice(), swapchain, context.GetAllocationCallbacks());
 	}
 }

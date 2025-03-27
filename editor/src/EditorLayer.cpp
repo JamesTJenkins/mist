@@ -19,7 +19,7 @@ namespace mistEditor {
 		};
 		properties.width = 1280;
 		properties.height = 720;
-		framebuffer = mist::Framebuffer::Create(properties);
+		mist::Framebuffer::Create(properties);
     }
 
     void EditorLayer::OnDetach() {

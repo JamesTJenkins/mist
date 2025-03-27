@@ -21,7 +21,5 @@ namespace mistEditor {
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
-
-		mist::Ref<mist::Framebuffer> framebuffer;
 	};
 }

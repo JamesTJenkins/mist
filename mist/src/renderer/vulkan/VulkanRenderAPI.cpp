@@ -20,10 +20,18 @@ namespace mist {
 
 	void VulkanRenderAPI::Shutdown() {
 		VulkanContext& context = VulkanContext::GetContext();
+		vkDeviceWaitIdle(context.GetDevice());
 
+		context.commands.FreeRenderBuffers();
+		context.sync.Cleanup();
 		context.descriptors.Cleanup();
 		context.descriptors.ClearPool();
+		context.GetSwapchain()->CleanupFramebuffers();
+		context.GetSwapchain()->CleanupRenderPasses();
 		context.pipeline.Cleanup();
+		// image views, samplers, buffers
+		context.commands.DestroyCommandPool();
+		context.GetSwapchain()->CleanupSwapchain();
 
 		vkDestroyDevice(context.GetDevice(), context.GetAllocationCallbacks());
 		vkDestroySurfaceKHR(context.GetInstance(), context.GetSurface(), context.GetAllocationCallbacks());

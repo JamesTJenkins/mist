@@ -90,4 +90,8 @@ namespace mist {
     void VulkanCommand::AllocateRenderBuffers() {
         renderBuffers = AllocateCommandBuffers(3);
     }
+
+    void VulkanCommand::FreeRenderBuffers() {
+        FreeCommandBuffers(renderBuffers);
+    }
 }

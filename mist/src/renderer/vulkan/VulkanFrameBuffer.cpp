@@ -9,7 +9,7 @@ namespace mist {
 
 	}
 
-	VulkanFramebuffer::VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, VulkanImage swapchainImage) : properties(properties) {
+	VulkanFramebuffer::VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, Ref<VulkanImage> swapchainImage) : properties(properties) {
 		if (properties.width == 0 || properties.height == 0) {
 			MIST_WARN("Tried to size framebuffer to {0} {1}", properties.width, properties.height);
 			return;
@@ -19,13 +19,39 @@ namespace mist {
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer() {
-		Destroy();
+		Cleanup();
 	}
 
-	void VulkanFramebuffer::Create(VkRenderPass renderpass, VulkanImage swapchainImage) {
+	VulkanFramebuffer::VulkanFramebuffer(VulkanFramebuffer&& other) noexcept : 
+		framebuffer(other.framebuffer), 
+		attachmentImages(std::move(other.attachmentImages)), 
+		properties(other.properties),
+		colorAttachmentProperties(std::move(other.colorAttachmentProperties)), 
+		depthAttachmentProperties(std::move(other.depthAttachmentProperties)), 
+		colorAttachments(std::move(other.colorAttachments)), 
+		depthAttachment(std::move(other.depthAttachment)) {
+		other.framebuffer = VK_NULL_HANDLE;
+	}
+
+    VulkanFramebuffer& VulkanFramebuffer::operator=(VulkanFramebuffer&& other) noexcept {
+		if (this != &other) {
+			Cleanup();
+			framebuffer = other.framebuffer;
+			attachmentImages = std::move(other.attachmentImages);
+			properties = other.properties;
+			colorAttachmentProperties = std::move(other.colorAttachmentProperties);
+			depthAttachmentProperties = std::move(other.depthAttachmentProperties);
+			colorAttachments = std::move(other.colorAttachments);
+			depthAttachment = std::move(other.depthAttachment);
+		}
+
+		return *this;
+	}
+
+	void VulkanFramebuffer::Create(VkRenderPass renderpass, Ref<VulkanImage> swapchainImage) {
 		VulkanContext& context = VulkanContext::GetContext();
 
-		attachmentImages.resize(properties.attachment.attachments.size());
+		attachmentImages.reserve(properties.attachment.attachments.size());
 
 		bool overridedColorBit = false;
 		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
@@ -40,7 +66,7 @@ namespace mist {
 				if (!overridedColorBit) {
 					overridedColorBit = true;
 
-					attachmentImages[i] = swapchainImage;
+					attachmentImages.push_back(swapchainImage);
 					continue;
 				}
 			}
@@ -60,13 +86,13 @@ namespace mist {
 				true
 			);
 
-			attachmentImages[i] = VulkanImage(props);
+			attachmentImages[i] = CreateRef<VulkanImage>(props);
 		}
 
 		std::vector<VkImageView> attachmentViews;
 		attachmentViews.resize(attachmentImages.size());
 		for (size_t i = 0; i < attachmentImages.size(); ++i) {
-			attachmentViews[i] = attachmentImages[i].GetImageView();
+			attachmentViews[i] = attachmentImages[i]->GetImageView();
 		}
 
 		VkFramebufferCreateInfo info {};
@@ -81,12 +107,13 @@ namespace mist {
 		CheckVkResult(vkCreateFramebuffer(context.GetDevice(), &info, context.GetAllocationCallbacks(), &framebuffer));
 	}
 
-	void VulkanFramebuffer::Destroy() {
-		if (framebuffer == VK_NULL_HANDLE) {
-			attachmentImages.clear();
+	void VulkanFramebuffer::Cleanup() {
+		if (framebuffer != VK_NULL_HANDLE) {
 			VulkanContext& context = VulkanContext::GetContext();
 			vkDestroyFramebuffer(context.GetDevice(), framebuffer, context.GetAllocationCallbacks());
 		}
+
+		attachmentImages.clear();
 	}
 
 	void VulkanFramebuffer::Resize(uint32_t width, uint32_t height) {

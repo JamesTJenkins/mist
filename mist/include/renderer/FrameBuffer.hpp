@@ -92,6 +92,6 @@ namespace mist {
 		virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const = 0;
 		virtual const FramebufferProperties& GetProperties() const = 0;
 
-		static Ref<Framebuffer> Create(FramebufferProperties& properties);
+		static void Create(FramebufferProperties& properties);
 	};
 }

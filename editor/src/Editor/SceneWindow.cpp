@@ -11,7 +11,19 @@ namespace mistEditor {
 		};
 		properties.width = 1280;
 		properties.height = 720;
-		framebuffer = mist::Framebuffer::Create(properties);
+		mist::Framebuffer::Create(properties);
+
+		std::vector<float> verts = {
+			-1, 0, 0,
+			0, 1, 0,
+			1, 0, 0
+		};
+		vBuffer = mist::VertexBuffer::Create(verts.data(), (uint32_t)verts.size());
+
+		std::vector<uint32_t> indices = {
+			0, 1, 2
+		};
+		iBuffer = mist::IndexBuffer::Create(indices.data(), (uint32_t)indices.size());
 	}
 
 	void SceneWindow::OnEditorUpdate() {
@@ -19,7 +31,8 @@ namespace mistEditor {
 	}
 
 	void SceneWindow::OnRender() {
-
+		vBuffer->Bind();
+		iBuffer->Bind();
 	}
 
 	void SceneWindow::SceneWindowDraw() {

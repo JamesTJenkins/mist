@@ -25,6 +25,7 @@ namespace mist {
         void SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count);
         
         void AllocateRenderBuffers();
+        void FreeRenderBuffers();
         inline const VkCommandBuffer& GetRenderBuffer(const uint8_t currentFrame) { return renderBuffers[currentFrame]; }
     private:
         VkCommandPool pool = VK_NULL_HANDLE;
