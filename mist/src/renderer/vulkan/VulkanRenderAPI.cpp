@@ -14,7 +14,7 @@ namespace mist {
 		context.CreatePhysicalDevice();
 		context.CreateDevice();
 		context.commands.CreateCommandPool(); // TODO: May need to do something more at some point but single pool will do for now
-		context.commands.AllocateRenderBuffer();
+		context.commands.AllocateRenderBuffers();
 		context.sync.CreateSyncObjects();
 	}
 
@@ -57,15 +57,16 @@ namespace mist {
 		}
 		CheckVkResult(vkResetFences(context.GetDevice(), 1, &context.sync.inFlightFences[currentFrame]));
 
-		context.commands.ResetCommandBuffer(context.commands.GetRenderBuffer());
-		context.commands.BeginCommandBuffer(context.commands.GetRenderBuffer());
-		context.GetSwapchain()->BeginRenderPass(context.commands.GetRenderBuffer());
+		context.commands.ResetCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
+		context.commands.BeginCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
+		context.GetSwapchain()->BeginRenderPass(context.commands.GetRenderBuffer(currentFrame));
 	}
 
 	void VulkanRenderAPI::EndRenderPass() {
 		VulkanContext& context = VulkanContext::GetContext();
-		context.GetSwapchain()->EndRenderPass(context.commands.GetRenderBuffer());
-		context.commands.EndCommandBuffer(context.commands.GetRenderBuffer());
+		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
+		context.GetSwapchain()->EndRenderPass(context.commands.GetRenderBuffer(currentFrame));
+		context.commands.EndCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
 	}
 
 	void VulkanRenderAPI::Draw() {
@@ -92,7 +93,7 @@ namespace mist {
 			submitInfo.pWaitSemaphores = waitSemaphores;
 			submitInfo.pWaitDstStageMask = waitStages;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &context.commands.GetRenderBuffer();
+			submitInfo.pCommandBuffers = &context.commands.GetRenderBuffer(currentFrame);
 			VkSemaphore signalSemaphores[] = {context.sync.renderFinishedSemaphores[currentFrame]};
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = signalSemaphores;

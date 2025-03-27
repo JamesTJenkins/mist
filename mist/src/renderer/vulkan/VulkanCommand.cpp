@@ -87,9 +87,7 @@ namespace mist {
         vkQueueWaitIdle(context.GetGraphicsQueue());
     }
 
-    void VulkanCommand::AllocateRenderBuffer() {
-        VulkanContext& context = VulkanContext::GetContext();
-        VkCommandBufferAllocateInfo info = CreateCommandBufferAllocationInfo(pool, 1);
-        CheckVkResult(vkAllocateCommandBuffers(context.GetDevice(), &info, &renderBuffer));
+    void VulkanCommand::AllocateRenderBuffers() {
+        renderBuffers = AllocateCommandBuffers(3);
     }
 }

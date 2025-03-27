@@ -24,10 +24,10 @@ namespace mist {
         void SubmitCommandBuffers(std::vector<VkCommandBuffer*> commandBuffers);
         void SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count);
         
-        void AllocateRenderBuffer();
-        const VkCommandBuffer& GetRenderBuffer() { return renderBuffer; }
+        void AllocateRenderBuffers();
+        inline const VkCommandBuffer& GetRenderBuffer(const uint8_t currentFrame) { return renderBuffers[currentFrame]; }
     private:
         VkCommandPool pool = VK_NULL_HANDLE;
-        VkCommandBuffer renderBuffer = VK_NULL_HANDLE;
+        std::vector<VkCommandBuffer> renderBuffers;
     };
 }
