@@ -133,18 +133,17 @@ namespace mist {
 
 	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionLayout(const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
-			//return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			//return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
 		return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		//return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 	}
 
 	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionFinalLayout(size_t attachmentIndex, const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
-			//return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			//return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
 		return attachmentIndex == 0 ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;

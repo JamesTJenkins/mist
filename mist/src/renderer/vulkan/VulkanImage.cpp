@@ -38,6 +38,10 @@ namespace mist {
     void VulkanImage::CreateImage(const VulkanImageProperties& properties) {
         imageProperties = properties;
 
+        VulkanContext& context = VulkanContext::GetContext();
+        QueueFamilyIndices indicies = context.FindQueueFamilies();
+		uint32_t queueFamilyIndices[] = { indicies.graphicsFamily.value(), indicies.presentFamily.value() };
+
         VkImageCreateInfo info {};
         info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         info.imageType = VK_IMAGE_TYPE_2D;
@@ -52,12 +56,17 @@ namespace mist {
         info.usage = imageProperties.usage;
         info.samples = VK_SAMPLE_COUNT_1_BIT;
         info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        info.queueFamilyIndexCount = 0;
-        info.pQueueFamilyIndices = nullptr;
         info.flags = 0;
         info.pNext = nullptr;
 
-        VulkanContext& context = VulkanContext::GetContext();
+        if (indicies.graphicsFamily != indicies.presentFamily) {
+			info.queueFamilyIndexCount = 2;
+			info.pQueueFamilyIndices = queueFamilyIndices;
+		} else {
+			info.queueFamilyIndexCount = 0;
+			info.pQueueFamilyIndices = nullptr;
+		}
+
         CheckVkResult(vkCreateImage(context.GetDevice(), &info, context.GetAllocationCallbacks(), &image));
 
         VkMemoryRequirements memRequirements;
