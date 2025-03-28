@@ -1,21 +1,26 @@
 #pragma once
-#include <vector>
 #include "Core.hpp"
 #include "Layer.hpp"
 
 namespace mist {
-    class MIST_API LayerStack {
-    public:
-        LayerStack();
-        ~LayerStack();
+	class MIST_API LayerStack {
+	public:
+		LayerStack();
+		~LayerStack();
 
-        void PushLayer(Layer* layer);
-        void PopLayer(Layer* layer);
+		void PushLayer(Layer* layer);
+		void PopLayer(Layer* layer);
 
-        std::vector<Layer*>::iterator begin() { return layers.begin(); }
-        std::vector<Layer*>::iterator end() { return layers.end(); }
-    private:
-        std::vector<Layer*> layers;
-        uint32_t layerInsert = 0;
-    };
+		inline Layer** begin() { return layers; }		// Lowercase to allow for(Layer* layer : layerstack) {}
+		inline Layer** end() { return layers + size; }	// Lowercase to allow for(Layer* layer : layerstack) {}
+		inline uint32_t Size() { return size; }
+		
+		void Clear();
+		void Resize(uint32_t newCapacity);
+
+		Layer** layers;
+	private:
+		uint32_t capacity;
+		uint32_t size;
+	};
 }

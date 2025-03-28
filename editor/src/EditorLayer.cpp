@@ -13,10 +13,12 @@ namespace mistEditor {
 
     void EditorLayer::OnAttach() {
 		// Create editor window
-		mist::FramebufferProperties properties;
-		properties.attachment = { 
+        std::vector<mist::FramebufferTextureProperties> attachments = {
 			mist::FramebufferTextureFormat::RGBA8
 		};
+		mist::FramebufferProperties properties;
+        properties.attachment.attachments = attachments.data();
+        properties.attachment.attachmentsCount = (uint32_t)attachments.size();
 		properties.width = 1280;
 		properties.height = 720;
 		mist::Framebuffer::Create(properties);

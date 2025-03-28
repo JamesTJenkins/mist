@@ -1,6 +1,5 @@
 #pragma once
 #include "Core.hpp"
-#include <vector>
 
 namespace mist {
 	enum class FramebufferTextureFormat {
@@ -72,9 +71,10 @@ namespace mist {
 
 	struct MIST_API FramebufferAttachmentProperties {
 		FramebufferAttachmentProperties() = default;
-		FramebufferAttachmentProperties(std::initializer_list<FramebufferTextureProperties> attachments) : attachments(attachments) {}
+		FramebufferAttachmentProperties(FramebufferTextureProperties* attachments, uint32_t attachmentsCount) : attachments(attachments), attachmentsCount(attachmentsCount) {}
 
-		std::vector<FramebufferTextureProperties> attachments;  // This will need sorting at somepoint either via using raw points or wrappers idk
+		FramebufferTextureProperties* attachments;
+		uint32_t attachmentsCount = 0;
 	};
 
 	struct MIST_API FramebufferProperties {

@@ -51,10 +51,10 @@ namespace mist {
 	void VulkanFramebuffer::Create(VkRenderPass renderpass, Scope<VulkanImage> swapchainImage) {
 		VulkanContext& context = VulkanContext::GetContext();
 
-		attachmentImages.reserve(properties.attachment.attachments.size());
+		attachmentImages.reserve(properties.attachment.attachmentsCount);
 
 		bool overridedColorBit = false;
-		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
+		for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
 			FramebufferTextureProperties format = properties.attachment.attachments[i];
 			bool isDepthFormat = VulkanHelper::IsDepthFormat(format.textureFormat);
 			

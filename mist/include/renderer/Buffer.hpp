@@ -32,13 +32,13 @@ namespace mist {
 
 	struct MIST_API BufferElement {
 		ShaderDataType type;
-		std::string name;
+		const char* name;
 		uint32_t size;
 		uint32_t offset;
 		bool normalized;
 
 		BufferElement() : type(ShaderDataType::None), name(""), size(0), offset(0), normalized(false) {}
-		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false) : type(type), name(name), size(GetDataTypeSize(type)), offset(0), normalized(normalized) {}
+		BufferElement(ShaderDataType type, const char* name, bool normalized = false) : type(type), name(name), size(GetDataTypeSize(type)), offset(0), normalized(normalized) {}
 
 		uint32_t GetComponentCount() const {
 			switch (type) {

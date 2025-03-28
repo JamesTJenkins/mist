@@ -67,22 +67,23 @@ namespace mist {
 	}
 
 	void ValidateFramebufferProperties(FramebufferProperties& properties) {
-		for (FramebufferTextureProperties& properties : properties.attachment.attachments) {
-			if (VulkanHelper::IsColorFormatSupported(VulkanHelper::GetVkFormat(properties.textureFormat))) {
+		for (size_t i = 0; i < properties.attachment.attachmentsCount; i++) {
+			FramebufferTextureProperties& textureProperties = properties.attachment.attachments[i];
+			if (VulkanHelper::IsColorFormatSupported(VulkanHelper::GetVkFormat(textureProperties.textureFormat))) {
 				continue;
 			}
-			if (VulkanHelper::IsDepthStencilFormatSupported(VulkanHelper::GetVkFormat(properties.textureFormat))) {
+			if (VulkanHelper::IsDepthStencilFormatSupported(VulkanHelper::GetVkFormat(textureProperties.textureFormat))) {
 				continue;
 			}
 	
 			// If format is not supported, choose a fallback format
-			if (VulkanHelper::IsDepthStencilFormat(properties.textureFormat)) {
-				properties.textureFormat = VulkanHelper::GetFramebufferTextureFormat(VulkanHelper::FindSupportedDepthStencilFormat(VulkanHelper::GetVkFormat(properties.textureFormat), VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
+			if (VulkanHelper::IsDepthStencilFormat(textureProperties.textureFormat)) {
+				textureProperties.textureFormat = VulkanHelper::GetFramebufferTextureFormat(VulkanHelper::FindSupportedDepthStencilFormat(VulkanHelper::GetVkFormat(textureProperties.textureFormat), VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
 			} else {
-				properties.textureFormat = VulkanHelper::GetFramebufferTextureFormat(VulkanHelper::FindSupportedColorFormat(VulkanHelper::GetVkFormat(properties.textureFormat), VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT));
+				textureProperties.textureFormat = VulkanHelper::GetFramebufferTextureFormat(VulkanHelper::FindSupportedColorFormat(VulkanHelper::GetVkFormat(textureProperties.textureFormat), VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT));
 			}
 	
-			MIST_WARN(std::string("Format not supported. Using a fallback format: ") + FramebufferTextureFormatToString(properties.textureFormat));
+			MIST_WARN(std::string("Format not supported. Using a fallback format: ") + FramebufferTextureFormatToString(textureProperties.textureFormat));
 		}
 	}
 

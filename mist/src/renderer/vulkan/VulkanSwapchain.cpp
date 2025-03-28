@@ -105,7 +105,7 @@ namespace mist {
 		std::vector<VkAttachmentReference> colorAttachmentRefs;
 		std::vector<VkAttachmentReference> depthAttachmentRefs;
 
-		for (size_t i = 0; i < properties.attachment.attachments.size(); ++i) {
+		for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
 			VkAttachmentDescription attachment = CreateAttachmentDescription(i, properties.attachment.attachments[i]);
 			attachments.push_back(attachment);
 

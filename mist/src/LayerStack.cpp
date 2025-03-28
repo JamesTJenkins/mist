@@ -2,23 +2,40 @@
 #include <algorithm>
 
 namespace mist {
-    LayerStack::LayerStack() {}
+	LayerStack::LayerStack() : layers(nullptr), capacity(0), size(0) {}
 
-    LayerStack::~LayerStack() {
-        for (Layer* layer : layers)
-            delete layer;
-    }
+	LayerStack::~LayerStack() {
+		Clear();
+		delete[] layers;
+	}
 
-    void LayerStack::PushLayer(Layer* layer) {
-        layers.emplace(layers.begin() + layerInsert, layer);
-        layerInsert++;
-    }
+	void LayerStack::PushLayer(Layer* layer) {
+		if (size == capacity) {
+			Resize(capacity == 0 ? 1 : capacity * 2);
+		}
+		layers[size++] = layer;
+	}
 
-    void LayerStack::PopLayer(Layer* layer) {
-        auto it = std::find(layers.begin(), layers.end(), layer);
-        if (it != layers.end()) {
-            layers.erase(it);
-            layerInsert--;
-        }
-    }
+	void LayerStack::PopLayer(Layer* layer) {
+		auto it = std::find(begin(), end(), layer);
+		if (it != end()) {
+			std::rotate(it, it + 1, end());
+			--size;
+		}
+	}
+
+	void LayerStack::Clear() {
+		for (uint32_t i = 0; i < size; i++) {
+			delete layers[i];
+		}
+		size = 0;
+	}
+
+	void LayerStack::Resize(uint32_t newCapacity) {
+		Layer** newLayers = new Layer*[newCapacity];
+		std::copy(begin(), end(), newLayers);
+		delete[] layers;
+		layers = newLayers;
+		capacity = newCapacity;
+	}
 }
