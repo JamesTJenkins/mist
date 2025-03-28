@@ -236,12 +236,10 @@ namespace mist {
 		framebuffers.clear();
 		framebuffers.reserve(swapchainImageCount);
 		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			Ref<VulkanImage> image = CreateRef<VulkanImage>(swapchainImages[i], imageProps);
-
-			framebuffers.push_back(CreateRef<VulkanFramebuffer>(
+			framebuffers.push_back(CreateScope<VulkanFramebuffer>(
 				properties, 
 				renderpass, 
-				image
+				CreateScope<VulkanImage>(swapchainImages[i], imageProps)
 			));
 		}
 

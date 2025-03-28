@@ -7,7 +7,7 @@ namespace mist {
     class VulkanFramebuffer : public Framebuffer {
     public:
         VulkanFramebuffer();
-        VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, Ref<VulkanImage> swapchainImage);
+        VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, Scope<VulkanImage> swapchainImage);
         ~VulkanFramebuffer();
 
         // Copy (deleted as shouldnt ever be copied)
@@ -19,7 +19,7 @@ namespace mist {
         // Move assignment
         VulkanFramebuffer& operator=(VulkanFramebuffer&& other) noexcept;
 
-        void Create(VkRenderPass renderpass, Ref<VulkanImage> swapchainImage);
+        void Create(VkRenderPass renderpass, Scope<VulkanImage> swapchainImage);
         void Cleanup();
 
         virtual void Resize(uint32_t width, uint32_t height) override;
@@ -27,11 +27,11 @@ namespace mist {
         virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const override;
         virtual const FramebufferProperties& GetProperties() const override { return properties; };
 
-        inline const std::vector<Ref<VulkanImage>> GetImages() const { return attachmentImages; }
+        inline const VulkanImage* GetImage(uint32_t index) const { return attachmentImages[index].get(); }
         inline const VkFramebuffer GetFramebuffer() const { return framebuffer; }
     private:
         VkFramebuffer framebuffer = VK_NULL_HANDLE;
-        std::vector<Ref<VulkanImage>> attachmentImages;
+        std::vector<Scope<VulkanImage>> attachmentImages;
 
         FramebufferProperties properties;
         std::vector<FramebufferTextureProperties> colorAttachmentProperties;

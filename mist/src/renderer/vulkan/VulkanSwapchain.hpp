@@ -35,8 +35,7 @@ namespace mist {
 
 		inline const VkSwapchainKHR& GetSwapchain() { return swapchain; }
 		inline const uint8_t GetCurrentFrameIndex() const { return activeFramebuffer; }
-		inline const Ref<VulkanFramebuffer> GetFrameBuffer() const { return framebuffers[GetCurrentFrameIndex()]; }
-		inline const std::vector<Ref<VulkanImage>> GetSwapchainImages() const { return framebuffers[GetCurrentFrameIndex()].get()->GetImages(); }
+		inline const VulkanFramebuffer* GetFrameBuffer() const { return framebuffers[GetCurrentFrameIndex()].get(); }
 		inline const VkRenderPass GetRenderPass() const { return renderpass; }
 		inline const uint32_t GetSwapchainMinImageCount() const { return swapchainMinImageCount; }
 		inline const uint32_t GetSwapchainImageCount() const { return swapchainImageCount; }
@@ -46,7 +45,7 @@ namespace mist {
 		uint32_t swapchainImageCount;
 		uint8_t activeFramebuffer = 0;	// Currently rendered image
 		VkSwapchainKHR swapchain;
-		std::vector<Ref<VulkanFramebuffer>> framebuffers;
+		std::vector<Scope<VulkanFramebuffer>> framebuffers;
 		VkFormat swapchainImageFormat;
 		VkExtent2D swapchainExtent;
 		VkRenderPass renderpass = VK_NULL_HANDLE;

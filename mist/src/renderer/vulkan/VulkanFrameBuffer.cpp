@@ -9,13 +9,13 @@ namespace mist {
 
 	}
 
-	VulkanFramebuffer::VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, Ref<VulkanImage> swapchainImage) : properties(properties) {
+	VulkanFramebuffer::VulkanFramebuffer(const FramebufferProperties& properties, VkRenderPass renderpass, Scope<VulkanImage> swapchainImage) : properties(properties) {
 		if (properties.width == 0 || properties.height == 0) {
 			MIST_WARN("Tried to size framebuffer to {0} {1}", properties.width, properties.height);
 			return;
 		}
 
-		Create(renderpass, swapchainImage);
+		Create(renderpass, std::move(swapchainImage));
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer() {
@@ -48,7 +48,7 @@ namespace mist {
 		return *this;
 	}
 
-	void VulkanFramebuffer::Create(VkRenderPass renderpass, Ref<VulkanImage> swapchainImage) {
+	void VulkanFramebuffer::Create(VkRenderPass renderpass, Scope<VulkanImage> swapchainImage) {
 		VulkanContext& context = VulkanContext::GetContext();
 
 		attachmentImages.reserve(properties.attachment.attachments.size());
@@ -66,7 +66,7 @@ namespace mist {
 				if (!overridedColorBit) {
 					overridedColorBit = true;
 
-					attachmentImages.push_back(swapchainImage);
+					attachmentImages.push_back(std::move(swapchainImage));
 					continue;
 				}
 			}
@@ -86,7 +86,7 @@ namespace mist {
 				true
 			);
 
-			attachmentImages[i] = CreateRef<VulkanImage>(props);
+			attachmentImages[i] = CreateScope<VulkanImage>(props);
 		}
 
 		std::vector<VkImageView> attachmentViews;
