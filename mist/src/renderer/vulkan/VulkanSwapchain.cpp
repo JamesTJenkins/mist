@@ -155,11 +155,20 @@ namespace mist {
 		return renderpass;
 	}
 
+	void VulkanSwapchain::ResizeSwapchain(uint32_t newWidth, uint32_t newHeight) {
+		swapchainProperties.width = newWidth;
+		swapchainProperties.height = newHeight;
+		RecreateSwapchain();
+	}
+
 	void VulkanSwapchain::RecreateSwapchain() {
 		CreateSwapchain(swapchainProperties);
 	}
 
 	void VulkanSwapchain::CreateSwapchain(FramebufferProperties& properties) {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDeviceWaitIdle(context.GetDevice());
+		
 		SwapchainSupportDetails swapchainSupport = QuerySwapchainSupport();
 
 		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats, VulkanHelper::GetVkFormat(properties.attachment.attachments[0].textureFormat));
@@ -179,7 +188,10 @@ namespace mist {
 
 		VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-		VulkanContext& context = VulkanContext::GetContext();
+		VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE;
+		if (swapchain != VK_NULL_HANDLE) {
+			oldSwapchain = swapchain;
+		}
 
 		VkSwapchainCreateInfoKHR info {};
 		info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -194,7 +206,7 @@ namespace mist {
 		info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		info.presentMode = presentMode;
 		info.clipped = VK_TRUE;
-		info.oldSwapchain = VK_NULL_HANDLE;	// TODO: handle this properly
+		info.oldSwapchain = oldSwapchain;
 
 		QueueFamilyIndices indicies = context.FindQueueFamilies();
 		uint32_t queueFamilyIndices[] = { indicies.graphicsFamily.value(), indicies.presentFamily.value() };
@@ -211,9 +223,14 @@ namespace mist {
 
 		CheckVkResult(vkCreateSwapchainKHR(context.GetDevice(), &info, context.GetAllocationCallbacks(), &swapchain));
 
+		if (oldSwapchain != VK_NULL_HANDLE) {
+			vkDestroySwapchainKHR(context.GetDevice(), oldSwapchain, context.GetAllocationCallbacks());
+		}
+
 		swapchainImageFormat = surfaceFormat.format;
 		swapchainExtent = extent;
 
+		CleanupRenderPasses();
 		CreateRenderPass(properties);
 
 		vkGetSwapchainImagesKHR(context.GetDevice(), swapchain, &swapchainImageCount, nullptr);

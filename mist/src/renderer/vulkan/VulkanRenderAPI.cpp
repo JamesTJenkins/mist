@@ -43,7 +43,8 @@ namespace mist {
 	}
 
 	void VulkanRenderAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-		
+		VulkanContext& context = VulkanContext::GetContext();
+		context.GetSwapchain()->ResizeSwapchain(width, height);
 	}
 
 	void VulkanRenderAPI::SetClearColor(glm::vec4& color) {

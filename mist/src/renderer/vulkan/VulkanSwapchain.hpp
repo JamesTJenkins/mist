@@ -22,6 +22,7 @@ namespace mist {
 
 		const SwapchainSupportDetails QuerySwapchainSupport() const;
 
+		void ResizeSwapchain(uint32_t newWidth, uint32_t newHeight);
 		void RecreateSwapchain();
 		void CreateSwapchain(FramebufferProperties& properties);
 		void CreateRenderPass(const FramebufferProperties& properties);
@@ -43,8 +44,8 @@ namespace mist {
 	private:
 		uint32_t swapchainMinImageCount;
 		uint32_t swapchainImageCount;
-		uint8_t activeFramebuffer = 0;	// Currently rendered image
-		VkSwapchainKHR swapchain;
+		uint8_t activeFramebuffer = 0;
+		VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 		std::vector<Scope<VulkanFramebuffer>> framebuffers;
 		VkFormat swapchainImageFormat;
 		VkExtent2D swapchainExtent;
