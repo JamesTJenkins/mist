@@ -6,7 +6,6 @@ namespace mist {
 
 	LayerStack::~LayerStack() {
 		Clear();
-		delete[] layers;
 	}
 
 	void LayerStack::PushLayer(Layer* layer) {
@@ -25,10 +24,9 @@ namespace mist {
 	}
 
 	void LayerStack::Clear() {
-		for (uint32_t i = 0; i < size; i++) {
-			delete layers[i];
-		}
+		delete[] layers;
 		size = 0;
+		capacity = 0;
 	}
 
 	void LayerStack::Resize(uint32_t newCapacity) {

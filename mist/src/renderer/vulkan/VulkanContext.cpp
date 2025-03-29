@@ -63,10 +63,10 @@ namespace mist {
 #endif
 
 		unsigned int count = 0;
-		SDL_Vulkan_GetInstanceExtensions(Application::Get().GetWindow().GetNativeWindow(), &count, nullptr);
+		SDL_Vulkan_GetInstanceExtensions(Application::Get().GetWindow()->GetNativeWindow(), &count, nullptr);
 		size_t additionalExtensionCount = extensions.size();
 		extensions.resize(additionalExtensionCount + count);
-		SDL_Vulkan_GetInstanceExtensions(Application::Get().GetWindow().GetNativeWindow(), &count, extensions.data() + additionalExtensionCount);
+		SDL_Vulkan_GetInstanceExtensions(Application::Get().GetWindow()->GetNativeWindow(), &count, extensions.data() + additionalExtensionCount);
 			
 		VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -97,7 +97,7 @@ namespace mist {
 	}
 
 	void VulkanContext::CreateSurface() {
-		if (!SDL_Vulkan_CreateSurface(Application::Get().GetWindow().GetNativeWindow(), instance, &surface))
+		if (!SDL_Vulkan_CreateSurface(Application::Get().GetWindow()->GetNativeWindow(), instance, &surface))
 			printf("[VULKAN] surface failed to be created");
 	}
 

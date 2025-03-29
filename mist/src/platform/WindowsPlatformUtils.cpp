@@ -12,7 +12,7 @@ namespace mist {
 	static HWND GetWindowsWindow() {
 		SDL_SysWMinfo wmInfo;
 		SDL_VERSION(&wmInfo.version);
-		SDL_GetWindowWMInfo(Application::Get().GetWindow().GetNativeWindow(), &wmInfo);
+		SDL_GetWindowWMInfo(Application::Get().GetWindow()->GetNativeWindow(), &wmInfo);
 		return wmInfo.info.win.window;
 	}
 

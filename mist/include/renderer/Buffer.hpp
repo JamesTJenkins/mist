@@ -60,29 +60,29 @@ namespace mist {
 	
 	class MIST_API BufferLayout {
 	public:
-		BufferLayout() {}
-		BufferLayout(const std::initializer_list<BufferElement>& elements) : elements(elements) { CalculateOffsetAndStride(); }
+		BufferLayout();
+		BufferLayout(BufferElement** elements, uint32_t elementCount);
+
+		void Push(BufferElement* element);
+		void Pop(BufferElement* element);
 
 		inline uint32_t GetStride() const { return stride; }
-		inline const std::vector<BufferElement>& GetElements() const { return elements; }
-
-		std::vector<BufferElement>::iterator begin() { return elements.begin(); }
-		std::vector<BufferElement>::iterator end() { return elements.end(); }
-		std::vector<BufferElement>::const_iterator begin() const { return elements.begin(); }
-		std::vector<BufferElement>::const_iterator end() const { return elements.end(); }
+		inline BufferElement** Data() { return elements; }
+		
+		inline BufferElement** begin() { return elements; }			// Lowercase to allow for(BufferElement* element : elements) {}
+		inline BufferElement** end() { return elements + size; }	// Lowercase to allow for(BufferElement* element : elements) {}
+		inline uint32_t Size() const { return elementCount; }
+		
+		void Clear();
+		void Resize(uint32_t newCapacity);
 	private:
-		void CalculateOffsetAndStride() {
-			uint32_t offset = 0;
-			stride = 0;
-			for (BufferElement& element : elements) {
-				element.offset = offset;
-				offset += element.size;
-				stride += element.size;
-			}
-		}
+		void CalculateOffsetAndStride();
 	private:
-		std::vector<BufferElement> elements;
-		uint32_t stride = 0;
+		BufferElement** elements;
+		uint32_t elementCount;
+		uint32_t capacity;
+		uint32_t size;
+		uint32_t stride;
 	};
 
 	class MIST_API VertexBuffer {

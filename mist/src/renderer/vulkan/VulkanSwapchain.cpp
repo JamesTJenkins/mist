@@ -178,7 +178,7 @@ namespace mist {
 		}
 
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchainSupport.presentMode);
-		VkExtent2D extent = ChooseSwapExtent(swapchainSupport.capabilities, Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight());
+		VkExtent2D extent = ChooseSwapExtent(swapchainSupport.capabilities, Application::Get().GetWindow()->GetWidth(), Application::Get().GetWindow()->GetHeight());
 
 		swapchainMinImageCount = swapchainSupport.capabilities.minImageCount;
 		swapchainImageCount = swapchainMinImageCount + 1;
@@ -276,7 +276,7 @@ namespace mist {
 		FramebufferProperties props = framebuffers[activeFramebuffer].get()->GetProperties();
 		renderPassInfo.renderArea.extent = { props.width, props.height };
 		renderPassInfo.clearValueCount = 1;
-		glm::vec4 color = Application::Get().GetRenderAPI().GetClearColor();
+		glm::vec4 color = Application::Get().GetRenderAPI()->GetClearColor();
 		VkClearValue clearColor = { color.r, color.g, color.b, color.a };
 		renderPassInfo.pClearValues = &clearColor;
 

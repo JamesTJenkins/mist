@@ -22,8 +22,8 @@ namespace mist {
 		void PushLayer(Layer* layer);
 		void PopLayer(Layer* layer);
 
-		inline RenderAPI& GetRenderAPI() { return *renderAPI; }
-		inline Window& GetWindow() { return *window; }
+		inline RenderAPI* GetRenderAPI() { return renderAPI; }
+		inline Window* GetWindow() { return window; }
 		inline const char* GetApplicationName() { return appName; }
 		inline ShaderLibrary* GetShaderLibrary() { return &shaderLib; }
 	private:
@@ -31,8 +31,8 @@ namespace mist {
 		bool running = true;
 		LayerStack layerStack;
 		ShaderLibrary shaderLib;
-		Scope<Window> window;
-		Scope<RenderAPI> renderAPI;
+		Window* window;
+		RenderAPI* renderAPI;
 		static Application* instance;
 	};
 }

@@ -18,9 +18,9 @@ namespace mist {
 
 		instance = this;
 		appName = name;
-		renderAPI = std::unique_ptr<VulkanRenderAPI>(new VulkanRenderAPI());
+		renderAPI = new VulkanRenderAPI();
 		SDL_Init(SDL_INIT_VIDEO);
-		window = std::unique_ptr<Window>(Window::Create(WindowProperties(name)));
+		window = Window::Create(WindowProperties(name));
 		RenderCommand::Initialize();
 	}
 
