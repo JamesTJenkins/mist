@@ -46,3 +46,24 @@ target_compile_definitions(${PROJECT_NAME}
     PRIVATE $<$<CONFIG:Debug>:DEBUG>
     PRIVATE $<$<PLATFORM_ID:Windows>:MIST_DLL>
 )
+
+set(ASSETS_SRC_DIR "${CMAKE_SOURCE_DIR}/editor/assets")
+set(ASSETS_DEST_DIR "${CMAKE_BINARY_DIR}/assets")
+
+file(REMOVE_RECURSE ${ASSETS_DEST_DIR}) # Need to clear the assets directory before copying over otherwise asset changes wont show
+
+add_custom_command(
+    OUTPUT ${ASSETS_DEST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${ASSETS_SRC_DIR} ${ASSETS_DEST_DIR}
+    COMMENT "Copying assets over to build dir"
+    DEPENDS ${ASSETS_SRC_DIR}
+)
+
+add_custom_target(CopyAssets ALL
+    DEPENDS ${ASSETS_DEST_DIR}
+)
+
+add_dependencies(editor
+    CopyAssets
+)
