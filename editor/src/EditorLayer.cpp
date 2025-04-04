@@ -13,15 +13,15 @@ namespace mistEditor {
 
     void EditorLayer::OnAttach() {
 		// Create editor window
-        std::vector<mist::FramebufferTextureProperties> attachments = {
-			mist::FramebufferTextureFormat::RGBA8
-		};
-		mist::FramebufferProperties properties;
-        properties.attachment.attachments = attachments.data();
-        properties.attachment.attachmentsCount = (uint32_t)attachments.size();
-		properties.width = 1280;
-		properties.height = 720;
-		mist::Framebuffer::Create(properties);
+        //std::vector<mist::FramebufferTextureProperties> attachments = {
+		//	mist::FramebufferTextureFormat::RGBA8
+		//};
+		//mist::FramebufferProperties properties;
+        //properties.attachment.attachments = attachments.data();
+        //properties.attachment.attachmentsCount = (uint32_t)attachments.size();
+		//properties.width = 1280;
+		//properties.height = 720;
+		//mist::Framebuffer::Create(properties);
     }
 
     void EditorLayer::OnDetach() {
@@ -29,11 +29,11 @@ namespace mistEditor {
     }
 
     void EditorLayer::OnUpdate() {
-        
+        sceneWindow.OnEditorUpdate();
     }
 
     void EditorLayer::OnRender() {
-		
+		sceneWindow.OnRender();
     }
     
     void EditorLayer::OnEvent(const SDL_Event* e) {

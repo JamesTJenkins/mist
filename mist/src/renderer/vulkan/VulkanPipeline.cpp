@@ -6,25 +6,13 @@ namespace mist {
 	void VulkanPipeline::Cleanup() {
 		VulkanContext& context = VulkanContext::GetContext();
 
-		for (size_t i = 0; i < pipelines.size(); i++) {
-			vkDestroyPipeline(context.GetDevice(), pipelines[i], context.GetAllocationCallbacks());
+		for (std::pair<const std::string, VkPipeline>& pipeline : pipelines) {
+			vkDestroyPipeline(context.GetDevice(), pipeline.second, context.GetAllocationCallbacks());
 		}
 		
-		for (size_t i = 0; i < pipelineLayouts.size(); i++) {
-			vkDestroyPipelineLayout(context.GetDevice(), pipelineLayouts[i], context.GetAllocationCallbacks());
+		for (std::pair<const std::string, VkPipelineLayout>& layout : pipelineLayouts) {
+			vkDestroyPipelineLayout(context.GetDevice(), layout.second, context.GetAllocationCallbacks());
 		}
-	}
-
-	VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<uint32_t> spirv) {
-		VkShaderModuleCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		info.codeSize = spirv.size();
-		info.pCode = spirv.data();
-
-		VulkanContext& context = VulkanContext::GetContext();
-		VkShaderModule module;
-		CheckVkResult(vkCreateShaderModule(context.GetDevice(), &info, context.GetAllocationCallbacks(), &module));
-		return module;
 	}
 
 	void VulkanPipeline::CreateGraphicsPipeline(const VulkanShader* shader) {
@@ -35,13 +23,6 @@ namespace mist {
 
 		VulkanContext& context = VulkanContext::GetContext();
 		FramebufferProperties framebufferProperties = context.GetSwapchain()->GetFrameBuffer()->GetProperties();
-
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr;
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr;
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -133,17 +114,32 @@ namespace mist {
 
 		VkPipelineLayout pipelineLayout;
 		CheckVkResult(vkCreatePipelineLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &pipelineLayout));
-		pipelineLayouts.push_back(pipelineLayout);
+		pipelineLayouts.emplace(shader->GetName(), pipelineLayout);
 
+		std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptons;
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		for (const auto& res : shader->GetResources()) {
+		for (const auto& res : shader->GetInputResources()) {
 			if (res.second.flags & VK_SHADER_STAGE_VERTEX_BIT) {
 				VkPipelineShaderStageCreateInfo shaderStageInfo{};
 				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 				shaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = res.first.c_str();
+				shaderStageInfo.pName = "main";
 				shaderStages.push_back(shaderStageInfo);
+
+				VkVertexInputBindingDescription binding;
+				binding.binding = res.second.binding;
+				binding.stride = res.second.stride;
+				binding.inputRate = res.second.inputRate;
+				bindingDescriptions.push_back(binding);
+
+				VkVertexInputAttributeDescription attrib;
+				attrib.binding = res.second.binding;
+				attrib.location = res.second.location;
+				attrib.format = res.second.format;
+				attrib.offset = res.second.offset;
+				attributeDescriptons.push_back(attrib);
 			}
 
 			if (res.second.flags & VK_SHADER_STAGE_FRAGMENT_BIT) {
@@ -151,7 +147,7 @@ namespace mist {
 				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 				shaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = res.first.c_str();
+				shaderStageInfo.pName = "main";
 				shaderStages.push_back(shaderStageInfo);
 			}
 
@@ -160,7 +156,7 @@ namespace mist {
 				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 				shaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
 				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = res.first.c_str();
+				shaderStageInfo.pName = "main";
 				shaderStages.push_back(shaderStageInfo);
 			}
 
@@ -169,10 +165,17 @@ namespace mist {
 				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 				shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = res.first.c_str();
+				shaderStageInfo.pName = "main";
 				shaderStages.push_back(shaderStageInfo);
 			}
 		}
+
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertexInputInfo.vertexBindingDescriptionCount = (uint32_t)bindingDescriptions.size();
+		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+		vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributeDescriptons.size();
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptons.data();
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -194,7 +197,7 @@ namespace mist {
 		VkPipeline graphicsPipeline;
 		CheckVkResult(vkCreateGraphicsPipelines(context.GetDevice(), nullptr, 1, &pipelineInfo, context.GetAllocationCallbacks(), &graphicsPipeline));
 	
-		pipelines.push_back(graphicsPipeline);
+		pipelines.emplace(shader->GetName(), graphicsPipeline);
 	}
 }
 

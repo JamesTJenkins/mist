@@ -1,9 +1,10 @@
 #include "VulkanShader.hpp"
 #include <glslang/SPIRV/GlslangToSpv.h>
-#include <spirv_cross.hpp>
 #include <spirv_glsl.hpp>
 #include <filesystem>
+#include "renderer/vulkan/VulkanContext.hpp"
 #include "Debug.hpp"
+#include "VulkanDebug.hpp"
 
 namespace mist {
 	static TBuiltInResource GetDefaultResources() {
@@ -147,6 +148,11 @@ namespace mist {
 			Compile(spirv, src.first);
 		}
 		glslang::FinalizeProcess();
+
+		VulkanContext& context = VulkanContext::GetContext();
+		context.pipeline.CreateGraphicsPipeline(this);
+
+		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + name);
 	}
 
 	VulkanShader::VulkanShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : name(name) {
@@ -160,21 +166,26 @@ namespace mist {
 			Compile(spirv, src.first);
 		}
 		glslang::FinalizeProcess();
+
+		VulkanContext& context = VulkanContext::GetContext();
+		context.pipeline.CreateGraphicsPipeline(this);
+
+		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + name);
 	}
 
 	VulkanShader::~VulkanShader() {}
 
 	std::string VulkanShader::ReadFile(const std::string& path) {
 		std::string result;
-		std::ifstream in(path, std::ios::in | std::ios::binary);
+		std::ifstream in(path);
+
 		if (in) {
 			in.seekg(0, std::ios::end);
 			result.resize(in.tellg());
 			in.seekg(0, std::ios::beg);
 			in.read(&result[0], result.size());
 			in.close();
-		}
-		else {
+		} else {
 			MIST_ERROR("Failed to open file at: {0}", path);
 		}
 
@@ -207,9 +218,9 @@ namespace mist {
 		shaderStrings[0] = src.c_str();
 
 		glslang::TShader shader(stage);
-		shader.setEnvInput(glslang::EShSourceGlsl, stage, glslang::EShClientVulkan, 100);
-		shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_0);
-		shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
+		shader.setEnvInput(glslang::EShSourceGlsl, stage, glslang::EShClientVulkan, 130);
+		shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_3);	// EshTargetVulkan_1_4 isnt available so will just use EshTargetVulkan_1_3 for now and other settings will also use 1.3 for now
+		shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_3);
 
 		shader.setStrings(shaderStrings, 1);
 
@@ -235,36 +246,144 @@ namespace mist {
 		return spirv;
 	}
 
+	uint32_t VulkanShader::CalculateSize(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type) {
+		uint32_t size = 0;
+
+		switch (type.basetype) {
+		case spirv_cross::SPIRType::Boolean:
+			size = sizeof(bool);
+			break;
+		case spirv_cross::SPIRType::Char:
+		case spirv_cross::SPIRType::SByte:
+		case spirv_cross::SPIRType::UByte:
+			size = sizeof(char);
+			break;
+		case spirv_cross::SPIRType::UShort:
+		case spirv_cross::SPIRType::Short:
+			size = sizeof(short);
+			break;
+		case spirv_cross::SPIRType::UInt:
+		case spirv_cross::SPIRType::Int:
+			size = sizeof(int);
+			break;
+		case spirv_cross::SPIRType::UInt64:
+		case spirv_cross::SPIRType::Int64:
+			size = sizeof(int64_t);
+			break;
+		case spirv_cross::SPIRType::AtomicCounter:
+			size = sizeof(uint32_t);
+			break;
+		case spirv_cross::SPIRType::Half:
+			size = sizeof(uint16_t);
+		case spirv_cross::SPIRType::Float:
+			size = sizeof(float);
+			break;
+		case spirv_cross::SPIRType::Double:
+			size = sizeof(double);
+			break;
+		case spirv_cross::SPIRType::Struct:
+			for (const auto& member : type.member_types) {
+				const spirv_cross::SPIRType& memberType = compiler.get_type(member);
+				size += CalculateSize(compiler, memberType);
+			}
+			break;
+		default:
+			MIST_ERROR("Unsupported type");
+		}
+
+		if (type.vecsize > 1)
+			size *= type.vecsize;
+		if (type.columns > 1)
+			size *= type.columns;
+
+		return size;
+	}
+
+	VkFormat VulkanShader::GetDescriptionFormat(spirv_cross::SPIRType type) {
+		if (type.basetype == spirv_cross::SPIRType::Float) {
+			if (type.vecsize == 2) {
+				return VK_FORMAT_R32G32_SFLOAT;
+			} else if (type.vecsize == 3) {
+				return VK_FORMAT_R32G32B32_SFLOAT;
+			} else if (type.vecsize == 4) {
+				return VK_FORMAT_R32G32B32A32_SFLOAT;
+			}
+		}
+	}
+
+	VkShaderModule VulkanShader::CreateShaderModule(const std::vector<uint32_t>& spirv) {
+		VkShaderModuleCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		info.codeSize = spirv.size() * sizeof(uint32_t);
+		info.pCode = spirv.data();
+
+		VulkanContext& context = VulkanContext::GetContext();
+		VkShaderModule module;
+		CheckVkResult(vkCreateShaderModule(context.GetDevice(), &info, context.GetAllocationCallbacks(), &module));
+		return module;
+	}
+
 	void VulkanShader::Compile(std::vector<uint32_t> spirv, EShLanguage stage) {
 		spirv_cross::CompilerGLSL compiler(spirv);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-		
+
+		for (const spirv_cross::Resource& inputs : resources.stage_inputs) {
+			InputShaderResource res;
+			res.binding = compiler.get_decoration(inputs.id, spv::DecorationBinding);
+			res.location = compiler.get_decoration(inputs.id, spv::DecorationLocation);
+			res.offset = compiler.get_decoration(inputs.id, spv::DecorationOffset);
+			res.format = GetDescriptionFormat(compiler.get_type(inputs.type_id));
+			res.stride = res.offset + CalculateSize(compiler, compiler.get_type(inputs.type_id));
+			res.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+			res.flags = EShLanguageToVkStageFlags(stage);
+			res.shaderModule = CreateShaderModule(spirv);
+			
+			shaderInputs[inputs.name] = res;
+		}
+
 		for (const spirv_cross::Resource& ubo : resources.uniform_buffers) {
-			ShaderResource res;
+			UBOShaderResource res;
 			res.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			res.binding = compiler.get_decoration(ubo.id, spv::DecorationBinding);
+			res.offset = compiler.get_decoration(ubo.id, spv::DecorationOffset);
 			res.count = 1;
 			res.flags = EShLanguageToVkStageFlags(stage);
-		
-			shaderResources[ubo.name] = res;
+			res.shaderModule = CreateShaderModule(spirv);
+
+			uint32_t size = 0;
+			const spirv_cross::SPIRType& type = compiler.get_type(ubo.base_type_id);
+			for (uint32_t i = 0; i < type.member_types.size(); ++i) {
+				const spirv_cross::SPIRType& memberType = compiler.get_type(type.member_types[i]);
+				uint32_t memberSize = CalculateSize(compiler, memberType);
+				uint32_t offset = (uint32_t)compiler.get_member_decoration(ubo.base_type_id, i, spv::DecorationOffset);
+				size = std::max(size, offset + memberSize);
+			}
+			res.size = size;
+			
+			shaderUbos[ubo.name] = res;
 		}
 		
 		for (const spirv_cross::Resource& sampled : resources.sampled_images) {
-			ShaderResource res;
+			SampledImageShaderResources res;
 			res.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			res.binding = compiler.get_decoration(sampled.id, spv::DecorationBinding);
 			res.count = 1;
 			res.flags = EShLanguageToVkStageFlags(stage);
+			res.shaderModule = CreateShaderModule(spirv);
 		
-			shaderResources[sampled.name] = res;
+			shaderSampledImages[sampled.name] = res;
 		}
 	}
 
-	ShaderResource& VulkanShader::GetResource(const std::string& name) {
-		return shaderResources[name];
+	void VulkanShader::Bind() const {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkCmdBindPipeline(
+			context.commands.GetRenderBuffer(context.GetSwapchain()->GetCurrentFrameIndex()), 
+			VK_PIPELINE_BIND_POINT_GRAPHICS, 	// TODO: make a way to detect correct bind point, will probably just have to hold a reference if cant defer
+			context.pipeline.GetGraphicsPipeline(name)
+		);
 	}
 
-	void VulkanShader::Bind() const {}
 	void VulkanShader::Unbind() const {}
 	void VulkanShader::SetUniformInt(const std::string& name, int value) {}
 	void VulkanShader::SetUniformIntArray(const std::string& name, int* values, uint32_t count) {}

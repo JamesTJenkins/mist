@@ -21,5 +21,7 @@ namespace mistEditor {
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();
+
+		SceneWindow sceneWindow;
 	};
 }

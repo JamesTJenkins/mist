@@ -3,6 +3,7 @@
 #include <Core.hpp>
 #include <renderer/Framebuffer.hpp>
 #include <renderer/Buffer.hpp>
+#include <renderer/Shader.hpp>
 
 namespace mistEditor {
 	class SceneWindow {
@@ -13,7 +14,7 @@ namespace mistEditor {
 		void OnRender();
 		void SceneWindowDraw();
 	private:
-		mist::Ref<mist::Framebuffer> framebuffer;
+		mist::Ref<mist::Shader> testShader;
 		mist::Ref<mist::VertexBuffer> vBuffer;
 		mist::Ref<mist::IndexBuffer> iBuffer;
 	};

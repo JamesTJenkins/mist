@@ -36,32 +36,13 @@ namespace mist {
 	VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const VulkanShader* shader) {
 		std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 
-		for (const auto& res : shader->GetResources()) {
-			if (res.second.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
-				VkDescriptorSetLayoutBinding uboLayout {};
-        		uboLayout.binding = res.second.binding;
-        		uboLayout.descriptorCount = res.second.count;
-        		uboLayout.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        		uboLayout.pImmutableSamplers = nullptr;
-        		uboLayout.stageFlags = res.second.flags;
-				layoutBindings.push_back(uboLayout);
-			}
-			
-			if (res.second.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
-				VkDescriptorSetLayoutBinding samplerLayout {};
-				samplerLayout.binding = res.second.binding;
-				samplerLayout.descriptorCount = res.second.count;
-				samplerLayout.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				samplerLayout.pImmutableSamplers = nullptr;
-				samplerLayout.stageFlags = res.second.flags;
-				layoutBindings.push_back(samplerLayout);
-			}
-
+		for (const auto& res : shader->GetUboResources()) {
 			VkDescriptorSetLayoutBinding layoutBinding{};
 			layoutBinding.binding = res.second.binding;
 			layoutBinding.descriptorType = res.second.type;
 			layoutBinding.descriptorCount = res.second.count;
 			layoutBinding.stageFlags = res.second.flags;
+			layoutBinding.pImmutableSamplers = nullptr;
 			layoutBindings.push_back(layoutBinding);
 		}
 

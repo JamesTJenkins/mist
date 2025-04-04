@@ -5,9 +5,7 @@
 namespace mistEditor {
 	SceneWindow::SceneWindow() {
 		std::vector<mist::FramebufferTextureProperties> attachments = {
-			mist::FramebufferTextureFormat::RGBA8,
-			mist::FramebufferTextureFormat::R8,
-			mist::FramebufferTextureFormat::DEPTH24_STENCIL8
+			mist::FramebufferTextureFormat::RGBA8
 		};
 		mist::FramebufferProperties properties;
 		properties.attachment.attachments = attachments.data();
@@ -27,6 +25,8 @@ namespace mistEditor {
 			0, 1, 2
 		};
 		iBuffer = mist::IndexBuffer::Create(indices.data(), (uint32_t)indices.size());
+
+		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
 	}
 
 	void SceneWindow::OnEditorUpdate() {
@@ -34,6 +34,7 @@ namespace mistEditor {
 	}
 
 	void SceneWindow::OnRender() {
+		testShader->Bind();
 		vBuffer->Bind();
 		iBuffer->Bind();
 	}

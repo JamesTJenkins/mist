@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_map>
 #include "renderer/vulkan/VulkanShader.hpp"
 
 namespace mist {
@@ -8,11 +9,11 @@ namespace mist {
 		~VulkanPipeline() {}
 
 		void Cleanup();
-
-		VkShaderModule CreateShaderModule(const std::vector<uint32_t> spirv);
 		void CreateGraphicsPipeline(const VulkanShader* shaderResources);
+
+		VkPipeline& GetGraphicsPipeline(std::string name) { return pipelines[name]; }
 	private:
-		std::vector<VkPipelineLayout> pipelineLayouts;
-		std::vector<VkPipeline> pipelines;
+		std::unordered_map<std::string, VkPipelineLayout> pipelineLayouts;
+		std::unordered_map<std::string, VkPipeline> pipelines;
 	};
 }
