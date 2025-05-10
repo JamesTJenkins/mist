@@ -301,7 +301,9 @@ namespace mist {
 
 	VkFormat VulkanShader::GetDescriptionFormat(spirv_cross::SPIRType type) {
 		if (type.basetype == spirv_cross::SPIRType::Float) {
-			if (type.vecsize == 2) {
+			if (type.vecsize == 1) {
+				return VK_FORMAT_R32_SFLOAT;
+			} else if (type.vecsize == 2) {
 				return VK_FORMAT_R32G32_SFLOAT;
 			} else if (type.vecsize == 3) {
 				return VK_FORMAT_R32G32B32_SFLOAT;
@@ -309,6 +311,21 @@ namespace mist {
 				return VK_FORMAT_R32G32B32A32_SFLOAT;
 			}
 		}
+
+		if (type.basetype == spirv_cross::SPIRType::Int) {
+			if (type.vecsize == 1) {
+				return VK_FORMAT_R32_SINT;
+			} else if (type.vecsize == 2) {
+				return VK_FORMAT_R32G32_SINT;
+			} else if (type.vecsize == 3) {
+				return VK_FORMAT_R32G32B32_SINT;
+			} else if (type.vecsize == 4) {
+				return VK_FORMAT_R32G32B32A32_SINT;
+			}
+		}
+
+		MIST_WARN("Couldnt get description format");
+		return VK_FORMAT_R32_SFLOAT;
 	}
 
 	VkShaderModule VulkanShader::CreateShaderModule(const std::vector<uint32_t>& spirv) {
