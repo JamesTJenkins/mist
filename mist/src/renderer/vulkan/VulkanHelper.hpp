@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "renderer/FrameBuffer.hpp"
+#include "renderer/Framebuffer.hpp"
 
 namespace mist {
     class VulkanHelper {

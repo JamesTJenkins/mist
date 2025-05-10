@@ -1,15 +1,14 @@
 #pragma once
 #include <memory>
 
-#ifdef MIST_DLL
-	#define MIST_API __declspec(dllexport)
-#else
-	#define MIST_API __declspec(dllimport)
-#endif
-
 #if _WIN32
+	#ifdef MIST_DLL
+		#define MIST_API __declspec(dllexport)
+	#else
+		#define MIST_API __declspec(dllimport)
+	#endif
 #elif __linux__
-	#error "Linux not supported yet"
+	#define MIST_API __attribute__((visibility("default")))
 #else
 	#error "Unsupported Platform"
 #endif

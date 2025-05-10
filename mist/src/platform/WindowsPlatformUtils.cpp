@@ -1,5 +1,6 @@
 #include "PlatformUtils.hpp"
 
+#if _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -50,3 +51,4 @@ namespace mist {
 		return std::string();
 	}
 }
+#endif

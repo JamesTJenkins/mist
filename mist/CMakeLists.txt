@@ -11,6 +11,7 @@ project ("mist")
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
@@ -19,6 +20,12 @@ if(CLANG)
         "$<$<CONFIG:DEBUG>:-O0;-fstack-protector-all;-g3;-ggdb;-fPIC>"
         "$<$<CONFIG:RELEASE>:-O3;-g0;-fPIC;-DNDEBUG>"
         "-std=gnu++2a;-fmessage-length=0;-Wall;-fms-extensions;-Wno-unused-function"
+    )
+elseif(GCC)
+    add_compile_options(
+        "$<$<CONFIG:DEBUG>:-O0;-fstack-protector-all;-g3;-ggdb;-fPIC>"
+        "$<$<CONFIG:RELEASE>:-O3;-g0;-fPIC;-DNDEBUG>"
+        "-std=gnu++2a;-fmessage-length=0;-Wall;-Wno-unused-function"
     )
 elseif(MSVC)
     add_compile_options(
