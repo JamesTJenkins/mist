@@ -6,14 +6,14 @@
 #include "Core.hpp"
 
 namespace mist {
-	struct MIST_API WindowProperties {
+	struct WindowProperties {
 		const char* title;
 		uint32_t width, height;
 
 		WindowProperties(const char* _title = "Untitled Window", uint32_t width = 1280, uint32_t height = 720) : title(_title), width(width), height(height) {}
 	};
 
-	class MIST_API Window {
+	class Window {
 	public:
 		virtual ~Window(){};
 

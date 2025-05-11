@@ -6,7 +6,7 @@
 #include <renderer/Shader.hpp>
 
 namespace mist {
-	class MIST_API Application {
+	class Application {
 	public:
 		Application(const char* name = "Untitled");
 		virtual ~Application();

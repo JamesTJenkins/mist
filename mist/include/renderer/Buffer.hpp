@@ -30,7 +30,7 @@ namespace mist {
 		}
 	}
 
-	struct MIST_API BufferElement {
+	struct BufferElement {
 		ShaderDataType type;
 		const char* name;
 		uint32_t size;
@@ -58,7 +58,7 @@ namespace mist {
 		}
 	};
 	
-	class MIST_API BufferLayout {
+	class BufferLayout {
 	public:
 		BufferLayout();
 		BufferLayout(BufferElement** elements, uint32_t elementCount);
@@ -85,7 +85,7 @@ namespace mist {
 		uint32_t stride;
 	};
 
-	class MIST_API VertexBuffer {
+	class VertexBuffer {
 	public:
 		virtual ~VertexBuffer() = default;
 
@@ -101,7 +101,7 @@ namespace mist {
 		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
 	};
 
-	class MIST_API IndexBuffer {
+	class IndexBuffer {
 	public:
 		virtual ~IndexBuffer() = default;
 

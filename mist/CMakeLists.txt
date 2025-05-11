@@ -43,7 +43,7 @@ find_package(glslang CONFIG REQUIRED)
 
 add_subdirectory(vendor/spirv-cross)
 
-add_library(mist SHARED ${SOURCES})
+add_library(mist STATIC ${SOURCES})
 
 target_include_directories(mist
 	PRIVATE "src/"

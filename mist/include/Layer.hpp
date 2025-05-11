@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 
 namespace mist {
-    class MIST_API Layer {
+    class Layer {
     public:
         Layer(const char* name = "Layer") : name(name) {}
         virtual ~Layer() {};

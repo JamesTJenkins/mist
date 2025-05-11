@@ -1,18 +1,6 @@
 #pragma once
 #include <memory>
 
-#if _WIN32
-	#ifdef MIST_DLL
-		#define MIST_API __declspec(dllexport)
-	#else
-		#define MIST_API __declspec(dllimport)
-	#endif
-#elif __linux__
-	#define MIST_API __attribute__((visibility("default")))
-#else
-	#error "Unsupported Platform"
-#endif
-
 namespace mist {
 	template<typename T>
 	using Scope = std::unique_ptr<T>;

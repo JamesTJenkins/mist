@@ -5,7 +5,7 @@
 #include "Core.hpp"
 
 namespace mist {
-	class MIST_API Shader {
+	class Shader {
 	public:
 		virtual ~Shader() {}
 
@@ -25,7 +25,7 @@ namespace mist {
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 	};
 
-	class MIST_API ShaderLibrary {
+	class ShaderLibrary {
 	public:
 		void Add(const Ref<Shader>& shader);
 		void Add(const std::string& name, const Ref<Shader>& shader);

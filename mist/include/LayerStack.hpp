@@ -3,7 +3,7 @@
 #include "Layer.hpp"
 
 namespace mist {
-	class MIST_API LayerStack {
+	class LayerStack {
 	public:
 		LayerStack();
 		~LayerStack();

@@ -4,7 +4,7 @@
 #include "renderer/Buffer.hpp"
 
 namespace mist {
-    class MIST_API RenderAPI {
+    class RenderAPI {
     public:
         enum API { None, Vulkan };
 

@@ -3,7 +3,7 @@
 #include "Application.hpp"
 
 namespace mist {
-    class MIST_API RenderCommand {
+    class RenderCommand {
     public:
         inline static void Initialize() { Application::Get().GetRenderAPI()->Initialize(); }
         inline static void Shutdown() { Application::Get().GetRenderAPI()->Shutdown(); }

@@ -62,14 +62,14 @@ namespace mist {
 		STENCIL8
 	};
 
-	struct MIST_API FramebufferTextureProperties {
+	struct FramebufferTextureProperties {
 		FramebufferTextureProperties() = default;
 		FramebufferTextureProperties(FramebufferTextureFormat format) : textureFormat(format) {}
 
 		FramebufferTextureFormat textureFormat = FramebufferTextureFormat::None;
 	};
 
-	struct MIST_API FramebufferAttachmentProperties {
+	struct FramebufferAttachmentProperties {
 		FramebufferAttachmentProperties() = default;
 		FramebufferAttachmentProperties(FramebufferTextureProperties* attachments, uint32_t attachmentsCount) : attachments(attachments), attachmentsCount(attachmentsCount) {}
 
@@ -77,15 +77,15 @@ namespace mist {
 		uint32_t attachmentsCount = 0;
 	};
 
-	struct MIST_API FramebufferProperties {
+	struct FramebufferProperties {
 		uint32_t width = 1, height = 1;
 		FramebufferAttachmentProperties attachment;
 		uint32_t samples = 1;
 	};
 
-	extern "C" MIST_API const char* FramebufferTextureFormatToString(const FramebufferTextureFormat format);
+	extern "C" const char* FramebufferTextureFormatToString(const FramebufferTextureFormat format);
 
-	class MIST_API Framebuffer {
+	class Framebuffer {
 	public:
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
