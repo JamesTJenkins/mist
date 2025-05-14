@@ -43,6 +43,8 @@ namespace mist {
 		VulkanShader(const VulkanShader& other) = delete;
 		VulkanShader& operator=(const VulkanShader& other) = delete;
 
+		virtual void Clear() override;
+
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 

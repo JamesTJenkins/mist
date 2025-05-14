@@ -173,7 +173,24 @@ namespace mist {
 		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + name);
 	}
 
-	VulkanShader::~VulkanShader() {}
+	VulkanShader::~VulkanShader() {
+		Clear();
+	}
+
+	void VulkanShader::Clear() {
+		VulkanContext& context = VulkanContext::GetContext();
+		for (std::pair<std::string, InputShaderResource> pair : shaderInputs) {
+			vkDestroyShaderModule(context.GetDevice(), pair.second.shaderModule, context.GetAllocationCallbacks());
+		}
+
+		for (std::pair<std::string, UBOShaderResource> pair : shaderUbos) {
+			vkDestroyShaderModule(context.GetDevice(), pair.second.shaderModule, context.GetAllocationCallbacks());
+		}
+		
+		for (std::pair<std::string, SampledImageShaderResources> pair : shaderSampledImages) {
+			vkDestroyShaderModule(context.GetDevice(), pair.second.shaderModule, context.GetAllocationCallbacks());
+		}
+	}
 
 	std::string VulkanShader::ReadFile(const std::string& path) {
 		std::string result;

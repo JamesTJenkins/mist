@@ -25,6 +25,7 @@ namespace mist {
 	}
 
 	Application::~Application() {
+		layerStack.Clear();
 		RenderCommand::Shutdown();
 		SDL_Quit();
 	}
@@ -82,11 +83,9 @@ namespace mist {
 
 	void Application::PushLayer(Layer* layer) {
 		layerStack.PushLayer(layer);
-		layer->OnAttach();
 	}
 
 	void Application::PopLayer(Layer* layer) {
-		layer->OnDetach();
 		layerStack.PopLayer(layer);
 	}
 }

@@ -5,7 +5,8 @@ namespace mist {
 	LayerStack::LayerStack() : layers(nullptr), capacity(0), size(0) {}
 
 	LayerStack::~LayerStack() {
-		Clear();
+		if (size > 0)
+			Clear();
 	}
 
 	void LayerStack::PushLayer(Layer* layer) {
@@ -13,9 +14,13 @@ namespace mist {
 			Resize(capacity == 0 ? 1 : capacity * 2);
 		}
 		layers[size++] = layer;
+
+		layer->OnAttach();
 	}
 
 	void LayerStack::PopLayer(Layer* layer) {
+		layer->OnDetach();
+
 		auto it = std::find(begin(), end(), layer);
 		if (it != end()) {
 			std::rotate(it, it + 1, end());
@@ -24,6 +29,10 @@ namespace mist {
 	}
 
 	void LayerStack::Clear() {
+		for (size_t i = 0; i < size; ++i) {
+			layers[i]->OnDetach();
+		}
+
 		delete[] layers;
 		size = 0;
 		capacity = 0;

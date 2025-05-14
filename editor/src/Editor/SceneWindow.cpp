@@ -33,6 +33,12 @@ namespace mistEditor {
 		sceneCamera.SetViewportSize(1280, 720);
 	}
 
+	void SceneWindow::Cleanup() {
+		testShader->Clear();
+		vBuffer->Clear();
+		iBuffer->Clear();
+	}
+
 	void SceneWindow::OnEditorUpdate() {
 
 	}

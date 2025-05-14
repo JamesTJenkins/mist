@@ -25,7 +25,7 @@ namespace mistEditor {
     }
 
     void EditorLayer::OnDetach() {
-
+        sceneWindow.Cleanup();
     }
 
     void EditorLayer::OnUpdate() {

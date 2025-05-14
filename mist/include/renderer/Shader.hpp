@@ -9,6 +9,8 @@ namespace mist {
 	public:
 		virtual ~Shader() {}
 
+		virtual void Clear() = 0;
+
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 

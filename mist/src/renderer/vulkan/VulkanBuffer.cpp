@@ -76,9 +76,16 @@ namespace mist {
 	}
 
 	VulkanVertexBuffer::~VulkanVertexBuffer() {
-		VulkanContext& context = VulkanContext::GetContext();
-		vkDestroyBuffer(context.GetDevice(), vertexBuffer, context.GetAllocationCallbacks());
-		vkFreeMemory(context.GetDevice(), vertexBufferMemory, context.GetAllocationCallbacks());
+		Clear();
+	}
+
+	void VulkanVertexBuffer::Clear() {
+		if (vertexBuffer != VK_NULL_HANDLE) {
+			VulkanContext& context = VulkanContext::GetContext();
+			vkDeviceWaitIdle(context.GetDevice());
+			vkDestroyBuffer(context.GetDevice(), vertexBuffer, context.GetAllocationCallbacks());
+			vkFreeMemory(context.GetDevice(), vertexBufferMemory, context.GetAllocationCallbacks());
+		}
 	}
 
 	void VulkanVertexBuffer::Bind() const {
@@ -101,16 +108,23 @@ namespace mist {
 		SetBufferData(vertices.data(), size, vertexBuffer);
 	}
 
-	VulkanIndexBuffer::VulkanIndexBuffer(std::vector<uint32_t> indices) : indexCount(indices.size()) {
-		const VkDeviceSize size = indexCount * sizeof(uint32_t);
+	VulkanIndexBuffer::VulkanIndexBuffer(std::vector<uint32_t> indices) {
+		const VkDeviceSize size = indices.size() * sizeof(uint32_t);
 		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 		SetBufferData(indices.data(), size, indexBuffer);
 	}
 
 	VulkanIndexBuffer::~VulkanIndexBuffer() {
-		VulkanContext& context = VulkanContext::GetContext();
-		vkDestroyBuffer(context.GetDevice(), indexBuffer, context.GetAllocationCallbacks());
-		vkFreeMemory(context.GetDevice(), indexBufferMemory, context.GetAllocationCallbacks());
+		Clear();
+	}
+
+	void VulkanIndexBuffer::Clear() {
+		if (indexBuffer != VK_NULL_HANDLE) {
+			VulkanContext& context = VulkanContext::GetContext();
+			vkDeviceWaitIdle(context.GetDevice());
+			vkDestroyBuffer(context.GetDevice(), indexBuffer, context.GetAllocationCallbacks());
+			vkFreeMemory(context.GetDevice(), indexBufferMemory, context.GetAllocationCallbacks());
+		}
 	}
 
 	void VulkanIndexBuffer::Bind() const {
