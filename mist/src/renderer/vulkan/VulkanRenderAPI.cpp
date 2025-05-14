@@ -67,7 +67,7 @@ namespace mist {
 		CheckVkResult(vkResetFences(context.GetDevice(), 1, &context.sync.inFlightFences[currentFrame]));
 
 		context.commands.ResetCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
-		context.commands.BeginCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
+		context.commands.BeginCommandBuffer(context.commands.GetRenderBuffer(currentFrame), false);
 		context.GetSwapchain()->BeginRenderPass(context.commands.GetRenderBuffer(currentFrame));
 	}
 

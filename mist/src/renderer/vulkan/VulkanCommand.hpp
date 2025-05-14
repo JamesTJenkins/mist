@@ -16,13 +16,13 @@ namespace mist {
         void FreeCommandBuffers(std::vector<VkCommandBuffer> commandBuffers);
         
         VkCommandBuffer BeginSingleTimeCommand();
-        void BeginCommandBuffer(VkCommandBuffer commandBuffer);
+        void BeginCommandBuffer(VkCommandBuffer commandBuffer, bool oneTime);
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void ResetCommandBuffer(VkCommandBuffer commandBuffer);
         
-        void SubmitCommandBuffer(VkCommandBuffer* commandBuffer);
-        void SubmitCommandBuffers(std::vector<VkCommandBuffer*> commandBuffers);
-        void SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count);
+        void SubmitCommandBuffer(VkCommandBuffer commandBuffer);
+        void SubmitCommandBuffers(std::vector<VkCommandBuffer> commandBuffers);
+        void SubmitCommandBuffersImmediately(VkCommandBuffer commandBuffers, uint32_t count);
         
         void AllocateRenderBuffers();
         void FreeRenderBuffers();

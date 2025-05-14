@@ -2,6 +2,7 @@
 #include "Core.hpp"
 #include <vector>
 #include <string>
+#include "Math.hpp"
 
 namespace mist {
 	enum class ShaderDataType {
@@ -57,6 +58,10 @@ namespace mist {
 			}
 		}
 	};
+
+	struct Vertex {
+		glm::vec3 position;
+	};
 	
 	class BufferLayout {
 	public:
@@ -95,10 +100,10 @@ namespace mist {
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
-		virtual void SetData(const void* data, uint32_t size) = 0;
+		virtual void SetData(const std::vector<Vertex> vertices) = 0;
 
 		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(const std::vector<Vertex> vertices);
 	};
 
 	class IndexBuffer {
@@ -110,6 +115,6 @@ namespace mist {
 
 		virtual uint32_t GetCount() const = 0;
 
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+		static Ref<IndexBuffer> Create(std::vector<uint32_t> indices);
 	};
 }

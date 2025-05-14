@@ -1,9 +1,10 @@
 #include "SceneWindow.hpp"
+#include <renderer/Buffer.hpp>
 #include <renderer/RenderCommand.hpp>
 #include <vector>
 
 namespace mistEditor {
-	SceneWindow::SceneWindow() {
+	SceneWindow::SceneWindow() : sceneCameraTransform(), sceneCamera(&sceneCameraTransform) {
 		std::vector<mist::FramebufferTextureProperties> attachments = {
 			mist::FramebufferTextureFormat::RGBA8
 		};
@@ -14,17 +15,17 @@ namespace mistEditor {
 		properties.height = 720;
 		mist::Framebuffer::Create(properties);
 
-		std::vector<float> verts = {
-			-1, 0, 0,
-			0, 1, 0,
-			1, 0, 0
+		std::vector<mist::Vertex> verts = {
+			{{  0.0f, -0.5f, 0.0f }},
+			{{  0.5f,  0.5f, 0.0f }},
+			{{ -0.5f,  0.5f, 0.0f }}
 		};
-		vBuffer = mist::VertexBuffer::Create(verts.data(), (uint32_t)verts.size());
+		vBuffer = mist::VertexBuffer::Create(verts);
 
 		std::vector<uint32_t> indices = {
 			0, 1, 2
 		};
-		iBuffer = mist::IndexBuffer::Create(indices.data(), (uint32_t)indices.size());
+		iBuffer = mist::IndexBuffer::Create(indices);
 
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
 	}

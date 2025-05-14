@@ -57,14 +57,14 @@ namespace mist {
 		VkCommandBuffer buffer;
 		VkCommandBufferAllocateInfo info = CreateCommandBufferAllocationInfo(pool, 1);
 		CheckVkResult(vkAllocateCommandBuffers(context.GetDevice(), &info, &buffer));
-		BeginCommandBuffer(buffer);
+		BeginCommandBuffer(buffer, true);
 		return buffer;
 	}
 
-	void VulkanCommand::BeginCommandBuffer(VkCommandBuffer commandBuffer) {
+	void VulkanCommand::BeginCommandBuffer(VkCommandBuffer commandBuffer, bool oneTime) {
 		VkCommandBufferBeginInfo info {};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+		info.flags = oneTime ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
 		CheckVkResult(vkBeginCommandBuffer(commandBuffer, &info));
 	}
@@ -77,11 +77,11 @@ namespace mist {
 		CheckVkResult(vkResetCommandBuffer(commandBuffer, 0));
 	}
 
-	void VulkanCommand::SubmitCommandBuffersImmediately(VkCommandBuffer* commandBuffers, uint32_t count) {
+	void VulkanCommand::SubmitCommandBuffersImmediately(VkCommandBuffer commandBuffers, uint32_t count) {
 		VkSubmitInfo info {};
 		info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		info.commandBufferCount = count;
-		info.pCommandBuffers = commandBuffers;
+		info.pCommandBuffers = &commandBuffers;
 
 		VulkanContext& context = VulkanContext::GetContext();
 		vkQueueSubmit(context.GetGraphicsQueue(), 1, &info, VK_NULL_HANDLE);

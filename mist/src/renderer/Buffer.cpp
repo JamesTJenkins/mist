@@ -17,28 +17,28 @@ namespace mist {
 		}
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size) {
+	Ref<VertexBuffer> VertexBuffer::Create(std::vector<Vertex> vertices) {
 		switch (RenderCommand::GetAPIType())
 		{
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");
 			return nullptr;
 		case RenderAPI::API::Vulkan:
-			return CreateRef<VulkanVertexBuffer>(vertices, size);
+			return CreateRef<VulkanVertexBuffer>(vertices);
 		default:
 			MIST_ASSERT(false, "Unknown renderer API");
 			return nullptr;
 		}
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t size) {
+	Ref<IndexBuffer> IndexBuffer::Create(std::vector<uint32_t> indices) {
 		switch (RenderCommand::GetAPIType())
 		{
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");
 			return nullptr;
 		case RenderAPI::API::Vulkan:
-			return CreateRef<VulkanIndexBuffer>(indices, size);
+			return CreateRef<VulkanIndexBuffer>(indices);
 		default:
 			MIST_ASSERT(false, "Unknown renderer API");
 			return nullptr;

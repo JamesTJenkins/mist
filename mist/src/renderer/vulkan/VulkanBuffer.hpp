@@ -5,8 +5,8 @@
 namespace mist {
     class VulkanVertexBuffer : public VertexBuffer {
     public:
-        VulkanVertexBuffer(uint32_t size);
-        VulkanVertexBuffer(float* vertices, uint32_t size);
+        VulkanVertexBuffer(uint32_t count);
+        VulkanVertexBuffer(const std::vector<Vertex> vertices);
         virtual ~VulkanVertexBuffer() override;
 
         VulkanVertexBuffer(const VulkanVertexBuffer& other) = delete;
@@ -15,34 +15,28 @@ namespace mist {
         virtual void Bind() const override;
         virtual void Unbind() const override;
 
-        virtual const BufferLayout& GetLayout() const override { return layout; }
-        virtual void SetLayout(const BufferLayout& newLayout) override { layout = newLayout; }
+        virtual const BufferLayout& GetLayout() const override { return vertexBufferLayout; }
+        virtual void SetLayout(const BufferLayout& newLayout) override { vertexBufferLayout = newLayout; }
 
-        virtual void SetData(const void* data, uint32_t size) override;
-
-        void SetAssignedCommandBuffer(const VkCommandBuffer commandBuffer) { assignedBuffer = commandBuffer; }
+        virtual void SetData(const std::vector<Vertex> vertices) override;
     private:
-        VkCommandBuffer assignedBuffer;
-        VkBuffer buffer;
-        VkDeviceMemory bufferMemory;
-        BufferLayout layout;
+        VkBuffer vertexBuffer;
+        VkDeviceMemory vertexBufferMemory;
+        BufferLayout vertexBufferLayout;
     };
 
     class VulkanIndexBuffer : public IndexBuffer {
     public:
-        VulkanIndexBuffer(uint32_t* indices, uint32_t count);
+        VulkanIndexBuffer(std::vector<uint32_t> indices);
         virtual ~VulkanIndexBuffer() override;
 
         virtual void Bind() const override;
         virtual void Unbind() const override;
 
-        virtual uint32_t GetCount() const override { return count; }
-
-        void SetAssignedCommandBuffer(const VkCommandBuffer commandBuffer) { assignedBuffer = commandBuffer; }
+        virtual uint32_t GetCount() const override { return indexCount; }
     private:
-        VkCommandBuffer assignedBuffer;
-        VkBuffer buffer;
-        VkDeviceMemory bufferMemory;
-        uint32_t count;
+        VkBuffer indexBuffer;
+        VkDeviceMemory indexBufferMemory;
+        uint32_t indexCount;
     };
 }
