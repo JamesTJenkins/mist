@@ -28,6 +28,9 @@ namespace mistEditor {
 		iBuffer = mist::IndexBuffer::Create(indices);
 
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
+
+		sceneCameraTransform.SetPosition(glm::vec3(0, 0, -10));
+		sceneCamera.SetViewportSize(1280, 720);
 	}
 
 	void SceneWindow::OnEditorUpdate() {
