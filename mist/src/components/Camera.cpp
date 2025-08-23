@@ -1,16 +1,14 @@
-#include "Components/Camera.hpp"
+#include "components/Camera.hpp"
 
 namespace mist {
-    Camera::Camera(Transform* transform) {
-        transformComponent = transform;
-    }
+    Camera::Camera(Transform& transform) : transformComponent(transform) {}
 
     Camera::~Camera() {}
 
     bool Camera::IsEqual(const Camera& other) const {
         return type == other.type &&
             projectionMatrix == other.projectionMatrix &&
-            transformComponent == other.transformComponent &&
+            transformComponent.IsEqual(other.transformComponent) &&
             width == other.width &&
             height == other.height &&
             aspect == other.aspect &&
@@ -40,7 +38,10 @@ namespace mist {
     }
 
     glm::mat4 Camera::GetViewMatrix() const {
-        return glm::lookAt(transformComponent->GetPosition(), transformComponent->GetPosition() + transformComponent->Forward(), transformComponent->Up());
+        return glm::lookAt(
+            transformComponent.GetPosition(), 
+            transformComponent.GetPosition() + transformComponent.Forward(), transformComponent.Up()
+        );
     }
 
     glm::mat4 Camera::GetViewProjectionMatrix() const {

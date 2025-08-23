@@ -1,4 +1,4 @@
-#include "Components/Transform.hpp"
+#include "components/Transform.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace mist {
@@ -6,6 +6,12 @@ namespace mist {
         SetPosition(position);
         SetRotation(rotation);
         SetScale(scale);
+    }
+
+    bool Transform::IsEqual(const Transform& other) const {
+        return position == other.position &&
+            rotation == other.rotation &&
+            scale == other.scale;
     }
 
     void Transform::Rotate(float angle_in_radians, glm::vec3 axis) {
