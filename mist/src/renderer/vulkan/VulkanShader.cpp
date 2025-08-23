@@ -236,7 +236,7 @@ namespace mist {
 
 		glslang::TShader shader(stage);
 		shader.setEnvInput(glslang::EShSourceGlsl, stage, glslang::EShClientVulkan, 130);
-		shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_3);	// EshTargetVulkan_1_4 isnt available so will just use EshTargetVulkan_1_3 for now and other settings will also use 1.3 for now
+		shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_3);
 		shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_3);
 
 		shader.setStrings(shaderStrings, 1);
