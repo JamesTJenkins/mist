@@ -76,7 +76,22 @@ namespace mist {
 		context.commands.EndCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
 	}
 
-	void VulkanRenderAPI::Draw() {
+	void VulkanRenderAPI::BindMeshRenderer(MeshRenderer& meshRenderer) {
+		VulkanContext& context = VulkanContext::GetContext();
+		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
+
+		meshRenderer.vBuffer->Bind();
+		meshRenderer.iBuffer->Bind();
+		vkCmdBindDescriptorSets(context.commands.GetRenderBuffer(currentFrame), VK_PIPELINE_BIND_POINT_GRAPHICS, context.pipeline.GetGraphicsPipelineLayout(meshRenderer.shaderName), 0, 1, &context.descriptors.GetDescriptorSet(meshRenderer), 0, nullptr);
+	}
+
+	void VulkanRenderAPI::Draw(uint32_t indexCount) {
+		VulkanContext& context = VulkanContext::GetContext();
+		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
+		vkCmdDrawIndexed(context.commands.GetRenderBuffer(currentFrame), indexCount, 0, 0, 0, 0);
+	}
+
+	void VulkanRenderAPI::Submit() {
 		VulkanContext& context = VulkanContext::GetContext();
 		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
 

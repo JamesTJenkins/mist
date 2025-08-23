@@ -1,6 +1,8 @@
 #include "VulkanDescriptors.hpp"
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
+#include "renderer/vulkan/VulkanBuffer.hpp"
+#include "Debug.hpp"
 
 namespace mist {
 	void VulkanDescriptor::CreateDescriptorPool() {
@@ -55,28 +57,33 @@ namespace mist {
 		VkDescriptorSetLayout layout;
         CheckVkResult(vkCreateDescriptorSetLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &layout));
 
-		descriptorSetLayouts.push_back(layout);
-
+		descriptorSetLayouts[shader->GetName()] = layout;
 		return layout;
 	}
 
-	VkDescriptorSet& VulkanDescriptor::CreateDescriptorSet() {
+	VkDescriptorSet& VulkanDescriptor::CreateDescriptorSet(const MeshRenderer& meshRenderer) {
 		VkDescriptorSet descriptorSet;
 		VulkanContext& context = VulkanContext::GetContext();
 
+		DescriptorSetKey key{};
+		key.layout = GetDescriptorSetLayout(meshRenderer.shaderName);
+		key.vertexBuffer = std::static_pointer_cast<VulkanVertexBuffer>(meshRenderer.vBuffer)->GetBuffer();
+		key.indexBuffer = std::static_pointer_cast<VulkanIndexBuffer>(meshRenderer.iBuffer)->GetBuffer();
+
 		// Try to place in existing pool
 		for (VkDescriptorPool& pool : pools) {
-			VkDescriptorSetAllocateInfo alloctionInfo {};
-			alloctionInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			alloctionInfo.descriptorPool = pool;
-			alloctionInfo.descriptorSetCount = 1;
-			//alloctionInfo.pSetLayouts = &descriptorSetLayout; // TODO: fix once shaders implemented
+			VkDescriptorSetAllocateInfo allocationInfo {};
+			allocationInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocationInfo.descriptorPool = pool;
+			allocationInfo.descriptorSetCount = 1;
+			allocationInfo.pSetLayouts = &GetDescriptorSetLayout(meshRenderer.shaderName);
 
-			VkResult result = vkAllocateDescriptorSets(context.GetDevice(), &alloctionInfo, &descriptorSet);
+			VkResult result = vkAllocateDescriptorSets(context.GetDevice(), &allocationInfo, &descriptorSet);
+
 			switch(result) {
 			case VK_SUCCESS:
-				descriptorSets.push_back(descriptorSet);
-				return descriptorSets[descriptorSets.size() - 1];
+				descriptorSets[key] = descriptorSet;
+				return descriptorSets[key];
 			case VK_ERROR_FRAGMENTED_POOL:
 			case VK_ERROR_OUT_OF_POOL_MEMORY:
 				continue;
@@ -85,19 +92,18 @@ namespace mist {
 			};
 		}
 
-		// Create new pool
 		CreateDescriptorPool();
 		
 		VkDescriptorSetAllocateInfo alloctionInfo {};
 		alloctionInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloctionInfo.descriptorPool = GetDescriptorPool((int)pools.size() - 1);
 		alloctionInfo.descriptorSetCount = 1;
-		//alloctionInfo.pSetLayouts = &descriptorSetLayout; // TODO: fix once shaders implemented
+		alloctionInfo.pSetLayouts = &GetDescriptorSetLayout(meshRenderer.shaderName);
 
 		CheckVkResult(vkAllocateDescriptorSets(context.GetDevice(), &alloctionInfo, &descriptorSet));
 
-		descriptorSets.push_back(descriptorSet);
-		return descriptorSets[descriptorSets.size() - 1];
+		descriptorSets[key] = descriptorSet;
+		return descriptorSets[key];
 	}
 
 	void VulkanDescriptor::ClearPool() {
@@ -109,8 +115,26 @@ namespace mist {
 
 	void VulkanDescriptor::Cleanup() {
 		VulkanContext& context = VulkanContext::GetContext();
-		for (VkDescriptorSetLayout& layout : descriptorSetLayouts) {
-			vkDestroyDescriptorSetLayout(context.GetDevice(), layout, nullptr);
+		for (std::pair<std::string, VkDescriptorSetLayout> layout : descriptorSetLayouts) {
+			vkDestroyDescriptorSetLayout(context.GetDevice(), layout.second, nullptr);
 		}
+	}
+
+	VkDescriptorSetLayout& VulkanDescriptor::GetDescriptorSetLayout(const std::string& name) {
+		MIST_ASSERT(Exists(name), "Descriptor set layout not found"); 
+		return descriptorSetLayouts[name];
+	}
+
+	VkDescriptorSet& VulkanDescriptor::GetDescriptorSet(const MeshRenderer& meshRenderer) {
+		DescriptorSetKey key{};
+		key.layout = GetDescriptorSetLayout(meshRenderer.shaderName);
+		key.vertexBuffer = std::static_pointer_cast<VulkanVertexBuffer>(meshRenderer.vBuffer)->GetBuffer();
+		key.indexBuffer = std::static_pointer_cast<VulkanIndexBuffer>(meshRenderer.iBuffer)->GetBuffer();
+
+		auto it = descriptorSets.find(key);
+		if (it != descriptorSets.end())
+			return it->second;
+
+		return CreateDescriptorSet(meshRenderer);
 	}
 }

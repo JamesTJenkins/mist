@@ -17,10 +17,12 @@ namespace mist {
 
         virtual void BeginRenderPass() override;
         virtual void EndRenderPass() override;
-        virtual void Draw() override;
+        virtual void BindMeshRenderer(MeshRenderer& meshRenderer) override;
+        virtual void Draw(uint32_t indexCount) override;
+        virtual void Submit() override;
 
         virtual RenderAPI::API GetAPI() override { return RenderAPI::API::Vulkan; }
     private:
-        glm::vec4 clearColor = glm::vec4(1,0,0,1);   // RGBA
+        glm::vec4 clearColor = glm::vec4(0,0,0,1);   // RGBA
     };
 }

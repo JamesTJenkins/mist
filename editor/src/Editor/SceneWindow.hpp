@@ -13,14 +13,8 @@ namespace mistEditor {
 
 		void OnEditorUpdate();
 		void OnRender();
-		void SceneWindowDraw();
 		void Cleanup();
 	private:
 		mist::Ref<mist::Shader> testShader;
-		mist::Ref<mist::VertexBuffer> vBuffer;
-		mist::Ref<mist::IndexBuffer> iBuffer;
-	
-		mist::Transform sceneCameraTransform;
-		mist::Camera sceneCamera;
 	};
 }

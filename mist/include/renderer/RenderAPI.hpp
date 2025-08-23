@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "Core.hpp"
 #include "renderer/Buffer.hpp"
+#include "components/MeshRenderer.hpp"
 
 namespace mist {
     class RenderAPI {
@@ -21,7 +22,9 @@ namespace mist {
 
         virtual void BeginRenderPass() = 0;
         virtual void EndRenderPass() = 0;
-        virtual void Draw() = 0;
+        virtual void BindMeshRenderer(MeshRenderer& MeshRenderer) = 0;
+        virtual void Draw(uint32_t indexCount) = 0;
+        virtual void Submit() = 0;
 
         virtual API GetAPI() = 0;;
     };

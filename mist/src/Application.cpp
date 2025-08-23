@@ -73,7 +73,7 @@ namespace mist {
 				layer->OnRender();
 			}
 			RenderCommand::EndRenderPass();
-			RenderCommand::Draw();
+			RenderCommand::Submit();
 		}
 	}
 

@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "Application.hpp"
 #include "renderer/Framebuffer.hpp"
+#include "Debug.hpp"
 
 namespace mist {
 	// TODO: This function does not account for requested color space as currently just tries to get the requested format with VK_COLOR_SPACE_SRGB_NONLINEAR_KHR as the color space

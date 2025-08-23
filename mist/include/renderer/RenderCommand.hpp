@@ -11,7 +11,7 @@ namespace mist {
         inline static void ResizeWindow(uint32_t x, uint32_t y, uint32_t width, uint32_t height) { Application::Get().GetRenderAPI()->SetViewport(x, y, width, height); }
         inline static void BeginRenderPass() { Application::Get().GetRenderAPI()->BeginRenderPass(); }
         inline static void EndRenderPass() { Application::Get().GetRenderAPI()->EndRenderPass(); }
-        inline static void Draw() { Application::Get().GetRenderAPI()->Draw(); }
+        inline static void Submit() { Application::Get().GetRenderAPI()->Submit(); }
 
         inline static RenderAPI::API GetAPIType() { return Application::Get().GetRenderAPI()->GetAPI(); }
         inline static RenderAPI* GetAPI() { return Application::Get().GetRenderAPI(); }

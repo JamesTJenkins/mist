@@ -2,9 +2,10 @@
 #include <renderer/Buffer.hpp>
 #include <renderer/RenderCommand.hpp>
 #include <vector>
+#include <components/MeshRenderer.hpp>
 
 namespace mistEditor {
-	SceneWindow::SceneWindow() : sceneCameraTransform(), sceneCamera(&sceneCameraTransform) {
+	SceneWindow::SceneWindow() {
 		std::vector<mist::FramebufferTextureProperties> attachments = {
 			mist::FramebufferTextureFormat::RGBA8
 		};
@@ -20,23 +21,34 @@ namespace mistEditor {
 			{{  0.5f,  0.5f, 0.0f }},
 			{{ -0.5f,  0.5f, 0.0f }}
 		};
-		vBuffer = mist::VertexBuffer::Create(verts);
 
 		std::vector<uint32_t> indices = {
 			0, 1, 2
 		};
-		iBuffer = mist::IndexBuffer::Create(indices);
 
+		mist::Mesh triMesh(verts, indices);
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
-
-		sceneCameraTransform.SetPosition(glm::vec3(0, 0, -10));
+		
+		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
+		const entt::entity triEntity = sm->CreateEntity();
+		sm->currentScene.emplace<mist::Transform>(triEntity, glm::vec3(0, 0, 0));
+		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testShader->GetName(), &triMesh);
+		
+		const entt::entity sceneCameraEntity = sm->CreateEntity();
+		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
+		mist::Camera& sceneCamera = sm->currentScene.emplace<mist::Camera>(sceneCameraEntity, sceneCameraT);
 		sceneCamera.SetViewportSize(1280, 720);
 	}
 
 	void SceneWindow::Cleanup() {
+		auto view = mist::Application::Get().GetSceneManager()->currentScene.view<mist::MeshRenderer>();
+		view.each([](mist::MeshRenderer &renderer) {
+			// Buffers need to be cleanedup immediately
+			renderer.Clear();
+		});
+
+		mist::Application::Get().GetSceneManager()->currentScene.clear();
 		testShader->Clear();
-		vBuffer->Clear();
-		iBuffer->Clear();
 	}
 
 	void SceneWindow::OnEditorUpdate() {
@@ -44,12 +56,16 @@ namespace mistEditor {
 	}
 
 	void SceneWindow::OnRender() {
-		testShader->Bind();
-		vBuffer->Bind();
-		iBuffer->Bind();
-	}
+		mist::ShaderLibrary* shaderLib = mist::Application::Get().GetShaderLibrary();
+		auto view = mist::Application::Get().GetSceneManager()->currentScene.view<mist::MeshRenderer>();
 
-	void SceneWindow::SceneWindowDraw() {
-		mist::RenderCommand::Draw();
+		// Binding and unbinding a shader pipeline after each object is terrible but will do for testing sake
+		// ideally we bind a shader then render everything with that shader before moving on
+		// unless there is better methods im unaware of
+		view.each([shaderLib](mist::MeshRenderer &renderer) {
+			shaderLib->Get(renderer.shaderName)->Bind();
+			renderer.Bind();
+			//shaderLib->Get(renderer.shaderName)->Unbind();
+		});
 	}
 }
