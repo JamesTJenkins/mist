@@ -2,8 +2,9 @@
 #include "Core.hpp"
 #include "Window.hpp"
 #include "LayerStack.hpp"
-#include <renderer/RenderAPI.hpp>
-#include <renderer/Shader.hpp>
+#include "renderer/RenderAPI.hpp"
+#include "renderer/Shader.hpp"
+#include "SceneManager.hpp"
 
 namespace mist {
 	class Application {
@@ -26,6 +27,7 @@ namespace mist {
 		inline Window* GetWindow() { return window; }
 		inline const char* GetApplicationName() { return appName; }
 		inline ShaderLibrary* GetShaderLibrary() { return &shaderLib; }
+		inline SceneManager* GetSceneManager() { return &sceneManager; }
 	private:
 		const char* appName = "Untitled";
 		bool running = true;
@@ -33,6 +35,7 @@ namespace mist {
 		ShaderLibrary shaderLib;
 		Window* window;
 		RenderAPI* renderAPI;
+		SceneManager sceneManager;
 		static Application* instance;
 	};
 }
