@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "Math.hpp"
+#include "Data/Mesh.hpp"
 
 namespace mist {
 	enum class ShaderDataType {
@@ -57,10 +58,6 @@ namespace mist {
 				default:					return 0;
 			}
 		}
-	};
-
-	struct Vertex {
-		glm::vec3 position;
 	};
 	
 	class BufferLayout {

@@ -21,6 +21,8 @@ namespace mist {
         virtual void SetLayout(const BufferLayout& newLayout) override { vertexBufferLayout = newLayout; }
 
         virtual void SetData(const std::vector<Vertex> vertices) override;
+
+        const VkBuffer& GetBuffer() const { return vertexBuffer; }
     private:
         VkBuffer vertexBuffer;
         VkDeviceMemory vertexBufferMemory;
@@ -36,6 +38,8 @@ namespace mist {
 
         virtual void Bind() const override;
         virtual void Unbind() const override;
+
+        const VkBuffer& GetBuffer() const { return indexBuffer; }
     private:
         VkBuffer indexBuffer;
         VkDeviceMemory indexBufferMemory;
