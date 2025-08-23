@@ -40,6 +40,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glslang CONFIG REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 
 add_subdirectory(vendor/spirv-cross)
 
@@ -57,6 +58,7 @@ target_link_libraries(mist
 	PRIVATE Vulkan::Vulkan
 	PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
+    PRIVATE EnTT::EnTT
 )
 
 # Stop warnings from spirv-cross
