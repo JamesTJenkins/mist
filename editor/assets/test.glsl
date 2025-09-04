@@ -3,13 +3,13 @@
 
 layout(location = 0) in vec3 Position;
 
-layout(set = 0, binding = 0) uniform TransformBlock {
+layout(set = 0, binding = 0) uniform CameraData {
 	uniform mat4 u_ViewProjection;
 	uniform mat4 u_Transform;
-} transforms;
+} cameraData;
 
 void main() {
-	gl_Position = transforms.u_ViewProjection * transforms.u_Transform * vec4(Position, 1);
+	gl_Position = cameraData.u_ViewProjection * cameraData.u_Transform * vec4(Position, 1);
 }
 
 #type fragment
