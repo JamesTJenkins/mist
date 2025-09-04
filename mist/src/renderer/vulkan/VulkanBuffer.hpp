@@ -44,4 +44,20 @@ namespace mist {
         VkBuffer indexBuffer;
         VkDeviceMemory indexBufferMemory;
     };
+
+    class UniformBuffer {
+    public:
+        UniformBuffer();
+        UniformBuffer(uint32_t size, void* data);
+        ~UniformBuffer();
+
+        UniformBuffer(const UniformBuffer&) = delete;
+
+        void SetData(uint32_t newSize, void* newData);
+        void Clear();
+
+        VkBuffer uboBuffer;
+        VkDeviceMemory uboMemory;
+        size_t size;
+    };
 }

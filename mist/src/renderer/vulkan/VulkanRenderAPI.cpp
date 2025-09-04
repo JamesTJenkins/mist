@@ -2,6 +2,7 @@
 #include "renderer/vulkan/VulkanContext.hpp"
 #include <Log.hpp>
 #include "renderer/vulkan/VulkanDebug.hpp"
+#include "data/RenderTypes.hpp"
 
 namespace mist {
 	void VulkanRenderAPI::Initialize() {
@@ -76,7 +77,16 @@ namespace mist {
 		context.commands.EndCommandBuffer(context.commands.GetRenderBuffer(currentFrame));
 	}
 
-	void VulkanRenderAPI::BindMeshRenderer(MeshRenderer& meshRenderer) {
+	void VulkanRenderAPI::UpdateCamera(Camera& camera) {
+		CameraData camData;
+		camData.u_ViewProjection = camera.GetViewProjectionMatrix();
+		camData.u_Transform = camera.GetTransform().GetLocalToWorldMatrix();
+
+		VulkanContext& context = VulkanContext::GetContext();
+		context.descriptors.UpdateUniformBuffer("CameraData", camData);
+	}
+
+	void VulkanRenderAPI::BindMeshRenderer(const MeshRenderer& meshRenderer) {
 		VulkanContext& context = VulkanContext::GetContext();
 		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
 

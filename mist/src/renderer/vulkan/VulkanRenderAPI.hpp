@@ -2,7 +2,6 @@
 #include "renderer/RenderAPI.hpp"
 
 namespace mist {
-    
     class VulkanRenderAPI : public RenderAPI {
     public:
         // Render API overrides
@@ -17,7 +16,8 @@ namespace mist {
 
         virtual void BeginRenderPass() override;
         virtual void EndRenderPass() override;
-        virtual void BindMeshRenderer(MeshRenderer& meshRenderer) override;
+        virtual void UpdateCamera(Camera& camera) override;
+        virtual void BindMeshRenderer(const MeshRenderer& meshRenderer) override;
         virtual void Draw(uint32_t indexCount) override;
         virtual void Submit() override;
 

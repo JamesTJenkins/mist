@@ -1,0 +1,11 @@
+#pragma once
+#include <glm/glm.hpp>
+
+// These are default types used for reflection of shaders
+
+namespace mist {
+	struct CameraData {
+		glm::mat4 u_ViewProjection;
+		glm::mat4 u_Transform;
+	};
+}

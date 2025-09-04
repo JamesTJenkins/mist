@@ -31,8 +31,8 @@ namespace mistEditor {
 		
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		const entt::entity triEntity = sm->CreateEntity();
-		sm->currentScene.emplace<mist::Transform>(triEntity, glm::vec3(0, 0, 0));
-		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testShader->GetName(), &triMesh);
+		mist::Transform& testT = sm->currentScene.emplace<mist::Transform>(triEntity, glm::vec3(0, 0, 0));
+		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), &triMesh);
 		
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
 		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
@@ -57,15 +57,29 @@ namespace mistEditor {
 
 	void SceneWindow::OnRender() {
 		mist::ShaderLibrary* shaderLib = mist::Application::Get().GetShaderLibrary();
-		auto view = mist::Application::Get().GetSceneManager()->currentScene.view<mist::MeshRenderer>();
-
+		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
+		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
+		auto view = sm->currentScene.view<mist::MeshRenderer>();
+		auto camView = sm->currentScene.view<mist::Camera>();
+		
+		mist::Camera* cam;
+		for (auto entity : camView) {
+			cam = sm->currentScene.try_get<mist::Camera>(entity);
+			break;
+		}
+		
+		renderAPI->UpdateCamera(*cam);
+		
 		// Binding and unbinding a shader pipeline after each object is terrible but will do for testing sake
 		// ideally we bind a shader then render everything with that shader before moving on
 		// unless there is better methods im unaware of
 		view.each([shaderLib](mist::MeshRenderer &renderer) {
 			shaderLib->Get(renderer.shaderName)->Bind();
 			renderer.Bind();
-			//shaderLib->Get(renderer.shaderName)->Unbind();
+		});
+		
+		view.each([](mist::MeshRenderer &renderer) {
+			renderer.Draw();
 		});
 	}
 }

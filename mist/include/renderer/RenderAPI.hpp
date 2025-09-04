@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "Core.hpp"
 #include "renderer/Buffer.hpp"
+#include "components/Camera.hpp"
 #include "components/MeshRenderer.hpp"
 
 namespace mist {
@@ -22,7 +23,8 @@ namespace mist {
 
         virtual void BeginRenderPass() = 0;
         virtual void EndRenderPass() = 0;
-        virtual void BindMeshRenderer(MeshRenderer& MeshRenderer) = 0;
+        virtual void UpdateCamera(Camera& camera) = 0;
+        virtual void BindMeshRenderer(const MeshRenderer& MeshRenderer) = 0;
         virtual void Draw(uint32_t indexCount) = 0;
         virtual void Submit() = 0;
 

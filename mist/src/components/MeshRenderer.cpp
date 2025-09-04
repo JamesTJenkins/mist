@@ -2,9 +2,7 @@
 #include "Application.hpp"
 
 namespace mist {
-	MeshRenderer::MeshRenderer() {}
-
-	MeshRenderer::MeshRenderer(std::string shaderName, Mesh* mesh) : shaderName(shaderName), mesh(mesh) {
+	MeshRenderer::MeshRenderer(Transform& transform, std::string shaderName, Mesh* mesh) : transformComponent(transformComponent), shaderName(shaderName), mesh(mesh) {
 		Apply();
 	}
 
@@ -14,6 +12,9 @@ namespace mist {
 
 	void MeshRenderer::Bind() {
 		Application::Get().GetRenderAPI()->BindMeshRenderer(*this);
+	}
+	
+	void MeshRenderer::Draw() {
 		Application::Get().GetRenderAPI()->Draw(mesh->indices.size());
 	}
 

@@ -4,6 +4,7 @@
 #include "VulkanDebug.hpp"
 #include "Log.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
+#include "Debug.hpp"
 
 namespace mist {
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags flags, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
@@ -26,7 +27,7 @@ namespace mist {
 		memoryAllocInfo.memoryTypeIndex = context.FindMemoryType(requirements.memoryTypeBits, flags);
 
 		CheckVkResult(vkAllocateMemory(context.GetDevice(), &memoryAllocInfo, context.GetAllocationCallbacks(), &bufferMemory));
-		vkBindBufferMemory(context.GetDevice(), buffer, bufferMemory, 0);
+		CheckVkResult(vkBindBufferMemory(context.GetDevice(), buffer, bufferMemory, 0));
 	}
 
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
@@ -64,14 +65,12 @@ namespace mist {
 
 	VulkanVertexBuffer::VulkanVertexBuffer(uint32_t count) {
 		const VkDeviceSize size = sizeof(float) * count;
-		CreateBuffer(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer, vertexBufferMemory);
-		//CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 	}
 
 	VulkanVertexBuffer::VulkanVertexBuffer(std::vector<Vertex> vertices) {
 		const VkDeviceSize size = sizeof(Vertex) * vertices.size();
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer, vertexBufferMemory);
-		//CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 		SetData(vertices);
 	}
 
@@ -138,5 +137,35 @@ namespace mist {
 		VulkanContext& context = VulkanContext::GetContext();
 		uint8_t currentFrame = context.GetSwapchain()->GetCurrentFrameIndex();
 		vkCmdBindIndexBuffer(context.commands.GetRenderBuffer(currentFrame), nullBuffer, 0, VK_INDEX_TYPE_UINT32);
+	}
+
+	UniformBuffer::UniformBuffer() : size(0) {}
+
+	UniformBuffer::UniformBuffer(uint32_t size, void* data) : size(size) {
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, uboBuffer, uboMemory);
+		if (data != nullptr)
+			SetBufferData(data, size, uboBuffer);
+	}
+
+	UniformBuffer::~UniformBuffer() {
+		Clear();
+	}
+
+	void UniformBuffer::SetData(uint32_t newSize, void* newData) {
+		size = newSize;
+		SetBufferData(newData, newSize, uboBuffer);
+	}
+
+	void UniformBuffer::Clear() {
+		VulkanContext& context = VulkanContext::GetContext();
+		if (uboBuffer != VK_NULL_HANDLE) {
+			vkDeviceWaitIdle(context.GetDevice());
+			vkDestroyBuffer(context.GetDevice(), uboBuffer, context.GetAllocationCallbacks());
+		}
+
+		if (uboMemory != VK_NULL_HANDLE) {
+			//vkUnmapMemory(context.GetDevice(), uboMemory);
+			vkFreeMemory(context.GetDevice(), uboMemory, context.GetAllocationCallbacks());
+		}
 	}
 }
