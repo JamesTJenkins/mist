@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
@@ -41,8 +42,13 @@ find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glslang CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
-
-add_subdirectory(vendor/spirv-cross)
+find_package(spirv_cross_core CONFIG REQUIRED)
+find_package(spirv_cross_glsl CONFIG REQUIRED)
+find_package(spirv_cross_cpp CONFIG REQUIRED)
+find_package(spirv_cross_hlsl CONFIG REQUIRED)
+find_package(spirv_cross_msl CONFIG REQUIRED)
+find_package(spirv_cross_reflect CONFIG REQUIRED)
+find_package(spirv_cross_c CONFIG REQUIRED)
 
 add_library(mist STATIC ${SOURCES})
 
@@ -52,20 +58,20 @@ target_include_directories(mist
 )
 
 target_link_libraries(mist
-    PRIVATE spirv-cross-core spirv-cross-glsl spirv-cross-hlsl spirv-cross-reflect
-	PUBLIC glm::glm
-	PRIVATE spdlog::spdlog
-	PRIVATE Vulkan::Vulkan
-	PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    PRIVATE stdc++
+    PUBLIC glm::glm
+    PRIVATE spdlog::spdlog
+    PRIVATE Vulkan::Vulkan
+    PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main> $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
     PRIVATE EnTT::EnTT
-)
-
-# Stop warnings from spirv-cross
-target_compile_options(spirv-cross PRIVATE
-    $<$<CXX_COMPILER_ID:GNU>:-w>
-    $<$<CXX_COMPILER_ID:Clang>:-w>
-    $<$<CXX_COMPILER_ID:MSVC>:/W0>
+    PRIVATE spirv-cross-core
+    PRIVATE spirv-cross-glsl 
+    PRIVATE spirv-cross-cpp
+    PRIVATE spirv-cross-hlsl 
+    PRIVATE spirv-cross-msl
+    PRIVATE spirv-cross-reflect
+    PRIVATE spirv-cross-c
 )
 
 target_compile_definitions(${PROJECT_NAME} 
