@@ -1,3 +1,0 @@
-[submodule "mist/vendor/spirv-cross"]
-	path = mist/vendor/spirv-cross
-	url = git@github.com:KhronosGroup/SPIRV-Cross.git

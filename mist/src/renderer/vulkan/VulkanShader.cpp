@@ -1,6 +1,6 @@
 #include "VulkanShader.hpp"
 #include <glslang/SPIRV/GlslangToSpv.h>
-#include <spirv_glsl.hpp>
+#include <spirv_cross/spirv_hlsl.hpp>
 #include <filesystem>
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "Debug.hpp"

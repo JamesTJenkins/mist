@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <glslang/Public/ShaderLang.h>
-#include <spirv_cross.hpp>
+#include <spirv_cross/spirv_cross.hpp>
 #include "renderer/Shader.hpp"
 
 namespace mist {
