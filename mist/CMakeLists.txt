@@ -58,7 +58,7 @@ target_include_directories(mist
 )
 
 target_link_libraries(mist
-    PRIVATE stdc++
+    PRIVATE $<$<PLATFORM_ID:Linux>:stdc++>
     PUBLIC glm::glm
     PRIVATE spdlog::spdlog
     PRIVATE Vulkan::Vulkan
