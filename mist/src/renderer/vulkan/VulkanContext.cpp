@@ -1,7 +1,7 @@
 #include "VulkanContext.hpp"
 #include <glm/glm.hpp>
 #include <set>
-#include <SDL2/SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "Application.hpp"
 #include "Debug.hpp"
@@ -61,13 +61,13 @@ namespace mist {
 #else
 		std::vector<const char*> extensions = {};
 #endif
-
 		unsigned int count = 0;
-		SDL_Vulkan_GetInstanceExtensions(Application::Get().GetWindow()->GetNativeWindow(), &count, nullptr);
-		size_t additionalExtensionCount = extensions.size();
-		extensions.resize(additionalExtensionCount + count);
-		SDL_Vulkan_GetInstanceExtensions(Application::Get().GetWindow()->GetNativeWindow(), &count, extensions.data() + additionalExtensionCount);
-			
+		const char* const * sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&count);
+		extensions.reserve(extensions.size() + count);
+		for (size_t i = 0; i < count; i++) {
+			extensions.emplace_back(sdlExtensions[i]);
+		}
+
 		VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
@@ -97,7 +97,7 @@ namespace mist {
 	}
 
 	void VulkanContext::CreateSurface() {
-		if (!SDL_Vulkan_CreateSurface(Application::Get().GetWindow()->GetNativeWindow(), instance, &surface))
+		if (!SDL_Vulkan_CreateSurface(Application::Get().GetWindow()->GetNativeWindow(), instance, allocator, &surface))
 			printf("[VULKAN] surface failed to be created");
 	}
 

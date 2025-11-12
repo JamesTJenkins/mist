@@ -5,7 +5,7 @@
     "glslang",
     "spdlog",
     {
-      "name": "sdl2",
+      "name": "sdl3",
       "features": [ "vulkan" ]
     },
     "entt"

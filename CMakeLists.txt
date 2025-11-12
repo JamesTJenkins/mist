@@ -37,7 +37,7 @@ elseif(MSVC)
     )
 endif()
 
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 
 add_executable(editor ${SOURCES})
 

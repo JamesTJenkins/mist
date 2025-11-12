@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string>
 #include <glm/glm.hpp>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Core.hpp"
 
 namespace mist {
