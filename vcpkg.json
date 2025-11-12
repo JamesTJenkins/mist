@@ -8,6 +8,7 @@
       "name": "sdl3",
       "features": [ "vulkan" ]
     },
-    "entt"
+    "entt",
+    "spirv-cross"
   ]
 }

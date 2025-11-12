@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include "Math.hpp"
-#include "Data/Mesh.hpp"
+#include "data/Mesh.hpp"
 
 namespace mist {
 	enum class ShaderDataType {
