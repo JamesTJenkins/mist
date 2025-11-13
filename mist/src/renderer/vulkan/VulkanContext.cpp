@@ -53,20 +53,18 @@ namespace mist {
 		appInfo.pEngineName = "mist";
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.apiVersion = VK_API_VERSION_1_3;
-
-#ifdef DEBUG
-		std::vector<const char*> extensions = {
-			VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-		};
-#else
+		
 		std::vector<const char*> extensions = {};
-#endif
 		unsigned int count = 0;
 		const char* const * sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&count);
-		extensions.reserve(extensions.size() + count);
+		extensions.reserve(count);
 		for (size_t i = 0; i < count; i++) {
 			extensions.emplace_back(sdlExtensions[i]);
 		}
+
+#ifdef DEBUG
+		extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
 
 		VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -86,13 +84,22 @@ namespace mist {
 		CheckVkResult(vkCreateInstance(&createInfo, allocator, &instance));
 
 #ifdef DEBUG
-		auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-		VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
-		debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-		debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-		debug_report_ci.pfnCallback = DebugReport;
-		debug_report_ci.pUserData = NULL;
-		CheckVkResult(vkCreateDebugReportCallbackEXT(instance, &debug_report_ci, allocator, &debugReport));
+		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
+		VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI = {};
+		debugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		debugUtilsMessengerCI.messageSeverity =
+		    VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+		    VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+		    VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
+		debugUtilsMessengerCI.messageType =
+		    VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+		    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+		    VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		debugUtilsMessengerCI.pfnUserCallback = DebugUtilsMessengerCallback;
+		debugUtilsMessengerCI.pUserData = nullptr;
+
+		CheckVkResult(vkCreateDebugUtilsMessengerEXT(instance, &debugUtilsMessengerCI, allocator, &debugMessenger));
 #endif
 	}
 

@@ -39,7 +39,7 @@ namespace mist {
 		inline const VkQueue GetGraphicsQueue() const { return graphicsQueue; }
 		inline const VkQueue GetPresentQueue() const { return presentQueue; }
 		inline const Ref<VulkanSwapchain>& GetSwapchain() { return swapchain; }
-        inline const VkDebugReportCallbackEXT GetDebugCallback() const { return debugReport; }
+        inline const VkDebugUtilsMessengerEXT GetDebugMessenger() const { return debugMessenger; }
 		inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocator; }
 
 		VulkanDescriptor descriptors;
@@ -53,7 +53,6 @@ namespace mist {
         VulkanContext(const VulkanContext&) = delete;
         VulkanContext& operator=(const VulkanContext&) = delete;
 
-		VkAllocationCallbacks* allocator = nullptr;
 		VkInstance instance = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -61,6 +60,7 @@ namespace mist {
 		VkQueue graphicsQueue = VK_NULL_HANDLE;
 		VkQueue presentQueue = VK_NULL_HANDLE;
 		Ref<VulkanSwapchain> swapchain;
-		VkDebugReportCallbackEXT debugReport = VK_NULL_HANDLE;
+		VkAllocationCallbacks* allocator = nullptr;
+		VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 	};
 }

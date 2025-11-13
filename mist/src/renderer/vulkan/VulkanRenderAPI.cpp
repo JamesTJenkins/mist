@@ -35,8 +35,8 @@ namespace mist {
 		vkDestroyDevice(context.GetDevice(), context.GetAllocationCallbacks());
 		vkDestroySurfaceKHR(context.GetInstance(), context.GetSurface(), context.GetAllocationCallbacks());
 #ifdef DEBUG
-		auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(context.GetInstance(), "vkDestroyDebugReportCallbackEXT");
-		vkDestroyDebugReportCallbackEXT(context.GetInstance(), context.GetDebugCallback(), context.GetAllocationCallbacks());
+		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.GetInstance(), "vkDestroyDebugUtilsMessengerEXT");
+		vkDestroyDebugUtilsMessengerEXT(context.GetInstance(), context.GetDebugMessenger(), context.GetAllocationCallbacks());
 #endif
 		vkDestroyInstance(context.GetInstance(), context.GetAllocationCallbacks());
 	}
@@ -83,7 +83,7 @@ namespace mist {
 		camData.u_Transform = camera.GetTransform().GetLocalToWorldMatrix();
 
 		VulkanContext& context = VulkanContext::GetContext();
-		context.descriptors.UpdateUniformBuffer("CameraData", camData);
+		context.descriptors.UpdateUniformBuffer({ context.GetSwapchain()->GetCurrentFrameIndex(), "CameraData" }, camData);
 	}
 
 	void VulkanRenderAPI::BindMeshRenderer(const MeshRenderer& meshRenderer) {
