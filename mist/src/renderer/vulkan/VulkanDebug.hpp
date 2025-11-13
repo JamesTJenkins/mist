@@ -7,8 +7,7 @@
 static void CheckVkResult(VkResult error) {
 	if (error == 0)
 		return;
-	//fprintf(stderr, "[vulkan] Error: VkResult = %d\n", error);
-	MIST_ERROR("[vulkan] Error: VkResult = {0}", error);
+	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", error);
 	if (error < 0)
 		abort();
 }
