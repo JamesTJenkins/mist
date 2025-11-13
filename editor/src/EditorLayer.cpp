@@ -12,7 +12,7 @@ namespace mistEditor {
 	}
 
 	void EditorLayer::OnAttach() {
-
+		sceneWindow.Initialize();
 	}
 
 	void EditorLayer::OnDetach() {
@@ -21,6 +21,10 @@ namespace mistEditor {
 
 	void EditorLayer::OnUpdate() {
 		sceneWindow.OnEditorUpdate();
+	}
+
+	void EditorLayer::OnPreRender() {
+		sceneWindow.OnPreRender();
 	}
 
 	void EditorLayer::OnRender() {

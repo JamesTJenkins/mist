@@ -27,6 +27,15 @@ namespace mist {
 			return h1 ^ (h2 << 1);
 		}
 	};
+
+	struct PairHash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+        return h1 ^ (h2 << 1);
+    }
+};
 }
 
 namespace std {
@@ -50,24 +59,25 @@ namespace mist {
 		VkDescriptorSetLayout CreateDescriptorSetLayout(const VulkanShader* shader);
 		void CreateDescriptorPool();
 		VkDescriptorSet& CreateDescriptorSet(const MeshRenderer& meshRenderer);
-
+		
 		void ClearPool();
 		void Cleanup();
-
+		
 		inline const VkDescriptorPool& GetDescriptorPool(const int index) const { return pools[index]; }
 		inline const std::vector<VkDescriptorPool>& GetDescriptorPools() const { return pools; }
-
+		
 		VkDescriptorSetLayout& GetDescriptorSetLayout(const std::string& name);
 		VkDescriptorSet& GetDescriptorSet(const MeshRenderer& meshRenderer);
-
+		
 		void UpdateDescriptorSetsWithUniformBuffers(const MeshRenderer& meshRenderer);
 		void UpdateDescriptorSetsWithUniformBuffer(const std::string& name);
 		
 		template<typename T>
-		void UpdateUniformBuffer(const std::string& name, T& data) {
-			if (uniformBuffers.find(name) != uniformBuffers.end()) {
-				UniformBuffer& buffer = uniformBuffers[name];
-				buffer.SetData(sizeof(T), &data);
+		void UpdateUniformBuffer(const std::pair<uint8_t, std::string>& bufferPair, T& data) {
+			if (uniformBuffers.find(bufferPair) != uniformBuffers.end()) {
+				uniformBuffers[bufferPair].SetData(sizeof(T), &data);
+			} else {
+				uniformBuffers[bufferPair] = UniformBuffer(sizeof(T), &data);
 			}
 		}
 	private:
@@ -77,7 +87,7 @@ namespace mist {
 		std::unordered_map<std::string, VkDescriptorSetLayout> descriptorSetLayouts;
 		std::unordered_map<std::string, std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;
 		std::unordered_map<DescriptorSetKey, VkDescriptorSet> descriptorSets;
-		std::unordered_map<std::string, UniformBuffer> uniformBuffers;
+		std::unordered_map<std::pair<uint8_t, std::string>, UniformBuffer, PairHash, std::equal_to<std::pair<uint8_t, std::string>>> uniformBuffers;
 		std::unordered_map<std::pair<std::string, uint32_t>, std::string, UniformBufferNameHash> uniformBufferNames;	// {shader name, binding} = uniformbuffer name
 	};
 }

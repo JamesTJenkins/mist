@@ -11,7 +11,9 @@ namespace mistEditor {
 	public:
 		SceneWindow();
 
+		void Initialize();
 		void OnEditorUpdate();
+		void OnPreRender();
 		void OnRender();
 		void Cleanup();
 	private:

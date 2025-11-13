@@ -63,6 +63,15 @@ namespace mist {
 		vkFreeMemory(context.GetDevice(), stagingMemory, context.GetAllocationCallbacks());
 	}
 
+	// Requires VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT enabled
+	void UpdateBufferData(const void* data, VkDeviceSize size, VkDeviceMemory& bufferMemory) {
+		VulkanContext& context = VulkanContext::GetContext();
+		void* mappedData;
+		vkMapMemory(context.GetDevice(), bufferMemory, 0, size, 0, &mappedData);
+		memcpy(mappedData, data, size);
+		vkUnmapMemory(context.GetDevice(), bufferMemory);
+	}
+
 	VulkanVertexBuffer::VulkanVertexBuffer(uint32_t count) {
 		const VkDeviceSize size = sizeof(float) * count;
 		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
@@ -142,9 +151,9 @@ namespace mist {
 	UniformBuffer::UniformBuffer() : size(0) {}
 
 	UniformBuffer::UniformBuffer(uint32_t size, void* data) : size(size) {
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, uboBuffer, uboMemory);
+		CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, uboBuffer, uboMemory);
 		if (data != nullptr)
-			SetBufferData(data, size, uboBuffer);
+			UpdateBufferData(data, size, uboMemory);
 	}
 
 	UniformBuffer::~UniformBuffer() {
@@ -153,7 +162,7 @@ namespace mist {
 
 	void UniformBuffer::SetData(uint32_t newSize, void* newData) {
 		size = newSize;
-		SetBufferData(newData, newSize, uboBuffer);
+		UpdateBufferData(newData, newSize, uboMemory);
 	}
 
 	void UniformBuffer::Clear() {
@@ -164,7 +173,6 @@ namespace mist {
 		}
 
 		if (uboMemory != VK_NULL_HANDLE) {
-			//vkUnmapMemory(context.GetDevice(), uboMemory);
 			vkFreeMemory(context.GetDevice(), uboMemory, context.GetAllocationCallbacks());
 		}
 	}

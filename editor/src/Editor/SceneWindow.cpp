@@ -5,7 +5,9 @@
 #include <components/MeshRenderer.hpp>
 
 namespace mistEditor {
-	SceneWindow::SceneWindow() {
+	SceneWindow::SceneWindow() {}
+
+	void SceneWindow::Initialize() {
 		std::vector<mist::FramebufferTextureProperties> attachments = {
 			mist::FramebufferTextureFormat::RGBA8
 		};
@@ -55,20 +57,23 @@ namespace mistEditor {
 
 	}
 
-	void SceneWindow::OnRender() {
-		mist::ShaderLibrary* shaderLib = mist::Application::Get().GetShaderLibrary();
+	void SceneWindow::OnPreRender() {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
-		auto view = sm->currentScene.view<mist::MeshRenderer>();
 		auto camView = sm->currentScene.view<mist::Camera>();
-		
+
 		mist::Camera* cam;
 		for (auto entity : camView) {
 			cam = sm->currentScene.try_get<mist::Camera>(entity);
 			break;
 		}
-		
 		renderAPI->UpdateCamera(*cam);
+	}
+
+	void SceneWindow::OnRender() {
+		mist::ShaderLibrary* shaderLib = mist::Application::Get().GetShaderLibrary();
+		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
+		auto view = sm->currentScene.view<mist::MeshRenderer>();
 		
 		// Binding and unbinding a shader pipeline after each object is terrible but will do for testing sake
 		// ideally we bind a shader then render everything with that shader before moving on

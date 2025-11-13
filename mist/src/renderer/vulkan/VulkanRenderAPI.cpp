@@ -15,6 +15,7 @@ namespace mist {
 		context.commands.CreateCommandPool(); // TODO: May need to do something more at some point but single pool will do for now
 		context.commands.AllocateRenderBuffers();
 		context.sync.CreateSyncObjects();
+MIST_INFO("Initialised Vulkan API");
 	}
 
 	void VulkanRenderAPI::Shutdown() {
@@ -28,8 +29,7 @@ namespace mist {
 		context.GetSwapchain()->CleanupFramebuffers();
 		context.GetSwapchain()->CleanupRenderPasses();
 		context.pipeline.Cleanup();
-		// image views, samplers, buffers
-		context.commands.DestroyCommandPool();
+				context.commands.DestroyCommandPool();
 		context.GetSwapchain()->CleanupSwapchain();
 
 		vkDestroyDevice(context.GetDevice(), context.GetAllocationCallbacks());

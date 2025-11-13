@@ -67,6 +67,9 @@ namespace mist {
 			
 			window->OnUpdate();
 
+			for (Layer* layer : layerStack) {
+				layer->OnPreRender();
+			}
 			RenderCommand::BeginRenderPass();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();

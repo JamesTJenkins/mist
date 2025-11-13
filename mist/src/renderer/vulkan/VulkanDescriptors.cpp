@@ -23,11 +23,11 @@ namespace mist {
 
 		// Testing this
 		VulkanContext& context = VulkanContext::GetContext();
-		VkDescriptorPoolCreateInfo info{};
+		VkDescriptorPoolCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		info.poolSizeCount = static_cast<uint32_t>(poolSize.size());
 		info.pPoolSizes = poolSize.data();
-		info.maxSets = context.GetSwapchain()->GetSwapchainImageCount();
+		info.maxSets = context.sync.MAX_FRAMES_IN_FLIGHT;
 		info.flags = 0;
 
 		//VkDescriptorPoolCreateInfo info {};
@@ -46,10 +46,14 @@ namespace mist {
 
 	VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const VulkanShader* shader) {
 		std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+		VulkanContext& context = VulkanContext::GetContext();
 
 		for (const auto& res : shader->GetUboResources()) {
-			UniformBuffer uboBuffer(res.second.size, nullptr);
-			uniformBuffers[res.first] = std::move(uboBuffer);
+			//for (uint8_t frameIndex = 0; frameIndex < context.sync.MAX_FRAMES_IN_FLIGHT; frameIndex++) {
+			//	uniformBuffers[{frameIndex, res.first}] = UniformBuffer(res.second.size, nullptr);
+			//	uniformBufferNames[{shader->GetName(), res.second.binding}] = res.first;
+			//}
+			
 			uniformBufferNames[{shader->GetName(), res.second.binding}] = res.first;
 
 			VkDescriptorSetLayoutBinding layoutBinding{};
@@ -66,7 +70,6 @@ namespace mist {
 		layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
 		layoutInfo.pBindings = layoutBindings.data();
 		
-		VulkanContext& context = VulkanContext::GetContext();
 		VkDescriptorSetLayout layout;
         CheckVkResult(vkCreateDescriptorSetLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &layout));
 
@@ -156,8 +159,9 @@ namespace mist {
 
 	void VulkanDescriptor::UpdateDescriptorSetsWithUniformBuffers(const MeshRenderer& meshRenderer) {
 		VulkanContext& context = VulkanContext::GetContext();
+		uint8_t frameIndex = context.GetSwapchain()->GetCurrentFrameIndex();
 		for (const VkDescriptorSetLayoutBinding& binding : descriptorSetLayoutBindings[meshRenderer.shaderName]) {
-			UniformBuffer& buffer = uniformBuffers[uniformBufferNames[{meshRenderer.shaderName, binding.binding}]];
+			UniformBuffer& buffer = uniformBuffers[{ frameIndex, uniformBufferNames[{meshRenderer.shaderName, binding.binding}] }];
 			VkDescriptorSet descriptor = GetDescriptorSet(meshRenderer);	// Get here incase we require to create the descriptor set incase we skip over due to the uniform buffer not being ready yet
 
 			VkDescriptorBufferInfo bufferInfo{};
