@@ -39,6 +39,7 @@ endif()
 find_package(glm CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 find_package(SDL3 REQUIRED)
 find_package(glslang CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
@@ -62,6 +63,7 @@ target_link_libraries(mist
     PUBLIC glm::glm
     PRIVATE spdlog::spdlog
     PRIVATE Vulkan::Vulkan
+    PRIVATE GPUOpen::VulkanMemoryAllocator
     PUBLIC $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main> $<IF:$<TARGET_EXISTS:SDL3::SDL3>,SDL3::SDL3,SDL3::SDL3-static>
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
     PRIVATE EnTT::EnTT
