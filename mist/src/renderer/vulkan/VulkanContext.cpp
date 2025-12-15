@@ -289,7 +289,7 @@ namespace mist {
 		VkSurfaceFormatKHR preferedFormat;
 		preferedFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
-		for (int i = 0; i < properties.attachment.attachmentsCount; i++) {
+		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; i++) {
 			if (VulkanHelper::IsColorFormat(properties.attachment.attachments[i].textureFormat)) {
 				preferedFormat.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
 				validPreferredFormat = true;
@@ -337,7 +337,7 @@ namespace mist {
 	VkFormat ChooseSwapchainDepthFormat(FramebufferProperties& properties) {
 		bool validFormat = false;
 		VkFormat preferredFormat;
-		for (int i = 0; i < properties.attachment.attachmentsCount; i++) {
+		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; i++) {
 			if (VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat)) {
 				preferredFormat = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
 				validFormat = true;
@@ -482,7 +482,7 @@ namespace mist {
 		additionalFramebufferAttachments.clear();
 
 		int framebufferColorIndex;
-		for (int i = 0; i < properties.attachment.attachmentsCount; ++i) {
+		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
 			if (VulkanHelper::IsColorFormat(properties.attachment.attachments[i].textureFormat)) {
 				framebufferColorIndex = i;
 				break;
@@ -581,7 +581,7 @@ namespace mist {
 		VkSemaphoreCreateInfo info {};
 		info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		
-		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 			CheckVkResult(vkCreateSemaphore(device, &info, allocationCallbacks, &imageAvailableSemaphores[i]));
 			CheckVkResult(vkCreateSemaphore(device, &info, allocationCallbacks, &renderFinishedSemaphores[i]));
 		}
@@ -597,7 +597,7 @@ namespace mist {
 		info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		
-		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 			CheckVkResult(vkCreateFence(device, &info, allocationCallbacks, &inFlightFences[i]));
 		}
 	}
@@ -620,6 +620,14 @@ namespace mist {
 		allocInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
 		CheckVkResult(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
+
+		VkCommandBufferAllocateInfo tempAllocInfo {};
+		tempAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		tempAllocInfo.commandPool = commandPool;
+		tempAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		tempAllocInfo.commandBufferCount = 1;
+
+		CheckVkResult(vkAllocateCommandBuffers(device, &tempAllocInfo, &tempCommandBuffer));
 	}
 
 	void VulkanContext::BeginSingleTimeCommands() {
@@ -652,18 +660,23 @@ namespace mist {
 			CheckVkResult(result);
 		}
 
-		VkRenderPassBeginInfo info {};
-		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		info.renderPass = renderPass;
-		info.framebuffer = framebuffers[currentFrame];
-		info.renderArea.offset = { 0, 0 };
-		info.renderArea.extent = extent;
-		info.clearValueCount = 1;
+		VkCommandBufferBeginInfo cmdInfo {};
+		cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo);
+
+		VkRenderPassBeginInfo renderPassInfo {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = renderPass;
+		renderPassInfo.framebuffer = framebuffers[currentFrame];
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = extent;
+		renderPassInfo.clearValueCount = 1;
 		glm::vec4 color = Application::Get().GetRenderAPI()->GetClearColor();
 		VkClearValue clearColor = { color.r, color.g, color.b, color.a };
-		info.pClearValues = &clearColor;
+		renderPassInfo.pClearValues = &clearColor;
 
-		vkCmdBeginRenderPass(commandBuffers[currentFrame], &info, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		
 		// Using dynamic viewport and scissor so needs to be set every frame
 		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
@@ -672,6 +685,7 @@ namespace mist {
 
 	void VulkanContext::EndRenderPass() {
 		vkCmdEndRenderPass(commandBuffers[currentFrame]);
+		vkEndCommandBuffer(commandBuffers[currentFrame]);
 
 		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
