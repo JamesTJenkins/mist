@@ -5,7 +5,7 @@
 #include "Debug.hpp"
 
 namespace mist {
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer& buffer, VmaAllocation& bufferAlloc, VmaAllocationCreateFlags allocFlags, VmaAllocationInfo& info) {
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer& buffer, VmaAllocation& bufferAlloc, VmaMemoryUsage allocUsage, VmaAllocationCreateFlags allocFlags, VmaAllocationInfo& info) {
 		VulkanContext& context = VulkanContext::GetContext();
 
 		VkBufferCreateInfo bufferInfo {};
@@ -15,7 +15,7 @@ namespace mist {
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		VmaAllocationCreateInfo allocCreateInfo {};
-		allocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+		allocCreateInfo.usage = allocUsage;
 		allocCreateInfo.flags = allocFlags;
 
 		CheckVkResult(vmaCreateBuffer(context.GetAllocator(), &bufferInfo, &allocCreateInfo, &buffer, &bufferAlloc, &info));
@@ -38,7 +38,7 @@ namespace mist {
 		VkBuffer stagingBuffer;
 		VmaAllocation stagingAlloc;
 		VmaAllocationInfo info {};
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBuffer, stagingAlloc, VMA_ALLOCATION_CREATE_MAPPED_BIT, info);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBuffer, stagingAlloc, VMA_MEMORY_USAGE_CPU_ONLY, VMA_ALLOCATION_CREATE_MAPPED_BIT, info);
 		
 		memcpy(info.pMappedData, data, size);
 		CopyBuffer(stagingBuffer, buffer, size);
@@ -50,13 +50,13 @@ namespace mist {
 	VulkanVertexBuffer::VulkanVertexBuffer(uint32_t count) {
 		const VkDeviceSize size = sizeof(float) * count;
 		VmaAllocationInfo info {};
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertexBuffer, vertexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, info);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertexBuffer, vertexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, 0, info);
 	}
 	
 	VulkanVertexBuffer::VulkanVertexBuffer(std::vector<Vertex> vertices) {
 		const VkDeviceSize size = sizeof(Vertex) * vertices.size();
 		VmaAllocationInfo info {};
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertexBuffer, vertexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, info);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertexBuffer, vertexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, 0, info);
 		SetData(vertices);
 	}
 	
@@ -82,7 +82,7 @@ namespace mist {
 	VulkanIndexBuffer::VulkanIndexBuffer(std::vector<uint32_t> indices) {
 		const VkDeviceSize size = indices.size() * sizeof(uint32_t);
 		VmaAllocationInfo info {};
-		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, indexBuffer, indexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, info);
+		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, indexBuffer, indexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, 0, info);
 		SetData(indices);
 	}
 
@@ -107,7 +107,7 @@ namespace mist {
 
 	UniformBuffer::UniformBuffer(uint32_t size, void* data) : size(size) {
 		VmaAllocationInfo info {};
-		CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, uboBuffer, uboAlloc, VMA_MEMORY_USAGE_CPU_TO_GPU, info);
+		CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, uboBuffer, uboAlloc, VMA_MEMORY_USAGE_CPU_TO_GPU, VMA_ALLOCATION_CREATE_MAPPED_BIT, info);
 		SetData(size, data);
 	}
 	
