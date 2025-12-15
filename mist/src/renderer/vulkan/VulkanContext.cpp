@@ -420,6 +420,7 @@ namespace mist {
 		extent = ChooseSwapchainExtent(capabilities, properties);
 
 		VkSwapchainCreateInfoKHR swapchainInfo {};
+		swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		swapchainInfo.surface = surface;
 		swapchainInfo.imageFormat = selectedFormat.format;
 		swapchainInfo.imageColorSpace = selectedFormat.colorSpace;
@@ -578,7 +579,7 @@ namespace mist {
 		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		
 		VkSemaphoreCreateInfo info {};
-		info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+		info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		
 		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 			CheckVkResult(vkCreateSemaphore(device, &info, allocationCallbacks, &imageAvailableSemaphores[i]));
