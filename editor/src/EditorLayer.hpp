@@ -14,7 +14,6 @@ namespace mistEditor {
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate() override;
-		virtual void OnPreRender() override;
 		virtual void OnRender() override;
 		virtual void OnEvent(const SDL_Event* e) override;
 	private:

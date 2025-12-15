@@ -1,7 +1,6 @@
 #include "VulkanDescriptors.hpp"
 #include "renderer/vulkan/VulkanDebug.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
-#include "renderer/vulkan/VulkanBuffer.hpp"
 #include "Debug.hpp"
 
 namespace mist {
@@ -27,17 +26,9 @@ namespace mist {
 		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		info.poolSizeCount = static_cast<uint32_t>(poolSize.size());
 		info.pPoolSizes = poolSize.data();
-		info.maxSets = context.sync.MAX_FRAMES_IN_FLIGHT;
+		info.maxSets = context.MAX_FRAMES_IN_FLIGHT;
 		info.flags = 0;
 
-		//VkDescriptorPoolCreateInfo info {};
-		//info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		//info.poolSizeCount = static_cast<uint32_t>(poolSize.size());
-		//info.pPoolSizes = poolSize.data();
-		//info.maxSets = (uint32_t)(1000 * (pools.size() + 1));	// Doubles the max pool size each time a new one is made
-		//info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-		//VulkanContext& context = VulkanContext::GetContext();
 		VkDescriptorPool pool;
 		CheckVkResult(vkCreateDescriptorPool(context.GetDevice(), &info, context.GetAllocationCallbacks(), &pool));
 
@@ -49,11 +40,6 @@ namespace mist {
 		VulkanContext& context = VulkanContext::GetContext();
 
 		for (const auto& res : shader->GetUboResources()) {
-			//for (uint8_t frameIndex = 0; frameIndex < context.sync.MAX_FRAMES_IN_FLIGHT; frameIndex++) {
-			//	uniformBuffers[{frameIndex, res.first}] = UniformBuffer(res.second.size, nullptr);
-			//	uniformBufferNames[{shader->GetName(), res.second.binding}] = res.first;
-			//}
-			
 			uniformBufferNames[{shader->GetName(), res.second.binding}] = res.first;
 
 			VkDescriptorSetLayoutBinding layoutBinding{};
@@ -135,7 +121,7 @@ namespace mist {
 	void VulkanDescriptor::Cleanup() {
 		VulkanContext& context = VulkanContext::GetContext();
 		for (std::pair<std::string, VkDescriptorSetLayout> layout : descriptorSetLayouts) {
-			vkDestroyDescriptorSetLayout(context.GetDevice(), layout.second, nullptr);
+			vkDestroyDescriptorSetLayout(context.GetDevice(), layout.second, context.GetAllocationCallbacks());
 		}
 	}
 
@@ -159,15 +145,15 @@ namespace mist {
 
 	void VulkanDescriptor::UpdateDescriptorSetsWithUniformBuffers(const MeshRenderer& meshRenderer) {
 		VulkanContext& context = VulkanContext::GetContext();
-		uint8_t frameIndex = context.GetSwapchain()->GetCurrentFrameIndex();
+		uint8_t frameIndex = context.GetCurrentFrameIndex();
 		for (const VkDescriptorSetLayoutBinding& binding : descriptorSetLayoutBindings[meshRenderer.shaderName]) {
 			UniformBuffer& buffer = uniformBuffers[{ frameIndex, uniformBufferNames[{meshRenderer.shaderName, binding.binding}] }];
 			VkDescriptorSet descriptor = GetDescriptorSet(meshRenderer);	// Get here incase we require to create the descriptor set incase we skip over due to the uniform buffer not being ready yet
 
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = buffer.uboBuffer;
+			bufferInfo.buffer = buffer.GetBuffer();
 			bufferInfo.offset = 0;
-			bufferInfo.range = buffer.size;
+			bufferInfo.range = buffer.GetSize();
 
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -181,43 +167,4 @@ namespace mist {
 			vkUpdateDescriptorSets(context.GetDevice(), 1, &descriptorWrite, 0, nullptr);
 		}
 	}
-
-	/*
-	void VulkanDescriptor::UpdateDescriptorSetsWithUniformBuffer(const std::string& name) {
-		VulkanContext& context = VulkanContext::GetContext();
-
-		for (const std::pair<DescriptorSetKey, VkDescriptorSet>& pair : descriptorSets) {
-			UniformBuffer& buffer = uniformBuffers[name];
-
-			uint32_t binding;
-			bool success = false;
-			for (std::pair<const std::pair<std::string, uint32_t>, std::string>& namePair : uniformBufferNames) {
-				if (namePair.second == name) {
-					binding = namePair.first.second;
-					success = true;
-					break;
-				}
-			}
-
-			if (!success)
-				continue;
-
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = buffer.uboBuffer;
-			bufferInfo.offset = 0;
-			bufferInfo.range = buffer.size;
-
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = pair.second;
-			descriptorWrite.dstBinding = binding;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pBufferInfo = &bufferInfo;
-
-			vkUpdateDescriptorSets(context.GetDevice(), 1, &descriptorWrite, 0, nullptr);
-		}
-	}
-	*/
 }

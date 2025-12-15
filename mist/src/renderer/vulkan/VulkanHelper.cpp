@@ -26,8 +26,8 @@ namespace mist {
 			}
 		}
 
-		MIST_ERROR("Failed to find supported format, defaulting to original");
-		return originalFormat;
+		MIST_ERROR("Failed to find supported format or alternative format");
+		return VK_FORMAT_UNDEFINED;
 	}
 
 	VkFormat VulkanHelper::FindSupportedColorFormat(VkFormat originalFormat, VkImageTiling tiling, VkFormatFeatureFlags formatFlags) {
@@ -66,19 +66,19 @@ namespace mist {
 	}
 
 	bool VulkanHelper::IsColorFormatSupported(const VkFormat& format) {
-	    VkFormatProperties props;
+		VkFormatProperties props;
 		VulkanContext& context = VulkanContext::GetContext();
-	    vkGetPhysicalDeviceFormatProperties(context.GetPhysicalDevice(), format, &props);
+		vkGetPhysicalDeviceFormatProperties(context.GetPhysicalDevice(), format, &props);
 
-	    return (props.optimalTilingFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) != 0;
+		return (props.optimalTilingFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) != 0;
 	}
 
 	bool VulkanHelper::IsDepthStencilFormatSupported(const VkFormat& format) {
 		VkFormatProperties props;
 		VulkanContext& context = VulkanContext::GetContext();
-	    vkGetPhysicalDeviceFormatProperties(context.GetPhysicalDevice(), format, &props);
+		vkGetPhysicalDeviceFormatProperties(context.GetPhysicalDevice(), format, &props);
 
-	    return (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0;
+		return (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0;
 	}
 
 	bool VulkanHelper::IsDepthStencilFormat(const VkFormat& format) {
@@ -117,6 +117,33 @@ namespace mist {
 		}
 	}
 
+	bool VulkanHelper::IsColorFormat(const FramebufferTextureFormat& format) {
+		switch (format) {
+			case FramebufferTextureFormat::RGBA8:
+			case FramebufferTextureFormat::BGRA8:
+			case FramebufferTextureFormat::RGB8:
+			case FramebufferTextureFormat::BGR8:
+			case FramebufferTextureFormat::RGBA16F:
+			case FramebufferTextureFormat::RGBA32F:
+			case FramebufferTextureFormat::RGB565:
+			case FramebufferTextureFormat::RGBA4:
+			case FramebufferTextureFormat::RG8:
+			case FramebufferTextureFormat::RG16F:
+			case FramebufferTextureFormat::R32F:
+			case FramebufferTextureFormat::R11F_G11F_B10F:
+			case FramebufferTextureFormat::RGB9_E5:
+			case FramebufferTextureFormat::R8:
+			case FramebufferTextureFormat::SR8:
+			case FramebufferTextureFormat::SRGB8_ALPHA8:
+			case FramebufferTextureFormat::SBGRA8:
+			case FramebufferTextureFormat::RGB10_A2:
+			case FramebufferTextureFormat::R16:
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	bool VulkanHelper::IsDepthFormat(const FramebufferTextureFormat& format) {
 		switch (format) {
 			case FramebufferTextureFormat::DEPTH16:
@@ -134,7 +161,6 @@ namespace mist {
 	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionLayout(const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
 			return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-			//return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
 		return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -143,7 +169,6 @@ namespace mist {
 	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionFinalLayout(size_t attachmentIndex, const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
 			return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-			//return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
 		return attachmentIndex == 0 ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -270,6 +295,14 @@ namespace mist {
 		case VK_FORMAT_D32_SFLOAT_S8_UINT:				return FramebufferTextureFormat::DEPTH32_STENCIL8;
 		case VK_FORMAT_S8_UINT:							return FramebufferTextureFormat::STENCIL8;
 		default:										return FramebufferTextureFormat::None;
+		}
+	}
+
+	VkPresentModeKHR VulkanHelper::GetPresentMode(RenderAPI::VSYNC mode) {
+		switch (mode) {
+		case RenderAPI::VSYNC::Off:				return VK_PRESENT_MODE_IMMEDIATE_KHR;
+		case RenderAPI::VSYNC::On:				return VK_PRESENT_MODE_FIFO_KHR;
+		case RenderAPI::VSYNC::TripleBuffer:	return VK_PRESENT_MODE_MAILBOX_KHR;
 		}
 	}
 }

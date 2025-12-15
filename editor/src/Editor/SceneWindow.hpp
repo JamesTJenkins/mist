@@ -13,7 +13,6 @@ namespace mistEditor {
 
 		void Initialize();
 		void OnEditorUpdate();
-		void OnPreRender();
 		void OnRender();
 		void Cleanup();
 	private:

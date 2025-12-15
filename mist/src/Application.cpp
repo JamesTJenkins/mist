@@ -4,7 +4,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <stdexcept>
-#include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include "Log.hpp"
 
@@ -22,12 +21,12 @@ namespace mist {
 		renderAPI = new VulkanRenderAPI();
 		SDL_Init(SDL_INIT_VIDEO);
 		window = Window::Create(WindowProperties(name));
-		RenderCommand::Initialize();
+		GetRenderAPI()->Initialize();
 	}
 
 	Application::~Application() {
 		layerStack.Clear();
-		RenderCommand::Shutdown();
+		GetRenderAPI()->Shutdown();
 		SDL_Quit();
 	}
 
@@ -48,7 +47,7 @@ namespace mist {
 					uint32_t newWidth = event.window.data1;
 					uint32_t newHeight = event.window.data2;
 					if (newWidth > 0 && newHeight > 0 && (window->GetWidth() != newWidth || window->GetHeight() != newHeight))
-						RenderCommand::ResizeWindow(window->GetXPosition(), window->GetYPosition(), newWidth, newHeight);
+						GetRenderAPI()->SetViewport(window->GetXPosition(), window->GetYPosition(), newWidth, newHeight);
 					break;
 				}
 				case SDL_EVENT_QUIT:
@@ -67,15 +66,11 @@ namespace mist {
 			
 			window->OnUpdate();
 
-			for (Layer* layer : layerStack) {
-				layer->OnPreRender();
-			}
-			RenderCommand::BeginRenderPass();
+			GetRenderAPI()->BeginRenderPass();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
 			}
-			RenderCommand::EndRenderPass();
-			RenderCommand::Submit();
+			GetRenderAPI()->EndRenderPass();
 		}
 	}
 
