@@ -16,37 +16,21 @@ namespace mist {
 	}
 
 	void VulkanPipeline::CreateGraphicsPipeline(const VulkanShader* shader) {
-		// After handling reflection of shader code pass through to here
 		// going to have to generate all the configurations before they are used so at game launch or creating a cache file where all the shaders and variants are stored after compilation
 		// Hold onto the pipeline in a unorderedmap/dictionary so the pipelines can be loaded when needed
 		// read through this more https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/
 
 		VulkanContext& context = VulkanContext::GetContext();
-		FramebufferProperties framebufferProperties = context.GetSwapchain()->GetFrameBuffer()->GetProperties();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-		VkViewport viewport;
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = (float)framebufferProperties.width / 2;
-		viewport.height = (float)framebufferProperties.height / 2;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		
-		VkRect2D scissor{};
-		scissor.offset = {0, 0};
-		scissor.extent = VkExtent2D(framebufferProperties.width / 2, framebufferProperties.height / 2);
+		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+		inputAssembly.primitiveRestartEnable = VK_TRUE;
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		viewportState.viewportCount = 1;
-		viewportState.pViewports = &viewport;
 		viewportState.scissorCount = 1;
-		viewportState.pScissors = &scissor;
 
 		VkPipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -57,11 +41,18 @@ namespace mist {
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
+		rasterizer.depthBiasConstantFactor = 0.0f;
+		rasterizer.depthBiasClamp = 0.0f;
+		rasterizer.depthBiasSlopeFactor = 0.0f;
 
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		multisampling.sampleShadingEnable = VK_FALSE;
 		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisampling.minSampleShading = 1.0f;
+		multisampling.pSampleMask = nullptr;
+		multisampling.alphaToCoverageEnable = VK_FALSE;
+		multisampling.alphaToOneEnable = VK_FALSE;
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil{};
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -72,7 +63,7 @@ namespace mist {
 		depthStencil.stencilTestEnable = VK_FALSE;
 
 		// 1 ColorBlendAttachmentState per attachment
-		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates(context.GetSwapchain()->GetSubpassColorAttachmentRefCount());
+		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates(context.GetColorAttachmentCount());
 		for (VkPipelineColorBlendAttachmentState& state : colorBlendAttachmentStates) {
 			state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 			state.blendEnable = VK_FALSE;
@@ -88,7 +79,7 @@ namespace mist {
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlending.logicOpEnable = VK_FALSE;
 		colorBlending.logicOp = VK_LOGIC_OP_COPY;
-		colorBlending.attachmentCount = context.GetSwapchain()->GetSubpassColorAttachmentRefCount();
+		colorBlending.attachmentCount = context.GetColorAttachmentCount();
 		colorBlending.pAttachments = colorBlendAttachmentStates.data();
 		colorBlending.blendConstants[0] = 0.0f;
 		colorBlending.blendConstants[1] = 0.0f;
@@ -97,7 +88,7 @@ namespace mist {
 
 		VkDynamicState dynamicStates[] = {
 			VK_DYNAMIC_STATE_VIEWPORT,
-			VK_DYNAMIC_STATE_LINE_WIDTH
+			VK_DYNAMIC_STATE_SCISSOR
 		};
 
 		VkPipelineDynamicStateCreateInfo dynamicState{};
@@ -190,7 +181,7 @@ namespace mist {
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.layout = pipelineLayout;
-		pipelineInfo.renderPass = context.GetSwapchain()->GetRenderPass();
+		pipelineInfo.renderPass = context.GetRenderPass();
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

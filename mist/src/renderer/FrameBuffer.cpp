@@ -1,8 +1,8 @@
 #include "renderer/Framebuffer.hpp"
-#include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "renderer/vulkan/VulkanHelper.hpp"
 #include "Debug.hpp"
+#include "Application.hpp"
 
 namespace mist {
 	const char* FramebufferTextureFormatToString(const FramebufferTextureFormat format) {
@@ -88,20 +88,14 @@ namespace mist {
 	}
 
 	void Framebuffer::Create(FramebufferProperties& properties) {
-		switch (RenderCommand::GetAPIType()) {
+		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::Vulkan:
 		{
 			ValidateFramebufferProperties(properties);
 			
 			VulkanContext& context = VulkanContext::GetContext();
-			if (context.GetSwapchain() != nullptr) {
-				context.GetSwapchain()->CreateSwapchain(properties);
-				context.GetSwapchain()->GetFrameBuffer();
-			}
-			
 			MIST_INFO("Creating new swapchain for framebuffer");
 			context.CreateSwapchain(properties);
-			context.GetSwapchain()->GetFrameBuffer();
 			break;
 		}
 		case RenderAPI::API::None:

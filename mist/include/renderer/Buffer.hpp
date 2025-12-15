@@ -91,13 +91,7 @@ namespace mist {
 	public:
 		virtual ~VertexBuffer() = default;
 		virtual void Clear() = 0;
-
 		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-	
-		virtual const BufferLayout& GetLayout() const = 0;
-		virtual void SetLayout(const BufferLayout& layout) = 0;
-
 		virtual void SetData(const std::vector<Vertex> vertices) = 0;
 
 		static Ref<VertexBuffer> Create(uint32_t size);
@@ -108,9 +102,8 @@ namespace mist {
 	public:
 		virtual ~IndexBuffer() = default;
 		virtual void Clear() = 0;
-
 		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
+		virtual void SetData(const std::vector<uint32_t> indices) = 0;
 
 		static Ref<IndexBuffer> Create(std::vector<uint32_t> indices);
 	};

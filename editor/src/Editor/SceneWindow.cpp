@@ -1,8 +1,8 @@
 #include "SceneWindow.hpp"
 #include <renderer/Buffer.hpp>
-#include <renderer/RenderCommand.hpp>
 #include <vector>
 #include <components/MeshRenderer.hpp>
+#include <Application.hpp>
 
 namespace mistEditor {
 	SceneWindow::SceneWindow() {}
@@ -54,10 +54,6 @@ namespace mistEditor {
 	}
 
 	void SceneWindow::OnEditorUpdate() {
-
-	}
-
-	void SceneWindow::OnPreRender() {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		auto camView = sm->currentScene.view<mist::Camera>();

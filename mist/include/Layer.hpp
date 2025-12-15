@@ -12,7 +12,6 @@ namespace mist {
         virtual void OnAttach() = 0;
         virtual void OnDetach() = 0;
         virtual void OnUpdate() = 0;
-        virtual void OnPreRender() = 0;
         virtual void OnRender() = 0;
         virtual void OnEvent(const SDL_Event* e) = 0;
 

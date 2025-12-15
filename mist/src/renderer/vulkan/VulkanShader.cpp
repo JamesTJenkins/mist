@@ -412,7 +412,7 @@ namespace mist {
 	void VulkanShader::Bind() const {
 		VulkanContext& context = VulkanContext::GetContext();
 		vkCmdBindPipeline(
-			context.commands.GetRenderBuffer(context.GetSwapchain()->GetCurrentFrameIndex()), 
+			context.GetCurrentFrameCommandBuffer(),
 			VK_PIPELINE_BIND_POINT_GRAPHICS, 	// TODO: make a way to detect correct bind point, will probably just have to hold a reference if cant defer
 			context.pipeline.GetGraphicsPipeline(name)
 		);

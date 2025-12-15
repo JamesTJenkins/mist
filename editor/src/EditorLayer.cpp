@@ -1,6 +1,5 @@
 #include "EditorLayer.hpp"
 #include <Application.hpp>
-#include <renderer/RenderCommand.hpp>
 
 namespace mistEditor {
 	EditorLayer::EditorLayer() : Layer("EditorLayer") {
@@ -21,10 +20,6 @@ namespace mistEditor {
 
 	void EditorLayer::OnUpdate() {
 		sceneWindow.OnEditorUpdate();
-	}
-
-	void EditorLayer::OnPreRender() {
-		sceneWindow.OnPreRender();
 	}
 
 	void EditorLayer::OnRender() {
