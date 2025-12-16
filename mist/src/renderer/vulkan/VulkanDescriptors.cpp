@@ -7,32 +7,32 @@ namespace mist {
 	void VulkanDescriptor::CreateDescriptorPool() {
 		// Initial pool sizes
 		std::vector<VkDescriptorPoolSize> poolSize = {
-			{ VK_DESCRIPTOR_TYPE_SAMPLER, 200 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 200 },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 200 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 100 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 100 },
 			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 200 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 200 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 200 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 200 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 200 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 200 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 200 }
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 }
 		};
 
-		// Testing this
 		VulkanContext& context = VulkanContext::GetContext();
 		VkDescriptorPoolCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		info.poolSizeCount = static_cast<uint32_t>(poolSize.size());
 		info.pPoolSizes = poolSize.data();
-		info.maxSets = context.MAX_FRAMES_IN_FLIGHT;
-		info.flags = 0;
+		info.maxSets = 100;
+		info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
 		VkDescriptorPool pool;
 		CheckVkResult(vkCreateDescriptorPool(context.GetDevice(), &info, context.GetAllocationCallbacks(), &pool));
-
 		pools.push_back(pool);
+		
+		MIST_INFO("Created new descriptor pool");
 	}
 
 	VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const VulkanShader* shader) {
@@ -42,6 +42,9 @@ namespace mist {
 		for (const auto& res : shader->GetUboResources()) {
 			uniformBufferNames[{shader->GetName(), res.second.binding}] = res.first;
 
+			MIST_ASSERT(res.second.count > 0, "Invalid descriptor set layout count");
+			MIST_ASSERT(res.second.flags != 0, "Invalid descriptor set layout flags");
+			
 			VkDescriptorSetLayoutBinding layoutBinding{};
 			layoutBinding.binding = res.second.binding;
 			layoutBinding.descriptorType = res.second.type;
@@ -58,6 +61,7 @@ namespace mist {
 		
 		VkDescriptorSetLayout layout;
         CheckVkResult(vkCreateDescriptorSetLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &layout));
+		MIST_INFO(std::string("Created new descriptor set layout for: ") + shader->GetName());
 
 		descriptorSetLayoutBindings[shader->GetName()] = std::move(layoutBindings);
 		descriptorSetLayouts[shader->GetName()] = std::move(layout);
@@ -85,6 +89,7 @@ namespace mist {
 
 			switch(result) {
 			case VK_SUCCESS:
+				MIST_INFO("Allocated descriptor set to existing pool");
 				descriptorSets[key] = descriptorSet;
 				UpdateDescriptorSetsWithUniformBuffers(meshRenderer);
 				return descriptorSets[key];
@@ -105,6 +110,7 @@ namespace mist {
 		alloctionInfo.pSetLayouts = &GetDescriptorSetLayout(meshRenderer.shaderName);
 
 		CheckVkResult(vkAllocateDescriptorSets(context.GetDevice(), &alloctionInfo, &descriptorSet));
+		MIST_INFO("Allocated descriptor set to new pool");
 
 		descriptorSets[key] = descriptorSet;
 		UpdateDescriptorSetsWithUniformBuffers(meshRenderer);
