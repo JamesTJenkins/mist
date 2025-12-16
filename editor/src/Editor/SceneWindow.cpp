@@ -75,12 +75,14 @@ namespace mistEditor {
 		// Binding and unbinding a shader pipeline after each object is terrible but will do for testing sake
 		// ideally we bind a shader then render everything with that shader before moving on
 		// unless there is better methods im unaware of
-		view.each([shaderLib](mist::MeshRenderer &renderer) {
-			shaderLib->Get(renderer.shaderName)->Bind();
+		std::string currentPipeline;
+		view.each([shaderLib, &currentPipeline](mist::MeshRenderer &renderer) {
+			if (renderer.shaderName.compare(currentPipeline) != 0) {
+				shaderLib->Get(renderer.shaderName)->Bind();
+				currentPipeline = renderer.shaderName;
+			}
+			
 			renderer.Bind();
-		});
-		
-		view.each([](mist::MeshRenderer &renderer) {
 			renderer.Draw();
 		});
 	}
