@@ -113,8 +113,9 @@ namespace mist {
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
 
-		VkCommandPool commandPool;
+		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer> commandBuffers;
-		VkCommandBuffer tempCommandBuffer;
+		VkCommandBuffer tempCommandBuffer = VK_NULL_HANDLE;
+		VkFence tempCommandBufferFence = VK_NULL_HANDLE;
 	};
 }
