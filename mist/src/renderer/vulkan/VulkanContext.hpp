@@ -23,6 +23,14 @@ namespace mist {
 		void Cleanup();
 	};
 
+	struct FrameData {
+		VkSemaphore imageAvailableSemaphore;
+		VkSemaphore renderFinishedSemaphore;
+		VkFence inFlightFence;
+
+		void Cleanup();
+	};
+
 	class VulkanContext {
 	public:
 		static VulkanContext& GetContext() {
@@ -80,13 +88,13 @@ namespace mist {
         void CreatePhysicalDevice();
         void CreateDevice();
         void CreateAllocator();
-		void CreateSemaphores();
-		void CreateFences();
+		void CreateFrameDatas();
 		void CreateCommandPool();
 		void AllocateCommandBuffers();
 		void CreateDescriptorPool();
 
 		uint32_t currentFrame = 0;
+		uint32_t imageIndex = 0;
 
 		VkInstance instance = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -109,9 +117,7 @@ namespace mist {
 		uint32_t colorAttachmentCount = 0;
 		std::vector<FramebufferAttachment> additionalFramebufferAttachments;
 		std::vector<VkFramebuffer> framebuffers;
-		std::vector<VkSemaphore> imageAvailableSemaphores;
-		std::vector<VkSemaphore> renderFinishedSemaphores;
-		std::vector<VkFence> inFlightFences;
+		std::vector<FrameData> frameDatas;
 
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer> commandBuffers;
