@@ -1,7 +1,6 @@
 {
   "dependencies": [
     "glm",
-    "vulkan",
     "vulkan-memory-allocator",
     "glslang",
     "spdlog",
