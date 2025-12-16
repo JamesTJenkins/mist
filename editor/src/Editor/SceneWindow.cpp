@@ -29,13 +29,13 @@ namespace mistEditor {
 			0, 1, 2
 		};
 
-		mist::Mesh triMesh(verts, indices);
+		mist::Ref<mist::Mesh> triMesh = mist::CreateRef<mist::Mesh>(verts, indices);
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
 		
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		const entt::entity triEntity = sm->CreateEntity();
 		mist::Transform& testT = sm->currentScene.emplace<mist::Transform>(triEntity, glm::vec3(0, 0, 0));
-		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), &triMesh);
+		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), triMesh);
 		
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
 		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
