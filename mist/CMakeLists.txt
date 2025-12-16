@@ -65,7 +65,7 @@ target_link_libraries(mist
     PRIVATE Vulkan::Vulkan
     PRIVATE GPUOpen::VulkanMemoryAllocator
     PUBLIC $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main> $<IF:$<TARGET_EXISTS:SDL3::SDL3>,SDL3::SDL3,SDL3::SDL3-static>
-    PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV glslang::SPVRemapper
+    PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV
     PRIVATE EnTT::EnTT
     PRIVATE spirv-cross-core
     PRIVATE spirv-cross-glsl 
