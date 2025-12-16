@@ -17,6 +17,19 @@ namespace mist {
 		if (image != VK_NULL_HANDLE)
 			vmaDestroyImage(context.GetAllocator(), image, imageAlloc);
 	}
+	
+	void FrameData::Cleanup() {
+		VulkanContext& context = VulkanContext::GetContext();
+
+		if (imageAvailableSemaphore != VK_NULL_HANDLE)
+			vkDestroySemaphore(context.GetDevice(), imageAvailableSemaphore, context.GetAllocationCallbacks());
+			
+		if (renderFinishedSemaphore != VK_NULL_HANDLE)
+			vkDestroySemaphore(context.GetDevice(), renderFinishedSemaphore, context.GetAllocationCallbacks());
+
+		if (inFlightFence != VK_NULL_HANDLE)
+			vkDestroyFence(context.GetDevice(), inFlightFence, context.GetAllocationCallbacks());
+	}
 
 	const QueueFamilyIndices VulkanContext::FindQueueFamilies() const {
 		QueueFamilyIndices indices;
@@ -221,15 +234,35 @@ namespace mist {
 		CheckVkResult(vmaCreateAllocator(&info, &allocator));
 	}
 
+	void VulkanContext::CreateFrameDatas() {
+		for (FrameData& data : frameDatas)
+			data.Cleanup();
+		frameDatas.clear();
+		frameDatas.resize(MAX_FRAMES_IN_FLIGHT);
+
+		VkSemaphoreCreateInfo semaphoreInfo {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+			CheckVkResult(vkCreateSemaphore(device, &semaphoreInfo, allocationCallbacks, &frameDatas[i].imageAvailableSemaphore));
+			CheckVkResult(vkCreateSemaphore(device, &semaphoreInfo, allocationCallbacks, &frameDatas[i].renderFinishedSemaphore));
+			CheckVkResult(vkCreateFence(device, &fenceInfo, allocationCallbacks, &frameDatas[i].inFlightFence));
+		}
+	}
+
 	void VulkanContext::Initialize() {
 		CreateInstance();
 		CreateSurface();
 		CreatePhysicalDevice();
 		CreateDevice();
 		CreateAllocator();
-		CreateSemaphores();
 		CreateCommandPool();
 		AllocateCommandBuffers();
+		CreateFrameDatas();
 		MIST_INFO("Initialised Vulkan API");
 	}
 
@@ -254,16 +287,8 @@ namespace mist {
 		if (commandPool != VK_NULL_HANDLE)
 			vkDestroyCommandPool(device, commandPool, allocationCallbacks);
 
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-			if (imageAvailableSemaphores[i] != VK_NULL_HANDLE)
-				vkDestroySemaphore(device, imageAvailableSemaphores[i], allocationCallbacks);
-			
-			if (renderFinishedSemaphores[i] != VK_NULL_HANDLE)
-				vkDestroySemaphore(device, renderFinishedSemaphores[i], allocationCallbacks);
-
-			if (inFlightFences[i] != VK_NULL_HANDLE)
-				vkDestroyFence(device, inFlightFences[i], allocationCallbacks);
-		}
+		for (FrameData& data : frameDatas)
+			data.Cleanup();
 
 		if (tempCommandBufferFence != VK_NULL_HANDLE)
 			vkDestroyFence(device, tempCommandBufferFence, allocationCallbacks);
@@ -417,7 +442,10 @@ namespace mist {
 		VkSurfaceCapabilitiesKHR capabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
 
-		uint32_t swapchainImageCount = capabilities.minImageCount + 1;
+		uint32_t swapchainImageCount = capabilities.minImageCount;
+		if (capabilities.maxImageCount > 0 && swapchainImageCount > capabilities.maxImageCount)
+			swapchainImageCount = capabilities.maxImageCount;
+
 		VkSwapchainKHR oldSwapchain = swapchain;
 
 		extent = ChooseSwapchainExtent(capabilities, properties);
@@ -570,42 +598,10 @@ namespace mist {
 		CreateSwapchain(framebufferProperties);
 	}
 
-	void VulkanContext::CreateSemaphores() {
-		for (VkSemaphore& semaphore : imageAvailableSemaphores)
-			vkDestroySemaphore(device, semaphore, allocationCallbacks);
-		imageAvailableSemaphores.clear();
-		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-		
-		for (VkSemaphore& semaphore : renderFinishedSemaphores)
-			vkDestroySemaphore(device, semaphore, allocationCallbacks);
-		renderFinishedSemaphores.clear();
-		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-		
-		VkSemaphoreCreateInfo info {};
-		info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		
-		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-			CheckVkResult(vkCreateSemaphore(device, &info, allocationCallbacks, &imageAvailableSemaphores[i]));
-			CheckVkResult(vkCreateSemaphore(device, &info, allocationCallbacks, &renderFinishedSemaphores[i]));
-		}
-	}
-
-	void VulkanContext::CreateFences() {
-		for (VkFence& fence : inFlightFences)
-			vkDestroyFence(device, fence, allocationCallbacks);
-		inFlightFences.clear();
-		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-		VkFenceCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		
-		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-			CheckVkResult(vkCreateFence(device, &info, allocationCallbacks, &inFlightFences[i]));
-		}
-	}
-
 	void VulkanContext::CreateCommandPool() {
+		if (commandPool != VK_NULL_HANDLE)
+			vkDestroyCommandPool(device, commandPool, allocationCallbacks);
+		
 		VkCommandPoolCreateInfo poolInfo {};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = FindQueueFamilies().graphicsFamily.value();
@@ -614,6 +610,7 @@ namespace mist {
 	}
 
 	void VulkanContext::AllocateCommandBuffers() {
+		commandBuffers.clear();
 		commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 		
 		VkCommandBufferAllocateInfo allocInfo {};
@@ -624,12 +621,6 @@ namespace mist {
 
 		CheckVkResult(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
 
-		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-		VkFenceCreateInfo commandBufferFenceInfo{};
-		commandBufferFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-			CheckVkResult(vkCreateFence(device, &commandBufferFenceInfo, allocationCallbacks, &inFlightFences[i]));
-
 		VkCommandBufferAllocateInfo tempAllocInfo {};
 		tempAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		tempAllocInfo.commandPool = commandPool;
@@ -637,7 +628,10 @@ namespace mist {
 		tempAllocInfo.commandBufferCount = 1;
 
 		CheckVkResult(vkAllocateCommandBuffers(device, &tempAllocInfo, &tempCommandBuffer));
-	
+
+		if (tempCommandBufferFence != VK_NULL_HANDLE)
+			vkDestroyFence(device, tempCommandBufferFence, allocationCallbacks);
+
 		VkFenceCreateInfo tempCommandBufferFenceInfo{};
 		tempCommandBufferFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		CheckVkResult(vkCreateFence(device, &tempCommandBufferFenceInfo, allocationCallbacks, &tempCommandBufferFence));
@@ -666,25 +660,28 @@ namespace mist {
 	}
 
 	void VulkanContext::BeginRenderPass() {
-		uint32_t imageIndex;
-		VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+		CheckVkResult(vkWaitForFences(device, 1, &frameDatas[currentFrame].inFlightFence, VK_TRUE, UINT64_MAX));
+ 		CheckVkResult(vkResetFences(device, 1, &frameDatas[currentFrame].inFlightFence));
 
-		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		VkResult aquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, frameDatas[currentFrame].imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+		if (aquireResult == VK_ERROR_OUT_OF_DATE_KHR) {
 			RecreateSwapchain();
 			return;
-		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-			CheckVkResult(result);
+		} else if (aquireResult != VK_SUCCESS && aquireResult != VK_SUBOPTIMAL_KHR) {
+			CheckVkResult(aquireResult);
 		}
 
+		CheckVkResult(vkResetCommandBuffer(commandBuffers[currentFrame], 0));
 		VkCommandBufferBeginInfo cmdInfo {};
 		cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo);
+		//cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		CheckVkResult(vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo));
 
 		VkRenderPassBeginInfo renderPassInfo {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = renderPass;
-		renderPassInfo.framebuffer = framebuffers[currentFrame];
+		renderPassInfo.framebuffer = framebuffers[imageIndex];
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = extent;
 		renderPassInfo.clearValueCount = 1;
@@ -701,33 +698,37 @@ namespace mist {
 
 	void VulkanContext::EndRenderPass() {
 		vkCmdEndRenderPass(commandBuffers[currentFrame]);
-		vkEndCommandBuffer(commandBuffers[currentFrame]);
+		CheckVkResult(vkEndCommandBuffer(commandBuffers[currentFrame]));
 
-		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		
+
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitSemaphores = &frameDatas[currentFrame].imageAvailableSemaphore;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
-		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = signalSemaphores;
+		submitInfo.pSignalSemaphores = &frameDatas[currentFrame].renderFinishedSemaphore;
 
-		CheckVkResult(vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]));
+		CheckVkResult(vkQueueSubmit(graphicsQueue, 1, &submitInfo, frameDatas[currentFrame].inFlightFence));
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSemaphores;
+		presentInfo.pWaitSemaphores = &frameDatas[currentFrame].renderFinishedSemaphore;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &swapchain;
-		presentInfo.pImageIndices = &currentFrame;
+		presentInfo.pImageIndices = &imageIndex;
 
-		CheckVkResult(vkQueuePresentKHR(presentQueue, &presentInfo));
+		VkResult presentResult = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR) {
+			RecreateSwapchain();
+		} else if (presentResult != VK_SUCCESS && presentResult != VK_SUBOPTIMAL_KHR) {
+			CheckVkResult(presentResult);
+		}
 
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
