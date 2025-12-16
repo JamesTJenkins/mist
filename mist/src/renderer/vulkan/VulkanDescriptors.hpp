@@ -77,7 +77,11 @@ namespace mist {
 			if (uniformBuffers.find(bufferPair) != uniformBuffers.end()) {
 				uniformBuffers[bufferPair].SetData(sizeof(T), &data);
 			} else {
-				uniformBuffers[bufferPair] = UniformBuffer(sizeof(T), &data);
+				uniformBuffers.emplace(
+					std::piecewise_construct,
+					std::forward_as_tuple(bufferPair), 
+					std::forward_as_tuple(sizeof(T), &data)
+				);
 			}
 		}
 	private:
