@@ -65,6 +65,6 @@ namespace mist {
 
 	void VulkanRenderAPI::Draw(uint32_t indexCount) {
 		VulkanContext& context = VulkanContext::GetContext();
-		vkCmdDrawIndexed(context.GetCurrentFrameCommandBuffer(), indexCount, 0, 0, 0, 0);
+		vkCmdDrawIndexed(context.GetCurrentFrameCommandBuffer(), indexCount, 1, 0, 0, 0);
 	}
 }
