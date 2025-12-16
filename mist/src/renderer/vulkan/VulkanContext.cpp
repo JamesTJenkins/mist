@@ -265,6 +265,9 @@ namespace mist {
 				vkDestroyFence(device, inFlightFences[i], allocationCallbacks);
 		}
 
+		if (tempCommandBufferFence != VK_NULL_HANDLE)
+			vkDestroyFence(device, tempCommandBufferFence, allocationCallbacks);
+
 		vmaDestroyAllocator(allocator);
 		vkDestroyDevice(device, allocationCallbacks);
 		SDL_Vulkan_DestroySurface(instance, surface, allocationCallbacks);
@@ -628,9 +631,15 @@ namespace mist {
 		tempAllocInfo.commandBufferCount = 1;
 
 		CheckVkResult(vkAllocateCommandBuffers(device, &tempAllocInfo, &tempCommandBuffer));
+	
+		VkFenceCreateInfo tempCommandBufferFenceInfo{};
+		tempCommandBufferFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		CheckVkResult(vkCreateFence(device, &tempCommandBufferFenceInfo, allocationCallbacks, &tempCommandBufferFence));
 	}
 
 	void VulkanContext::BeginSingleTimeCommands() {
+		CheckVkResult(vkResetCommandBuffer(tempCommandBuffer, 0));
+
 		VkCommandBufferBeginInfo info {};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -645,8 +654,9 @@ namespace mist {
 		info.commandBufferCount = 1;
 		info.pCommandBuffers = &tempCommandBuffer;
 		
-		CheckVkResult(vkQueueSubmit(graphicsQueue, 1, &info, VK_NULL_HANDLE));
-		CheckVkResult(vkQueueWaitIdle(graphicsQueue));
+		CheckVkResult(vkQueueSubmit(graphicsQueue, 1, &info, tempCommandBufferFence));
+		CheckVkResult(vkWaitForFences(device, 1, &tempCommandBufferFence, VK_TRUE, UINT64_MAX));
+		CheckVkResult(vkResetFences(device, 1, &tempCommandBufferFence));
 	}
 
 	void VulkanContext::BeginRenderPass() {
