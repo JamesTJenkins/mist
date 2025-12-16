@@ -624,6 +624,12 @@ namespace mist {
 
 		CheckVkResult(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
 
+		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+		VkFenceCreateInfo commandBufferFenceInfo{};
+		commandBufferFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+			CheckVkResult(vkCreateFence(device, &commandBufferFenceInfo, allocationCallbacks, &inFlightFences[i]));
+
 		VkCommandBufferAllocateInfo tempAllocInfo {};
 		tempAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		tempAllocInfo.commandPool = commandPool;
