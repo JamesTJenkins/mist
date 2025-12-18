@@ -9,12 +9,14 @@
 
 namespace mist {
 	struct DescriptorSetKey {
+		size_t poolIndex;
 		VkDescriptorSetLayout layout;
 		VkBuffer vertexBuffer;
 		VkBuffer indexBuffer;
 
 		bool operator==(const DescriptorSetKey& other) const {
-			return layout == other.layout &&
+			return poolIndex == other.poolIndex &&
+				layout == other.layout &&
 				vertexBuffer == other.vertexBuffer &&
 				indexBuffer == other.indexBuffer;
 		}

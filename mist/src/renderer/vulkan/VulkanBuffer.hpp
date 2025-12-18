@@ -8,7 +8,7 @@ namespace mist {
 	public:
 		VulkanVertexBuffer(uint32_t count);
 		VulkanVertexBuffer(const std::vector<Vertex> vertices);
-		virtual ~VulkanVertexBuffer() override;
+		~VulkanVertexBuffer();
 
 		VulkanVertexBuffer(VulkanVertexBuffer&& other) noexcept;
 		VulkanVertexBuffer& operator=(VulkanVertexBuffer&& other) noexcept;
@@ -26,7 +26,7 @@ namespace mist {
 	class VulkanIndexBuffer : public IndexBuffer {
 	public:
 		VulkanIndexBuffer(std::vector<uint32_t> indices);
-		virtual ~VulkanIndexBuffer() override;
+		~VulkanIndexBuffer();
 
 		VulkanIndexBuffer(VulkanIndexBuffer&& other) noexcept;
 		VulkanIndexBuffer& operator=(VulkanIndexBuffer&& other) noexcept;

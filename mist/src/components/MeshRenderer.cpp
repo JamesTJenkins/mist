@@ -6,9 +6,7 @@ namespace mist {
 		Apply();
 	}
 
-	MeshRenderer::~MeshRenderer() {
-		Clear();
-	}
+	MeshRenderer::~MeshRenderer() {}
 
 	void MeshRenderer::Bind() {
 		Application::Get().GetRenderAPI()->BindMeshRenderer(*this);
