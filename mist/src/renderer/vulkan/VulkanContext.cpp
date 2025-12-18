@@ -1,5 +1,5 @@
 #include "VulkanContext.hpp"
-#include <glm/glm.hpp>
+#include <Math.hpp>
 #include <set>
 #include <SDL3/SDL_vulkan.h>
 #include "renderer/vulkan/VulkanDebug.hpp"
@@ -263,8 +263,6 @@ namespace mist {
 	}
 
 	void VulkanContext::Cleanup() {
-		vkDeviceWaitIdle(device);
-
 		for (VkFramebuffer& framebuffer : framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, allocationCallbacks);
 

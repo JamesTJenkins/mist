@@ -13,6 +13,7 @@ namespace mist {
         virtual void SetClearColor(glm::vec4& color) override;
         virtual glm::vec4 GetClearColor() override { return clearColor; }
 
+        virtual void WaitForIdle() override;
         virtual void BeginRenderPass() override;
         virtual void EndRenderPass() override;
         virtual void UpdateCamera(Camera& camera) override;

@@ -20,13 +20,15 @@ namespace mistEditor {
 		mist::Application::Get().GetRenderAPI()->SetViewport(0, 0, 1280, 720);
 
 		std::vector<mist::Vertex> verts = {
-			{{  0.0f, -0.5f, 0.0f }},
-			{{  0.5f,  0.5f, 0.0f }},
-			{{ -0.5f,  0.5f, 0.0f }}
+			{{  0.0f,  0.0f, 0.0f }},
+			{{  0.0f,  1.0f, 0.0f }},
+			{{  1.0f,  0.0f, 0.0f }},
+			{{  1.0f,  1.0f, 0.0f }}
 		};
 
 		std::vector<uint32_t> indices = {
-			0, 1, 2
+			0, 1, 2,
+			1, 3, 2
 		};
 
 		mist::Ref<mist::Mesh> triMesh = mist::CreateRef<mist::Mesh>(verts, indices);
@@ -38,9 +40,9 @@ namespace mistEditor {
 		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), triMesh);
 		
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
-		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
+		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, .5, -2));
 		mist::Camera& sceneCamera = sm->currentScene.emplace<mist::Camera>(sceneCameraEntity, sceneCameraT);
-		sceneCamera.SetViewportSize(1280, 720);
+		sceneCamera.SetPerspectiveCamera(1280, 720);
 	}
 
 	void SceneWindow::Cleanup() {
