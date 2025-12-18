@@ -24,8 +24,7 @@ namespace mist {
 	};
 
 	struct FrameData {
-		VkSemaphore imageAvailableSemaphore;
-		VkSemaphore renderFinishedSemaphore;
+		VkSemaphore acquireImageSempahore;
 		VkFence inFlightFence;
 
 		void Cleanup();
@@ -118,6 +117,7 @@ namespace mist {
 		std::vector<FramebufferAttachment> additionalFramebufferAttachments;
 		std::vector<VkFramebuffer> framebuffers;
 		std::vector<FrameData> frameDatas;
+		std::vector<VkSemaphore> submitSemaphores;
 
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer> commandBuffers;

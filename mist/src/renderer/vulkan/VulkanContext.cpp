@@ -21,12 +21,9 @@ namespace mist {
 	void FrameData::Cleanup() {
 		VulkanContext& context = VulkanContext::GetContext();
 
-		if (imageAvailableSemaphore != VK_NULL_HANDLE)
-			vkDestroySemaphore(context.GetDevice(), imageAvailableSemaphore, context.GetAllocationCallbacks());
+		if (acquireImageSempahore != VK_NULL_HANDLE)
+			vkDestroySemaphore(context.GetDevice(), acquireImageSempahore, context.GetAllocationCallbacks());
 			
-		if (renderFinishedSemaphore != VK_NULL_HANDLE)
-			vkDestroySemaphore(context.GetDevice(), renderFinishedSemaphore, context.GetAllocationCallbacks());
-
 		if (inFlightFence != VK_NULL_HANDLE)
 			vkDestroyFence(context.GetDevice(), inFlightFence, context.GetAllocationCallbacks());
 	}
@@ -248,8 +245,7 @@ namespace mist {
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-			CheckVkResult(vkCreateSemaphore(device, &semaphoreInfo, allocationCallbacks, &frameDatas[i].imageAvailableSemaphore));
-			CheckVkResult(vkCreateSemaphore(device, &semaphoreInfo, allocationCallbacks, &frameDatas[i].renderFinishedSemaphore));
+			CheckVkResult(vkCreateSemaphore(device, &semaphoreInfo, allocationCallbacks, &frameDatas[i].acquireImageSempahore));
 			CheckVkResult(vkCreateFence(device, &fenceInfo, allocationCallbacks, &frameDatas[i].inFlightFence));
 		}
 	}
@@ -280,6 +276,9 @@ namespace mist {
 
 		for (VkImageView& swapchainImageView : swapchainImageViews)
 			vkDestroyImageView(device, swapchainImageView, allocationCallbacks);
+
+		for (VkSemaphore& semaphore : submitSemaphores)
+			vkDestroySemaphore(device, semaphore, allocationCallbacks);
 
 		if (swapchain != VK_NULL_HANDLE)
 			vkDestroySwapchainKHR(device, swapchain, allocationCallbacks);
@@ -445,6 +444,16 @@ namespace mist {
 		uint32_t swapchainImageCount = capabilities.minImageCount;
 		if (capabilities.maxImageCount > 0 && swapchainImageCount > capabilities.maxImageCount)
 			swapchainImageCount = capabilities.maxImageCount;
+
+		for (VkSemaphore& semaphore : submitSemaphores)
+			vkDestroySemaphore(device, semaphore, allocationCallbacks);
+		submitSemaphores.clear();
+		submitSemaphores.resize(swapchainImageCount);
+
+		VkSemaphoreCreateInfo semaphoreInfo {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		for (size_t i = 0; i < swapchainImageCount; ++i)
+			vkCreateSemaphore(device, &semaphoreInfo, allocationCallbacks, &submitSemaphores[i]);
 
 		VkSwapchainKHR oldSwapchain = swapchain;
 
@@ -663,19 +672,12 @@ namespace mist {
 		CheckVkResult(vkWaitForFences(device, 1, &frameDatas[currentFrame].inFlightFence, VK_TRUE, UINT64_MAX));
  		CheckVkResult(vkResetFences(device, 1, &frameDatas[currentFrame].inFlightFence));
 
-		VkResult aquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, frameDatas[currentFrame].imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
-
-		if (aquireResult == VK_ERROR_OUT_OF_DATE_KHR) {
-			RecreateSwapchain();
-			return;
-		} else if (aquireResult != VK_SUCCESS && aquireResult != VK_SUBOPTIMAL_KHR) {
-			CheckVkResult(aquireResult);
-		}
+		CheckVkResult(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, frameDatas[currentFrame].acquireImageSempahore, VK_NULL_HANDLE, &imageIndex));
 
 		CheckVkResult(vkResetCommandBuffer(commandBuffers[currentFrame], 0));
 		VkCommandBufferBeginInfo cmdInfo {};
 		cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		//cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		CheckVkResult(vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo));
 
 		VkRenderPassBeginInfo renderPassInfo {};
@@ -705,19 +707,19 @@ namespace mist {
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &frameDatas[currentFrame].imageAvailableSemaphore;
+		submitInfo.pWaitSemaphores = &frameDatas[currentFrame].acquireImageSempahore;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &frameDatas[currentFrame].renderFinishedSemaphore;
+		submitInfo.pSignalSemaphores = &submitSemaphores[imageIndex];
 
 		CheckVkResult(vkQueueSubmit(graphicsQueue, 1, &submitInfo, frameDatas[currentFrame].inFlightFence));
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &frameDatas[currentFrame].renderFinishedSemaphore;
+		presentInfo.pWaitSemaphores = &submitSemaphores[imageIndex];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &swapchain;
 		presentInfo.pImageIndices = &imageIndex;
