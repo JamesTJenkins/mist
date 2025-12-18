@@ -25,6 +25,7 @@ namespace mist {
 	}
 
 	Application::~Application() {
+		GetRenderAPI()->WaitForIdle();
 		layerStack.Clear();
 		GetRenderAPI()->Shutdown();
 		SDL_Quit();

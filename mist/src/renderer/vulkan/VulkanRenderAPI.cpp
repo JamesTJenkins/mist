@@ -49,7 +49,7 @@ namespace mist {
 	void VulkanRenderAPI::UpdateCamera(Camera& camera) {
 		CameraData camData;
 		camData.u_ViewProjection = camera.GetViewProjectionMatrix();
-		camData.u_Transform = camera.GetTransform().GetLocalToWorldMatrix();
+		camData.u_Transform = glm::mat4();//camera.GetTransform().GetLocalToWorldMatrix();
 
 		VulkanContext& context = VulkanContext::GetContext();
 		context.descriptors.UpdateUniformBuffer({ context.GetCurrentFrameIndex(), "CameraData" }, camData);
@@ -66,5 +66,10 @@ namespace mist {
 	void VulkanRenderAPI::Draw(uint32_t indexCount) {
 		VulkanContext& context = VulkanContext::GetContext();
 		vkCmdDrawIndexed(context.GetCurrentFrameCommandBuffer(), indexCount, 1, 0, 0, 0);
+	}
+	
+	void VulkanRenderAPI::WaitForIdle() {
+		VulkanContext& context = VulkanContext::GetContext();
+		vkDeviceWaitIdle(context.GetDevice());
 	}
 }

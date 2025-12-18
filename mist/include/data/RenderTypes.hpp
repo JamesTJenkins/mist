@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <Math.hpp>
 
 // These are default types used for reflection of shaders
 

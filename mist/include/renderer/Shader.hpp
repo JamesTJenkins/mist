@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <glm/glm.hpp>
+#include <Math.hpp>
 #include <unordered_map>
 #include "Core.hpp"
 

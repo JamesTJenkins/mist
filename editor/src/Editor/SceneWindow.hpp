@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <Math.hpp>
 #include <Core.hpp>
 #include <renderer/Framebuffer.hpp>
 #include <renderer/Buffer.hpp>

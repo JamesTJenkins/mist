@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <Math.hpp>
 #include "Core.hpp"
 #include "renderer/Buffer.hpp"
 #include "components/Camera.hpp"
@@ -21,6 +21,7 @@ namespace mist {
         virtual void SetClearColor(glm::vec4& color) = 0;
         virtual glm::vec4 GetClearColor() = 0;
 
+        virtual void WaitForIdle() = 0;
         virtual void BeginRenderPass() = 0;
         virtual void EndRenderPass() = 0;
         virtual void UpdateCamera(Camera& camera) = 0;
