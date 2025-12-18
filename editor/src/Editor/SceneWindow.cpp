@@ -17,7 +17,7 @@ namespace mistEditor {
 		properties.width = 1280;
 		properties.height = 720;
 		mist::Framebuffer::Create(properties);
-		mist::Application::Get().GetRenderAPI()->SetViewport(0, 0, 1280, 1080);
+		mist::Application::Get().GetRenderAPI()->SetViewport(0, 0, 1280, 720);
 
 		std::vector<mist::Vertex> verts = {
 			{{  0.0f, -0.5f, 0.0f }},
