@@ -78,10 +78,10 @@ namespace mist {
 		key.indexBuffer = std::static_pointer_cast<VulkanIndexBuffer>(meshRenderer.iBuffer)->GetBuffer();
 
 		// Try to place in existing pool
-		for (VkDescriptorPool& pool : pools) {
+		for (size_t i = 0; i < pools.size(); ++i) {
 			VkDescriptorSetAllocateInfo allocationInfo {};
 			allocationInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			allocationInfo.descriptorPool = pool;
+			allocationInfo.descriptorPool = pools[i];
 			allocationInfo.descriptorSetCount = 1;
 			allocationInfo.pSetLayouts = &GetDescriptorSetLayout(meshRenderer.shaderName);
 
@@ -90,6 +90,7 @@ namespace mist {
 			switch(result) {
 			case VK_SUCCESS:
 				MIST_INFO("Allocated descriptor set to existing pool");
+				key.poolIndex = i;
 				descriptorSets[key] = descriptorSet;
 				UpdateDescriptorSetsWithUniformBuffers(meshRenderer);
 				return descriptorSets[key];
@@ -102,6 +103,8 @@ namespace mist {
 		}
 
 		CreateDescriptorPool();
+
+		key.poolIndex = pools.size() - 1;
 		
 		VkDescriptorSetAllocateInfo alloctionInfo {};
 		alloctionInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -129,6 +132,20 @@ namespace mist {
 		for (std::pair<std::string, VkDescriptorSetLayout> layout : descriptorSetLayouts) {
 			vkDestroyDescriptorSetLayout(context.GetDevice(), layout.second, context.GetAllocationCallbacks());
 		}
+		
+		for (auto& set : descriptorSets) {
+			vkFreeDescriptorSets(context.GetDevice(), pools[set.first.poolIndex], 1, &set.second);
+		}
+
+		for (std::pair<const std::pair<uint8_t, std::string>, mist::UniformBuffer>& ubo : uniformBuffers) {
+			ubo.second.Clear();
+		}
+
+		for (VkDescriptorPool& pool : pools) {
+			vkDestroyDescriptorPool(context.GetDevice(), pool, context.GetAllocationCallbacks());
+		}
+
+		MIST_INFO("Destroyed descriptors and uniform buffers");
 	}
 
 	VkDescriptorSetLayout& VulkanDescriptor::GetDescriptorSetLayout(const std::string& name) {

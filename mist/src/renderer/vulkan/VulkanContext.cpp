@@ -263,6 +263,9 @@ namespace mist {
 	}
 
 	void VulkanContext::Cleanup() {
+		descriptors.Cleanup();
+		pipeline.Cleanup();
+
 		for (VkFramebuffer& framebuffer : framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, allocationCallbacks);
 

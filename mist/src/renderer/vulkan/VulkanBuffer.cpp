@@ -65,10 +65,7 @@ namespace mist {
 		MIST_INFO("Created new vertex buffer and set data");
 	}
 	
-	VulkanVertexBuffer::~VulkanVertexBuffer() {
-		Clear();
-		MIST_INFO("Destroyed vertex buffer");
-	}
+	VulkanVertexBuffer::~VulkanVertexBuffer() {}
 
 	VulkanVertexBuffer::VulkanVertexBuffer(VulkanVertexBuffer&& other) noexcept : vertexBuffer(other.vertexBuffer), vertexAlloc(other.vertexAlloc) {
 		other.Clear();
@@ -88,8 +85,12 @@ namespace mist {
 	void VulkanVertexBuffer::Clear() {
 		VulkanContext& context = VulkanContext::GetContext();
 		
-		if (vertexBuffer != VK_NULL_HANDLE)
+		if (vertexBuffer != VK_NULL_HANDLE) {
 			vmaDestroyBuffer(context.GetAllocator(), vertexBuffer, vertexAlloc);
+			vertexBuffer = VK_NULL_HANDLE;
+		}
+
+		MIST_INFO("Destroyed vertex buffer");
 	}
 	
 	void VulkanVertexBuffer::Bind() const {
@@ -110,16 +111,13 @@ namespace mist {
 		SetData(indices);
 		MIST_INFO("Created new index buffer and set data");
 	}
-
-	VulkanIndexBuffer::~VulkanIndexBuffer() {
-		Clear();
-		MIST_INFO("Destroyed index buffer");
-	}
-
+	
+	VulkanIndexBuffer::~VulkanIndexBuffer() {}
+	
 	VulkanIndexBuffer::VulkanIndexBuffer(VulkanIndexBuffer&& other) noexcept : indexBuffer(other.indexBuffer), indexAlloc(other.indexAlloc) {
 		other.Clear();
 	}
-
+	
 	VulkanIndexBuffer& VulkanIndexBuffer::operator=(VulkanIndexBuffer&& other) noexcept {
 		if (this != &other) {
 			this->Clear();
@@ -130,14 +128,16 @@ namespace mist {
 		
 		return *this;
 	}
-
+	
 	void VulkanIndexBuffer::Clear() {
 		VulkanContext& context = VulkanContext::GetContext();
-
+		
 		if (indexBuffer != VK_NULL_HANDLE)
 			vmaDestroyBuffer(context.GetAllocator(), indexBuffer, indexAlloc);
-	}
 
+		MIST_INFO("Destroyed index buffer");
+	}
+	
 	void VulkanIndexBuffer::Bind() const {
 		VulkanContext& context = VulkanContext::GetContext();
 		vkCmdBindIndexBuffer(context.GetCurrentFrameCommandBuffer(), indexBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -151,7 +151,7 @@ namespace mist {
 	UniformBuffer::UniformBuffer() : size(0) {
 		MIST_WARN("Created new uniform buffer but no buffer allocated yet");
 	}
-
+	
 	UniformBuffer::UniformBuffer(uint32_t size, void* data) : size(size) {
 		VmaAllocationInfo info {};
 		CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, uboBuffer, uboAlloc, VMA_MEMORY_USAGE_CPU_TO_GPU, VMA_ALLOCATION_CREATE_MAPPED_BIT, info);
@@ -159,15 +159,12 @@ namespace mist {
 		MIST_INFO("Created new uniform buffer and set data");
 	}
 	
-	UniformBuffer::~UniformBuffer() {
-		Clear();
-		MIST_INFO("Destroyed uniform buffer");
-	}
-
+	UniformBuffer::~UniformBuffer() {}
+	
 	UniformBuffer::UniformBuffer(UniformBuffer&& other) noexcept : uboBuffer(other.uboBuffer), uboAlloc(other.uboAlloc), size(other.size) {
 		other.Clear();
 	}
-
+	
 	UniformBuffer& UniformBuffer::operator=(UniformBuffer&& other) noexcept {
 		if (this != &other) {
 			this->Clear();
@@ -194,5 +191,7 @@ namespace mist {
 
 		if (uboBuffer != VK_NULL_HANDLE)
 			vmaDestroyBuffer(context.GetAllocator(), uboBuffer, uboAlloc);
+		
+		MIST_INFO("Destroyed uniform buffer");
 	}
 }

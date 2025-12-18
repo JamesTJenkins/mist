@@ -89,7 +89,6 @@ namespace mist {
 
 	class VertexBuffer {
 	public:
-		virtual ~VertexBuffer() = default;
 		virtual void Clear() = 0;
 		virtual void Bind() const = 0;
 		virtual void SetData(const std::vector<Vertex> vertices) = 0;
@@ -100,7 +99,6 @@ namespace mist {
 
 	class IndexBuffer {
 	public:
-		virtual ~IndexBuffer() = default;
 		virtual void Clear() = 0;
 		virtual void Bind() const = 0;
 		virtual void SetData(const std::vector<uint32_t> indices) = 0;

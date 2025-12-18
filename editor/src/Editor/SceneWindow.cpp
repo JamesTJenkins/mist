@@ -31,13 +31,13 @@ namespace mistEditor {
 			1, 3, 2
 		};
 
-		mist::Ref<mist::Mesh> triMesh = mist::CreateRef<mist::Mesh>(verts, indices);
+		testMesh = mist::CreateRef<mist::Mesh>(verts, indices);
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
 		
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		const entt::entity triEntity = sm->CreateEntity();
 		mist::Transform& testT = sm->currentScene.emplace<mist::Transform>(triEntity, glm::vec3(0, 0, 0));
-		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), triMesh);
+		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
 		
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
 		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, .5, -2));
@@ -48,7 +48,6 @@ namespace mistEditor {
 	void SceneWindow::Cleanup() {
 		auto view = mist::Application::Get().GetSceneManager()->currentScene.view<mist::MeshRenderer>();
 		view.each([](mist::MeshRenderer &renderer) {
-			// Buffers need to be cleanedup immediately
 			renderer.Clear();
 		});
 
