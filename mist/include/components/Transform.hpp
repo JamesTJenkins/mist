@@ -5,7 +5,7 @@
 namespace mist {
     class Transform {
     public:
-        Transform(glm::vec3 position = glm::vec3(0, 0, 0), glm::quat rotation = glm::quat(), glm::vec3 scale = glm::vec3(1, 1, 1));
+        Transform(glm::vec3 position = glm::vec3(0, 0, 0), glm::quat rotation = glm::quat_identity<float, glm::defaultp>(), glm::vec3 scale = glm::vec3(1, 1, 1));
         
         bool IsEqual(const Transform& other) const;
 
