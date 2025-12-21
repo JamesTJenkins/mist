@@ -5,7 +5,6 @@
 
 namespace mist {
 	struct CameraData {
-		glm::mat4 u_ViewProjection;
-		glm::mat4 u_Transform;
+		glm::mat4 u_ViewProjectionMatrix;
 	};
 }

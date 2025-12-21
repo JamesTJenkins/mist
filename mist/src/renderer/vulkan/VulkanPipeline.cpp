@@ -103,6 +103,17 @@ namespace mist {
 		layoutInfo.setLayoutCount = 1;
 		layoutInfo.pSetLayouts = &layout;
 
+		std::vector<VkPushConstantRange> pushConstantData;
+		for (const auto& res : shader->GetPushConstantResources()) {
+			VkPushConstantRange range{};
+			range.offset = res.second.offset;
+			range.size = res.second.size;
+			range.stageFlags = res.second.flags;
+			pushConstantData.push_back(range);
+		}
+		layoutInfo.pPushConstantRanges = pushConstantData.data();
+		layoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantData.size());
+
 		VkPipelineLayout pipelineLayout;
 		CheckVkResult(vkCreatePipelineLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &pipelineLayout));
 		pipelineLayouts.emplace(shader->GetName(), pipelineLayout);

@@ -138,7 +138,7 @@ namespace mist {
 	}
 
 	VulkanShader::VulkanShader(const std::string& path) {
-		name = std::filesystem::path(path).stem().string();
+		shaderName = std::filesystem::path(path).stem().string();
 		std::string src = ReadFile(path);
 		std::unordered_map<EShLanguage, std::string> shaderSources = PreProcess(src);
 
@@ -152,10 +152,10 @@ namespace mist {
 		VulkanContext& context = VulkanContext::GetContext();
 		context.pipeline.CreateGraphicsPipeline(this);
 
-		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + name);
+		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + shaderName);
 	}
 
-	VulkanShader::VulkanShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : name(name) {
+	VulkanShader::VulkanShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : shaderName(name) {
 		std::unordered_map<EShLanguage, std::string> shaderSources;
 		shaderSources[EShLangVertex] = vertexSrc;
 		shaderSources[EShLangFragment] = fragmentSrc;
@@ -396,6 +396,22 @@ namespace mist {
 			
 			shaderUbos[ubo.name] = res;
 		}
+
+		for (const spirv_cross::Resource& pushConstant : resources.push_constant_buffers) {
+			for (spirv_cross::BufferRange& bufferRange : compiler.get_active_buffer_ranges(pushConstant.id)) {
+				std::string name = compiler.get_member_name(pushConstant.base_type_id, bufferRange.index);
+				if (shaderPushConstants.contains(name)) {
+					shaderPushConstants[name].flags |=  EShLanguageToVkStageFlags(stage);
+					continue;
+				}
+
+				PushConstantResource res;
+				res.offset = bufferRange.offset;
+				res.size = bufferRange.range;
+				res.flags = EShLanguageToVkStageFlags(stage);
+				shaderPushConstants[name] = res;
+			}
+		}
 		
 		for (const spirv_cross::Resource& sampled : resources.sampled_images) {
 			SampledImageShaderResources res;
@@ -414,15 +430,22 @@ namespace mist {
 		vkCmdBindPipeline(
 			context.GetCurrentFrameCommandBuffer(),
 			VK_PIPELINE_BIND_POINT_GRAPHICS, 	// TODO: make a way to detect correct bind point, will probably just have to hold a reference if cant defer
-			context.pipeline.GetGraphicsPipeline(name)
+			context.pipeline.GetGraphicsPipeline(shaderName)
 		);
 	}
 
 	void VulkanShader::Unbind() const {}
-	void VulkanShader::SetUniformInt(const std::string& name, int value) {}
-	void VulkanShader::SetUniformIntArray(const std::string& name, int* values, uint32_t count) {}
-	void VulkanShader::SetUniformMat4(const std::string& name, const glm::mat4& value) {}
-	void VulkanShader::SetUniformVec4(const std::string& name, const glm::vec4& value) {}
-	void VulkanShader::SetUniformVec3(const std::string& name, const glm::vec3& value) {}
-	void VulkanShader::SetUniformVec2(const std::string& name, const glm::vec2& value) {}
+
+	void VulkanShader::SetUniformData(const std::string& name, const void* data) {
+		VulkanContext& context = VulkanContext::GetContext();
+		PushConstantResource& res = shaderPushConstants[name];
+		vkCmdPushConstants(
+			context.GetCurrentFrameCommandBuffer(), 
+			context.pipeline.GetGraphicsPipelineLayout(shaderName),
+			res.flags,
+			res.offset,
+			res.size,
+			data
+		);
+	}
 }
