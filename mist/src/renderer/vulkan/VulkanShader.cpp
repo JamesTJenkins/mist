@@ -436,9 +436,17 @@ namespace mist {
 
 	void VulkanShader::Unbind() const {}
 
-	void VulkanShader::SetUniformData(const std::string& name, const void* data) {
+	void VulkanShader::SetUniformData(const std::string& name, const int size, const void* data) {
 		VulkanContext& context = VulkanContext::GetContext();
 		PushConstantResource& res = shaderPushConstants[name];
+		
+#if DEBUG
+		MIST_ASSERT(shaderPushConstants.contains(name), std::string("Invalid push constants name passed: " + name));
+
+		if (res.size != size)
+			MIST_WARN(std::string("Expected size of: %d, you passed %d", res.size, size));
+#endif
+
 		vkCmdPushConstants(
 			context.GetCurrentFrameCommandBuffer(), 
 			context.pipeline.GetGraphicsPipelineLayout(shaderName),
