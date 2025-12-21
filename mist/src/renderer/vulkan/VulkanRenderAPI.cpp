@@ -1,6 +1,8 @@
 #include "VulkanRenderAPI.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "data/RenderTypes.hpp"
+#include "Debug.hpp"
+#include "Application.hpp"
 
 namespace mist {
 	void VulkanRenderAPI::Initialize() {
@@ -48,8 +50,7 @@ namespace mist {
 
 	void VulkanRenderAPI::UpdateCamera(Camera& camera) {
 		CameraData camData;
-		camData.u_ViewProjection = camera.GetViewProjectionMatrix();
-		camData.u_Transform = glm::mat4();//camera.GetTransform().GetLocalToWorldMatrix();
+		camData.u_ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
 		VulkanContext& context = VulkanContext::GetContext();
 		context.descriptors.UpdateUniformBuffer({ context.GetCurrentFrameIndex(), "CameraData" }, camData);
@@ -61,6 +62,9 @@ namespace mist {
 		meshRenderer.vBuffer->Bind();
 		meshRenderer.iBuffer->Bind();
 		vkCmdBindDescriptorSets(context.GetCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, context.pipeline.GetGraphicsPipelineLayout(meshRenderer.shaderName), 0, 1, &context.descriptors.GetDescriptorSet(meshRenderer), 0, nullptr);
+		
+		glm::mat4 matrix = meshRenderer.GetTransform().GetLocalToWorldMatrix();
+		Application::Get().GetShaderLibrary()->Get(meshRenderer.shaderName).get()->SetUniformData("ModelMatrix", &matrix);
 	}
 
 	void VulkanRenderAPI::Draw(uint32_t indexCount) {

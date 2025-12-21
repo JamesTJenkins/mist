@@ -20,9 +20,9 @@ namespace mistEditor {
 		mist::Application::Get().GetRenderAPI()->SetViewport(0, 0, 1280, 720);
 
 		std::vector<mist::Vertex> verts = {
-			{{  0.0f,  0.0f, 0.0f }},
-			{{  0.0f,  1.0f, 0.0f }},
-			{{  1.0f,  0.0f, 0.0f }},
+			{{ -1.0f, -1.0f, 0.0f }},
+			{{ -1.0f,  1.0f, 0.0f }},
+			{{  1.0f, -1.0f, 0.0f }},
 			{{  1.0f,  1.0f, 0.0f }}
 		};
 
@@ -40,7 +40,7 @@ namespace mistEditor {
 		sm->currentScene.emplace<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
 		
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
-		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, .5, -2));
+		mist::Transform& sceneCameraT = sm->currentScene.emplace<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
 		mist::Camera& sceneCamera = sm->currentScene.emplace<mist::Camera>(sceneCameraEntity, sceneCameraT);
 		sceneCamera.SetPerspectiveCamera(1280, 720);
 	}
@@ -59,13 +59,19 @@ namespace mistEditor {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		auto camView = sm->currentScene.view<mist::Camera>();
-
+		
 		mist::Camera* cam;
 		for (auto entity : camView) {
 			cam = sm->currentScene.try_get<mist::Camera>(entity);
 			break;
 		}
 		renderAPI->UpdateCamera(*cam);
+		
+		auto renderView = sm->currentScene.view<mist::MeshRenderer>();
+		for (auto entity : renderView) {
+			mist::Transform* transform = sm->currentScene.try_get<mist::Transform>(entity);
+			transform->Rotate(glm::radians(1.0f), glm::vec3(0,0,1));
+		}
 	}
 
 	void SceneWindow::OnRender() {

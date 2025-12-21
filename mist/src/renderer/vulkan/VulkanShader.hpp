@@ -26,6 +26,12 @@ namespace mist {
         VkShaderModule shaderModule;
     };
 
+	struct PushConstantResource {
+		uint32_t offset;
+		uint32_t size;
+		VkShaderStageFlags flags;
+	};
+
 	struct SampledImageShaderResources {
 		VkDescriptorType type;
 		uint32_t binding;
@@ -48,17 +54,13 @@ namespace mist {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual void SetUniformInt(const std::string& name, int value) override;
-		virtual void SetUniformIntArray(const std::string& name, int* values, uint32_t count) override;
-		virtual void SetUniformMat4(const std::string& name, const glm::mat4& value) override;
-		virtual void SetUniformVec4(const std::string& name, const glm::vec4& value) override;
-		virtual void SetUniformVec3(const std::string& name, const glm::vec3& value) override;
-		virtual void SetUniformVec2(const std::string& name, const glm::vec2& value) override;
+		virtual void SetUniformData(const std::string& name, const void* data) override;
 
-		virtual const std::string& GetName() const override { return name; }
+		virtual const std::string& GetName() const override { return shaderName; }
 		
 		const std::unordered_map<std::string, InputShaderResource>& GetInputResources() const { return shaderInputs; }
 		const std::unordered_map<std::string, UBOShaderResource>& GetUboResources() const { return shaderUbos; }
+		const std::unordered_map<std::string, PushConstantResource>& GetPushConstantResources() const { return shaderPushConstants; }
 		const std::unordered_map<std::string, SampledImageShaderResources>& GetSampledImageResources() const { return shaderSampledImages; }
 	private:
 		std::string ReadFile(const std::string& path);
@@ -69,10 +71,10 @@ namespace mist {
 		VkShaderModule CreateShaderModule(const std::vector<uint32_t>& spirv);
 		void Compile(std::vector<uint32_t> spirv, EShLanguage stage);
 
-		std::string name;
-		// Add additional shader resources for push constants, storage, etc.
+		std::string shaderName;
 		std::unordered_map<std::string, InputShaderResource> shaderInputs;
 		std::unordered_map<std::string, UBOShaderResource> shaderUbos;
+		std::unordered_map<std::string, PushConstantResource> shaderPushConstants;
 		std::unordered_map<std::string, SampledImageShaderResources> shaderSampledImages;
 	};
 }
