@@ -14,7 +14,7 @@ namespace mist {
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetUniformData(const std::string& name, const void* value) = 0;
+		virtual void SetUniformData(const std::string& name, const int size, const void* value) = 0;
 
 		virtual const std::string& GetName() const = 0;
 

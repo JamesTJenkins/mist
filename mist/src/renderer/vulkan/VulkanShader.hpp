@@ -54,7 +54,7 @@ namespace mist {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual void SetUniformData(const std::string& name, const void* data) override;
+		virtual void SetUniformData(const std::string& name, const int size, const void* data) override;
 
 		virtual const std::string& GetName() const override { return shaderName; }
 		

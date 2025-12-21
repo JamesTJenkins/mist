@@ -64,7 +64,7 @@ namespace mist {
 		vkCmdBindDescriptorSets(context.GetCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, context.pipeline.GetGraphicsPipelineLayout(meshRenderer.shaderName), 0, 1, &context.descriptors.GetDescriptorSet(meshRenderer), 0, nullptr);
 		
 		glm::mat4 matrix = meshRenderer.GetTransform().GetLocalToWorldMatrix();
-		Application::Get().GetShaderLibrary()->Get(meshRenderer.shaderName).get()->SetUniformData("ModelMatrix", &matrix);
+		Application::Get().GetShaderLibrary()->Get(meshRenderer.shaderName).get()->SetUniformData("ModelMatrix", sizeof(matrix), &matrix);
 	}
 
 	void VulkanRenderAPI::Draw(uint32_t indexCount) {
