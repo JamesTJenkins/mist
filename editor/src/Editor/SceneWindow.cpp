@@ -54,14 +54,6 @@ namespace mistEditor {
 	void SceneWindow::OnEditorUpdate() {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
-		auto camView = sm->GetActiveScene().view<mist::Camera>();
-		
-		mist::Camera* cam;
-		for (auto entity : camView) {
-			cam = sm->GetActiveScene().try_get<mist::Camera>(entity);
-			break;
-		}
-		renderAPI->UpdateCamera(*cam);
 		
 		auto renderView = sm->GetActiveScene().view<mist::MeshRenderer>();
 		for (auto entity : renderView) {
@@ -71,6 +63,8 @@ namespace mistEditor {
 	}
 
 	void SceneWindow::OnRender() {
-		mist::Application::Get().GetSceneManager()->SubmitActiveScene();
+		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
+		sm->UpdateSceneCamera();
+		sm->SubmitActiveScene();
 	}
 }

@@ -23,6 +23,8 @@ namespace mist {
 		inline void SubmitActiveScene() { SubmitScene(activeScene); }
 		void SubmitScene(uint32_t index);
 
+		void UpdateSceneCamera();
+
 		void LoadEmptyScene();
 		void LoadScene();
 		void SetActiveScene(uint32_t index) { activeScene = index; }
