@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SOURCES "editor/src/*.cpp")
 
@@ -37,7 +38,7 @@ elseif(MSVC)
     )
 endif()
 
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 
 add_executable(editor ${SOURCES})
 

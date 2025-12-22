@@ -1,12 +1,19 @@
 {
   "dependencies": [
     "glm",
+    {
+      "name": "vulkan-loader",
+      "features": [ "wayland" ]
+    },
     "vulkan",
+    "vulkan-memory-allocator",
     "glslang",
     "spdlog",
     {
-      "name": "sdl2",
+      "name": "sdl3",
       "features": [ "vulkan" ]
-    }
+    },
+    "entt",
+    "spirv-cross"
   ]
 }

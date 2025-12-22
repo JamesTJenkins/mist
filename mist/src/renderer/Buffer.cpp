@@ -1,11 +1,11 @@
 #include "renderer/Buffer.hpp"
 #include "Debug.hpp"
-#include "renderer/RenderCommand.hpp"
+#include "Application.hpp"
 #include "renderer/vulkan/VulkanBuffer.hpp"
 
 namespace mist {
 	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size) {
-		switch (RenderCommand::GetAPIType()) {
+		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");
 			return nullptr;
@@ -18,8 +18,7 @@ namespace mist {
 	}
 
 	Ref<VertexBuffer> VertexBuffer::Create(std::vector<Vertex> vertices) {
-		switch (RenderCommand::GetAPIType())
-		{
+		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");
 			return nullptr;
@@ -32,8 +31,7 @@ namespace mist {
 	}
 
 	Ref<IndexBuffer> IndexBuffer::Create(std::vector<uint32_t> indices) {
-		switch (RenderCommand::GetAPIType())
-		{
+		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");
 			return nullptr;

@@ -1,55 +1,55 @@
-#include "Components/Transform.hpp"
+#include "components/Transform.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace mist {
-    Transform::Transform(glm::vec3 position, glm::quat rotation, glm::vec3 scale) {
-        SetPosition(position);
-        SetRotation(rotation);
-        SetScale(scale);
-    }
+	Transform::Transform(glm::vec3 position, glm::quat rotation, glm::vec3 scale) : position(position), rotation(rotation), scale(scale) {}
 
-    void Transform::Rotate(float angle_in_radians, glm::vec3 axis) {
-        axis *= sin(angle_in_radians / 2.0f);
-        rotation = glm::normalize(glm::quat(cos(angle_in_radians / 2.0f), axis) * rotation);
-    }
+	bool Transform::IsEqual(const Transform& other) const {
+		return position == other.position &&
+			rotation == other.rotation &&
+			scale == other.scale;
+	}
 
-    glm::quat Transform::EulerToQuat(glm::vec3 rotation_in_degrees) {
-        return glm::quat(glm::radians(rotation_in_degrees));
-    }
+	void Transform::Rotate(float angle_in_radians, glm::vec3 axis) {
+		rotation *= glm::angleAxis(angle_in_radians, glm::normalize(axis));
+	}
 
-    glm::vec3 Transform::QuatToEuler(glm::quat quaternion) {
-        return glm::degrees(glm::eulerAngles(quaternion));
-    }
+	glm::quat Transform::EulerToQuat(glm::vec3 rotation_in_degrees) {
+		return glm::quat(glm::radians(rotation_in_degrees));
+	}
 
-    void Transform::SetPosition(glm::vec3 position) { this->position = position; }
-    void Transform::SetRotation(glm::quat rotation) { this->rotation = rotation; }
-    void Transform::SetScale(glm::vec3 scale) { this->scale = scale; }
+	glm::vec3 Transform::QuatToEuler(glm::quat quaternion) {
+		return glm::degrees(glm::eulerAngles(quaternion));
+	}
 
-    glm::vec3 Transform::GetPosition() const { return position; }
-    glm::quat Transform::GetRotation() const { return rotation; }
-    glm::vec3 Transform::GetScale() const { return scale; }
+	void Transform::SetPosition(glm::vec3 position) { this->position = position; }
+	void Transform::SetRotation(glm::quat rotation) { this->rotation = rotation; }
+	void Transform::SetScale(glm::vec3 scale) { this->scale = scale; }
 
-    glm::vec3 Transform::Left() const { return rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f); }
-    glm::vec3 Transform::Right() const { return rotation * glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f); }
-    glm::vec3 Transform::Up() const { return rotation * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); }
-    glm::vec3 Transform::Down() const { return rotation * glm::vec4(0.0f, -1.0f, 0.0f, 0.0f); }
-    glm::vec3 Transform::Forward() const { return rotation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f); }
-    glm::vec3 Transform::Backward() const { return rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f); }
+	glm::vec3 Transform::GetPosition() const { return position; }
+	glm::quat Transform::GetRotation() const { return rotation; }
+	glm::vec3 Transform::GetScale() const { return scale; }
 
-    glm::mat4 Transform::GetLocalToWorldMatrix() const {
-        glm::mat4 translationMatrix = glm::translate(position);
-        glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
-        glm::mat4 scaleMatrix = glm::scale(scale);
+	glm::vec3 Transform::Left() const { return rotation * glm::vec3(1.0f, 0.0f, 0.0f); }
+	glm::vec3 Transform::Right() const { return rotation * glm::vec3(-1.0f, 0.0f, 0.0f); }
+	glm::vec3 Transform::Up() const { return rotation * glm::vec3(0.0f, 1.0f, 0.0f); }
+	glm::vec3 Transform::Down() const { return rotation * glm::vec3(0.0f, -1.0f, 0.0f); }
+	glm::vec3 Transform::Forward() const { return rotation * glm::vec3(0.0f, 0.0f, 1.0f); }
+	glm::vec3 Transform::Backward() const { return rotation * glm::vec3(0.0f, 0.0f, -1.0f); }
 
-        return glm::mat4(translationMatrix * rotationMatrix * scaleMatrix);
-    }
+	glm::mat4 Transform::GetLocalToWorldMatrix() const {
+		glm::mat4 translationMatrix = glm::translate(position);
+		glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
+		glm::mat4 scaleMatrix = glm::scale(scale);
+		
+		return glm::mat4(translationMatrix * rotationMatrix * scaleMatrix);
+	}
 
-    glm::mat4 Transform::GetWorldToLocalMatrix() const {
-        glm::mat4 translationMatrix = glm::translate(-position);
-        // glm::mat4 rotationMatrix = glm::mat4_cast(-rotation);
-        glm::mat4 rotationMatrix = glm::mat4_cast(glm::inverse(rotation));
-        glm::mat4 scaleMatrix = glm::scale(1.0f / scale);
+	glm::mat4 Transform::GetWorldToLocalMatrix() const {
+		glm::mat4 translationMatrix = glm::translate(-position);
+		glm::mat4 rotationMatrix = glm::mat4_cast(glm::inverse(rotation));
+		glm::mat4 scaleMatrix = glm::scale(1.0f / scale);
 
-        return glm::mat4(scaleMatrix * rotationMatrix * translationMatrix);
-    }
+		return glm::mat4(scaleMatrix * rotationMatrix * translationMatrix);
+	}
 }

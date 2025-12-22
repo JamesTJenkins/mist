@@ -1,5 +1,5 @@
 # Mist Engine
-Mist is a 3D game engine that utilizes Vulkan and SDL2.
+Mist is a 3D game engine that utilizes Vulkan and SDL3.
 
 ## Setup
 To compile the project you will require [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview).

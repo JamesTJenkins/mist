@@ -1,8 +1,8 @@
 #pragma once
 #include <stdint.h>
 #include <string>
-#include <glm/glm.hpp>
-#include <SDL.h>
+#include <Math.hpp>
+#include <SDL3/SDL.h>
 #include "Core.hpp"
 
 namespace mist {

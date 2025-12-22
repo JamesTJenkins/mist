@@ -6,6 +6,9 @@
 *.code-workspace
 .vs/*
 
+# Linux VisualStudioCode
+.cache/*
+
 # Ingore builds folder
 build/*
 out/*

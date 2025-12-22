@@ -1,5 +1,4 @@
 #include "platform/WindowsWindow.hpp"
-#include "renderer/RenderCommand.hpp"
 
 namespace mist {
     Window* Window::Create(const WindowProperties& properties) {
@@ -7,10 +6,10 @@ namespace mist {
     }
 
     WindowsWindow::WindowsWindow(const WindowProperties& properties) : properties(properties) {
-        uint32_t flags = 0;
-        switch (RenderCommand::GetAPIType()) {
+        SDL_WindowFlags flags = 0;
+        switch (Application::Get().GetRenderAPI()->GetAPI()) {
             case RenderAPI::API::Vulkan:
-                flags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+                flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
                 break;
             default:
                 break;
@@ -18,8 +17,6 @@ namespace mist {
 
         window = SDL_CreateWindow(
             properties.title,
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
             properties.width,
             properties.height,
             flags

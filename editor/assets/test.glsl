@@ -3,20 +3,28 @@
 
 layout(location = 0) in vec3 Position;
 
-layout(set = 0, binding = 0) uniform TransformBlock {
-	uniform mat4 u_ViewProjection;
-	uniform mat4 u_Transform;
-} transforms;
+layout(location = 0) out vec3 fragColor;
+
+layout(push_constant) uniform PushConstants {
+	mat4 ModelMatrix;
+} constants;
+
+layout(set = 0, binding = 0) uniform CameraData {
+	uniform mat4 u_ViewProjectionMatrix;
+} cameraData;
 
 void main() {
-	gl_Position = transforms.u_ViewProjection * transforms.u_Transform * vec4(Position, 1);
+	gl_Position = cameraData.u_ViewProjectionMatrix * constants.ModelMatrix * vec4(Position, 1);
+	fragColor = Position;
 }
 
 #type fragment
 #version 460 core
 
+layout(location = 0) in vec3 fragColor;
+
 layout(location = 0) out vec4 color;
 
 void main() {
-	color = vec4(1.0, 1.0, 1.0, 1.0);
+	color = vec4(fragColor, 1.0);
 }

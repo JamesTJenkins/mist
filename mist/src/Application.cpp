@@ -1,9 +1,9 @@
 #define SDL_MAIN_HANDLED
 
 #include "Application.hpp"
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
 #include <stdexcept>
-#include "renderer/RenderCommand.hpp"
 #include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include "Log.hpp"
 
@@ -21,12 +21,14 @@ namespace mist {
 		renderAPI = new VulkanRenderAPI();
 		SDL_Init(SDL_INIT_VIDEO);
 		window = Window::Create(WindowProperties(name));
-		RenderCommand::Initialize();
+		renderAPI->Initialize();
 	}
 
 	Application::~Application() {
+		renderAPI->WaitForIdle();
 		layerStack.Clear();
-		RenderCommand::Shutdown();
+		sceneManager.Cleanup();
+		renderAPI->Shutdown();
 		SDL_Quit();
 	}
 
@@ -42,17 +44,15 @@ namespace mist {
 			SDL_Event event;
 			while (SDL_PollEvent (&event)) {
 				switch (event.type) {
-				case SDL_WINDOWEVENT:
-					switch (event.window.event) {
-					case SDL_WINDOWEVENT_RESIZED:
-						uint32_t newWidth = event.window.data1;
-						uint32_t newHeight = event.window.data2;
-						if (newWidth > 0 && newHeight > 0 && (window->GetWidth() != newWidth || window->GetHeight() != newHeight))
-							RenderCommand::ResizeWindow(window->GetXPosition(), window->GetYPosition(), newWidth, newHeight);
-						break;
-					}
+				case SDL_EVENT_WINDOW_RESIZED:
+				{
+					uint32_t newWidth = event.window.data1;
+					uint32_t newHeight = event.window.data2;
+					if (newWidth > 0 && newHeight > 0 && (window->GetWidth() != newWidth || window->GetHeight() != newHeight))
+						renderAPI->SetViewport(window->GetXPosition(), window->GetYPosition(), newWidth, newHeight);
 					break;
-				case SDL_QUIT:
+				}
+				case SDL_EVENT_QUIT:
 					Quit();
 					break;
 				}
@@ -68,12 +68,11 @@ namespace mist {
 			
 			window->OnUpdate();
 
-			RenderCommand::BeginRenderPass();
+			renderAPI->BeginRenderPass();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
 			}
-			RenderCommand::EndRenderPass();
-			RenderCommand::Draw();
+			renderAPI->EndRenderPass();
 		}
 	}
 

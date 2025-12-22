@@ -1,11 +1,11 @@
 #include "renderer/Shader.hpp"
-#include "renderer/RenderCommand.hpp"
 #include "Debug.hpp"
 #include "renderer/vulkan/VulkanShader.hpp"
+#include "Application.hpp"
 
 namespace mist {
 	Ref<Shader> Shader::Create(const std::string& path) {
-		switch (RenderCommand::GetAPIType()) {
+		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::None:
 			MIST_ASSERT(false, "No render API set");
 			return nullptr;
@@ -18,7 +18,7 @@ namespace mist {
 	}
 
 	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) {
-		switch (RenderCommand::GetAPIType()) {
+		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::None:
 			MIST_ASSERT(false, "No render API set");
 			return nullptr;

@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <Math.hpp>
 #include <Core.hpp>
 #include <renderer/Framebuffer.hpp>
 #include <renderer/Buffer.hpp>
@@ -11,16 +11,12 @@ namespace mistEditor {
 	public:
 		SceneWindow();
 
+		void Initialize();
 		void OnEditorUpdate();
 		void OnRender();
-		void SceneWindowDraw();
 		void Cleanup();
 	private:
 		mist::Ref<mist::Shader> testShader;
-		mist::Ref<mist::VertexBuffer> vBuffer;
-		mist::Ref<mist::IndexBuffer> iBuffer;
-	
-		mist::Transform sceneCameraTransform;
-		mist::Camera sceneCamera;
+		mist::Ref<mist::Mesh> testMesh;
 	};
 }

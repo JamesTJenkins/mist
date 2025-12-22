@@ -5,16 +5,12 @@
 #include <windows.h>
 
 #include <commdlg.h>
-#include <SDL.h>
-#include <SDL_syswm.h>
+#include <SDL3/SDL.h>
 #include "Application.hpp"
 
 namespace mist {
 	static HWND GetWindowsWindow() {
-		SDL_SysWMinfo wmInfo;
-		SDL_VERSION(&wmInfo.version);
-		SDL_GetWindowWMInfo(Application::Get().GetWindow()->GetNativeWindow(), &wmInfo);
-		return wmInfo.info.win.window;
+		return (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(Application::Get().GetWindow()->GetNativeWindow()), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
 	}
 
 	std::string FileDialog::OpenFile(const char* filter) {
