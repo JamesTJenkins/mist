@@ -21,13 +21,14 @@ namespace mist {
 		renderAPI = new VulkanRenderAPI();
 		SDL_Init(SDL_INIT_VIDEO);
 		window = Window::Create(WindowProperties(name));
-		GetRenderAPI()->Initialize();
+		renderAPI->Initialize();
 	}
 
 	Application::~Application() {
-		GetRenderAPI()->WaitForIdle();
+		renderAPI->WaitForIdle();
 		layerStack.Clear();
-		GetRenderAPI()->Shutdown();
+		sceneManager.Cleanup();
+		renderAPI->Shutdown();
 		SDL_Quit();
 	}
 
@@ -48,7 +49,7 @@ namespace mist {
 					uint32_t newWidth = event.window.data1;
 					uint32_t newHeight = event.window.data2;
 					if (newWidth > 0 && newHeight > 0 && (window->GetWidth() != newWidth || window->GetHeight() != newHeight))
-						GetRenderAPI()->SetViewport(window->GetXPosition(), window->GetYPosition(), newWidth, newHeight);
+						renderAPI->SetViewport(window->GetXPosition(), window->GetYPosition(), newWidth, newHeight);
 					break;
 				}
 				case SDL_EVENT_QUIT:
@@ -67,11 +68,11 @@ namespace mist {
 			
 			window->OnUpdate();
 
-			GetRenderAPI()->BeginRenderPass();
+			renderAPI->BeginRenderPass();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
 			}
-			GetRenderAPI()->EndRenderPass();
+			renderAPI->EndRenderPass();
 		}
 	}
 
