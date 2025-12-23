@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <stdexcept>
+#include <chrono>
 #include "renderer/vulkan/VulkanRenderAPI.hpp"
 #include "Log.hpp"
 
@@ -40,6 +41,8 @@ namespace mist {
 	}
 
 	void Application::Run() {
+		std::chrono::high_resolution_clock::time_point lastTime = std::chrono::high_resolution_clock::now();
+
 		while (running) {
 			SDL_Event event;
 			while (SDL_PollEvent (&event)) {
@@ -73,6 +76,10 @@ namespace mist {
 				layer->OnRender();
 			}
 			renderAPI->EndRenderPass();
+
+			std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
+			deltaTime = std::min(std::chrono::duration<float>(currentTime - lastTime).count(), maxDeltaTime);
+			lastTime = currentTime;
 		}
 	}
 
