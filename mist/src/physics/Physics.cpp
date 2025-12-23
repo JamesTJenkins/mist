@@ -216,19 +216,19 @@ namespace mist {
 		case CollisionType::SPHERE:
 			switch (bType) {
 				case CollisionType::SPHERE:	return SphereIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<SphereCollider>(colliderB.data));
-				case CollisionType::BOX:	return SphereBoxIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<BoxCollider>(colliderB.data), false);
-				case CollisionType::PLANE:	return SpherePlaneIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), false);
+				case CollisionType::BOX:	return SphereBoxIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<BoxCollider>(colliderB.data), true);
+				case CollisionType::PLANE:	return SpherePlaneIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), true);
 			}
 		case CollisionType::BOX:
 			switch (bType) {
-				case CollisionType::SPHERE:	return SphereBoxIntersect(transformB, std::get<SphereCollider>(colliderB.data), transformA, std::get<BoxCollider>(colliderA.data), true);
+				case CollisionType::SPHERE:	return SphereBoxIntersect(transformB, std::get<SphereCollider>(colliderB.data), transformA, std::get<BoxCollider>(colliderA.data), false);
 				case CollisionType::BOX:	return BoxIntersect(transformA, std::get<BoxCollider>(colliderA.data), transformB, std::get<BoxCollider>(colliderB.data));
 				case CollisionType::PLANE:	return BoxPlaneIntersect(transformA, std::get<BoxCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), false);
 			}
 		case CollisionType::PLANE:
 			switch (bType) {
 				case CollisionType::SPHERE:	return SpherePlaneIntersect(transformB, std::get<SphereCollider>(colliderB.data), transformA, std::get<PlaneCollider>(colliderA.data), true);
-				case CollisionType::BOX:	return BoxPlaneIntersect(transformB, std::get<BoxCollider>(colliderB.data), transformA, std::get<PlaneCollider>(colliderA.data), true);
+				case CollisionType::BOX:	return BoxPlaneIntersect(transformB, std::get<BoxCollider>(colliderB.data), transformA, std::get<PlaneCollider>(colliderA.data), false);
 				case CollisionType::PLANE:	return PlaneIntersect(transformA, std::get<PlaneCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data));
 			}
 		}

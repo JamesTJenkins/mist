@@ -55,6 +55,14 @@ namespace mistEditor {
 			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
 		}
 
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(0, 4, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 3.0f, 0.5f, glm::vec3(0, -1, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
+		}
+
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
 		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
 		mist::Camera& sceneCamera = sm->AddComponent<mist::Camera>(sceneCameraEntity, sceneCameraT);
