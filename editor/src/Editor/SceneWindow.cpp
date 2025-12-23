@@ -1,8 +1,10 @@
 #include "SceneWindow.hpp"
 #include <renderer/Buffer.hpp>
 #include <vector>
-#include <components/MeshRenderer.hpp>
 #include <Application.hpp>
+#include <components/MeshRenderer.hpp>
+#include <components/Collider.hpp>
+#include <components/Rigidbody.hpp>
 
 namespace mistEditor {
 	SceneWindow::SceneWindow() {}
@@ -21,26 +23,38 @@ namespace mistEditor {
 
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		sm->LoadEmptyScene();
-
+		
 		std::vector<mist::Vertex> verts = {
 			{{ -1.0f, -1.0f, 0.0f }},
 			{{ -1.0f,  1.0f, 0.0f }},
 			{{  1.0f, -1.0f, 0.0f }},
 			{{  1.0f,  1.0f, 0.0f }}
 		};
-
+		
 		std::vector<uint32_t> indices = {
 			0, 1, 2,
 			1, 3, 2
 		};
-
+		
 		testMesh = mist::CreateRef<mist::Mesh>(verts, indices);
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
 		
-		const entt::entity triEntity = sm->CreateEntity();
-		mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(0, 0, 0));
-		sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
+		}
+
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
+		}
+
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
 		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
 		mist::Camera& sceneCamera = sm->AddComponent<mist::Camera>(sceneCameraEntity, sceneCameraT);
@@ -54,12 +68,6 @@ namespace mistEditor {
 	void SceneWindow::OnEditorUpdate() {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
-		
-		auto renderView = sm->GetActiveScene().view<mist::MeshRenderer>();
-		for (auto entity : renderView) {
-			mist::Transform* transform = sm->GetActiveScene().try_get<mist::Transform>(entity);
-			transform->Rotate(glm::radians(1.0f), glm::vec3(0,0,1));
-		}
 	}
 
 	void SceneWindow::OnRender() {

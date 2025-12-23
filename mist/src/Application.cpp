@@ -68,6 +68,8 @@ namespace mist {
 			for (Layer* layer : layerStack) {
 				layer->OnUpdate();
 			}
+
+			physics.Simulate(deltaTime);
 			
 			window->OnUpdate();
 

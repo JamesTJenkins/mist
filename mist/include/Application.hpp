@@ -5,6 +5,7 @@
 #include "renderer/RenderAPI.hpp"
 #include "renderer/Shader.hpp"
 #include "SceneManager.hpp"
+#include "physics/Physics.hpp"
 
 namespace mist {
 	class Application {
@@ -41,6 +42,6 @@ namespace mist {
 		Window* window;
 		RenderAPI* renderAPI;
 		SceneManager sceneManager;
-		static Application* instance;
+		Physics physics;
 	};
 }
