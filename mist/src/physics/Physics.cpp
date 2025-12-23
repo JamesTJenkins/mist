@@ -75,7 +75,7 @@ namespace mist {
 		float distance = std::sqrt(distanceSqr);
 		float penetration = sphereCollider.radius - distance;
 		glm::vec3 mtv = (direction / distance) * penetration;
-		return IntersectData(true, invert ? mtv * -1.0f : mtv);
+		return IntersectData(true, invert ? -mtv: mtv);
 	}
 
 	IntersectData SpherePlaneIntersect(const Transform& sphereTransform, const SphereCollider& sphereCollider, const Transform& planeTransform, const PlaneCollider& planeCollider, const bool invert) {
@@ -86,14 +86,14 @@ namespace mist {
 
 		float peneration = sphereCollider.radius - std::abs(distance);
 		glm::vec3 mtv = planeCollider.normal * (distance > 0 ? -peneration : peneration);
-		return IntersectData(true, invert ? mtv * -1.0f : mtv);
+		return IntersectData(true, invert ? -mtv: mtv);
 	}
 
 	IntersectData BoxIntersect(const Transform& transformA, const BoxCollider& colliderA, const Transform& transformB, const BoxCollider& colliderB) {
 		glm::mat3 rotMatrixA = glm::mat3_cast(transformA.GetRotation());
 		glm::mat3 rotMatrixB = glm::mat3_cast(transformB.GetRotation());
 
-		glm::vec3 axisA[] = { rotMatrixA[0], rotMatrixA[1], rotMatrixB[2] };
+		glm::vec3 axisA[] = { rotMatrixA[0], rotMatrixA[1], rotMatrixA[2] };
 		glm::vec3 axisB[] = { rotMatrixB[0], rotMatrixB[1], rotMatrixB[2] };
 
 		glm::vec3 axis[] = {
@@ -173,7 +173,7 @@ namespace mist {
 
 		glm::vec3 mtv = planeCollider.normal * minDistance;
 		mtv = firstDistance > 0 ? -mtv : mtv;
-		return IntersectData(true, invert ? mtv * -1.0f : mtv);
+		return IntersectData(true, invert ? -mtv: mtv);
 	}
 
 	IntersectData PlaneIntersect(const Transform& transformA, const PlaneCollider colliderA, const Transform& transformB, const PlaneCollider colliderB) {
@@ -217,13 +217,13 @@ namespace mist {
 			switch (bType) {
 				case CollisionType::SPHERE:	return SphereIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<SphereCollider>(colliderB.data));
 				case CollisionType::BOX:	return SphereBoxIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<BoxCollider>(colliderB.data), true);
-				case CollisionType::PLANE:	return SpherePlaneIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), true);
+				case CollisionType::PLANE:	return SpherePlaneIntersect(transformA, std::get<SphereCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), false);
 			}
 		case CollisionType::BOX:
 			switch (bType) {
 				case CollisionType::SPHERE:	return SphereBoxIntersect(transformB, std::get<SphereCollider>(colliderB.data), transformA, std::get<BoxCollider>(colliderA.data), false);
 				case CollisionType::BOX:	return BoxIntersect(transformA, std::get<BoxCollider>(colliderA.data), transformB, std::get<BoxCollider>(colliderB.data));
-				case CollisionType::PLANE:	return BoxPlaneIntersect(transformA, std::get<BoxCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), false);
+				case CollisionType::PLANE:	return BoxPlaneIntersect(transformA, std::get<BoxCollider>(colliderA.data), transformB, std::get<PlaneCollider>(colliderB.data), true);
 			}
 		case CollisionType::PLANE:
 			switch (bType) {
@@ -253,7 +253,7 @@ namespace mist {
 				entt::entity b = colliderEntities[j];
 				IntersectData data = DetectCollision(colliderView, a, b);
 				if (data.isIntersecting)
-					entityCollisions[a].emplace_back(b, -data.minimumTranslationVector);	// Setting the MTV to be -MTV instead fixes physics problem but not certain why
+					entityCollisions[a].emplace_back(b, data.minimumTranslationVector);
 			}
 		}
 
@@ -264,7 +264,7 @@ namespace mist {
 				Rigidbody& otherRigidbody = scene.get<Rigidbody>(collision.collidingEntity);
 				glm::vec3 normalizedMTV = glm::normalize(collision.minimumTranslationVector);
 				
-				glm::vec3 relativeVelocity = rigidbody.velocity - otherRigidbody.velocity;
+				glm::vec3 relativeVelocity = otherRigidbody.velocity - rigidbody.velocity;
 				float velocityAlongNormal = glm::dot(relativeVelocity, normalizedMTV);
 
 				if (velocityAlongNormal < 0) {
@@ -272,8 +272,8 @@ namespace mist {
 					j /= (1.0f / rigidbody.mass + 1.0f / otherRigidbody.mass);
 
 					glm::vec3 impulse = j * normalizedMTV;
-					rigidbody.velocity += impulse / rigidbody.mass;
-					otherRigidbody.velocity -= impulse / otherRigidbody.mass;
+					rigidbody.velocity -= impulse / rigidbody.mass;
+					otherRigidbody.velocity += impulse / otherRigidbody.mass;
 				}
 
 				const float correctionPercent = 0.2f;
