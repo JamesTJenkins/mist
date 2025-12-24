@@ -14,6 +14,7 @@
       "features": [ "vulkan" ]
     },
     "entt",
-    "spirv-cross"
+    "spirv-cross",
+    "gtest"
   ]
 }

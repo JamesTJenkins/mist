@@ -39,7 +39,7 @@ namespace mistEditor {
 		testMesh = mist::CreateRef<mist::Mesh>(verts, indices);
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
 		
-		///* Sphere vs Sphere
+		/* Sphere vs Sphere
 		{
 			const entt::entity triEntity = sm->CreateEntity();
 			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
@@ -54,116 +54,44 @@ namespace mistEditor {
 			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
 			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
 			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
+		}
+		*/
+
+		/* Sphere vs Box
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
+		}
+
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
+		}
+		*/
+
+		///* Box vs Box
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
+		}
+
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
+			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
+			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
 		}
 		//*/
-
-		/* Sphere vs Box
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
-		}
-
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		}
-		*/
-
-		/* Sphere vs Plane
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
-		}
-
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::PlaneCollider(glm::vec3(-1,0,0), 0.0f));
-		}
-		*/
-
-		/* Box vs Box
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		}
-
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		}
-		*/
-
-		/* Box vs Plane
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		}
-
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::PlaneCollider(glm::vec3(-1,0,0), 0));
-		}
-		*/
-
-		/* Sphere vs Box
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
-		}
-
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		}
-		*/
-
-		/* Sphere vs Plane
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, -0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1.0f));
-		}
-
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0.5, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::PlaneCollider(glm::vec3(-1,0,0), 0.0f));
-		}
-		*/
 
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
 		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));

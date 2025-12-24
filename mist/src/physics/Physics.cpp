@@ -1,10 +1,7 @@
 #include "physics/Physics.hpp"
 #include "Application.hpp"
 #include "Debug.hpp"
-#include "components/Transform.hpp"
 #include "components/Rigidbody.hpp"
-#include "components/Collider.hpp"
-#include "physics/IntersectData.hpp"
 #include "physics/CollisionEvent.hpp"
 
 namespace mist {
@@ -205,10 +202,7 @@ namespace mist {
 		return CollisionType::SPHERE;
 	}
 
-	IntersectData DetectCollision(const entt::view<entt::get_t<Transform, Rigidbody, Collider>> &view, const entt::entity a, const entt::entity b) {
-		auto [transformA, rigidbodyA, colliderA] = view.get<Transform, Rigidbody, Collider>(a);
-		auto [transformB, rigidbodyB, colliderB] = view.get<Transform, Rigidbody, Collider>(b);
-		
+	IntersectData Physics::DetectCollision(const Transform& transformA, const Collider& colliderA, const Transform& transformB, const Collider& colliderB) {
 		CollisionType aType = GetCollisionType(colliderA);
 		CollisionType bType = GetCollisionType(colliderB);
 
@@ -247,11 +241,16 @@ namespace mist {
 		std::unordered_map<entt::entity, std::vector<CollisionEvent>> entityCollisions;
 		auto colliderView = scene.view<Transform, Rigidbody, Collider>();
 		std::vector<entt::entity> colliderEntities(colliderView.begin(), colliderView.end());
+
 		for (size_t i = 0; i < colliderEntities.size(); ++i) {
 			entt::entity a = colliderEntities[i];
+			auto [transformA, colliderA] = colliderView.get<Transform, Collider>(a);
+
 			for (size_t j = i + 1; j < colliderEntities.size(); ++j) {
 				entt::entity b = colliderEntities[j];
-				IntersectData data = DetectCollision(colliderView, a, b);
+				auto [transformB, colliderB] = colliderView.get<Transform, Collider>(b);
+				IntersectData data = DetectCollision(transformA, colliderA, transformB, colliderB);
+
 				if (data.isIntersecting)
 					entityCollisions[a].emplace_back(b, data.minimumTranslationVector);
 			}
