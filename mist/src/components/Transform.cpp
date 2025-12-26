@@ -1,5 +1,4 @@
 #include "components/Transform.hpp"
-#include <glm/gtx/matrix_decompose.hpp>
 
 namespace mist {
 	Transform::Transform(glm::vec3 position, glm::quat rotation, glm::vec3 scale) : position(position), rotation(rotation), scale(scale) {}
@@ -38,18 +37,16 @@ namespace mist {
 	glm::vec3 Transform::Backward() const { return rotation * glm::vec3(0.0f, 0.0f, -1.0f); }
 
 	glm::mat4 Transform::GetLocalToWorldMatrix() const {
-		glm::mat4 translationMatrix = glm::translate(position);
-		glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
-		glm::mat4 scaleMatrix = glm::scale(scale);
-		
-		return glm::mat4(translationMatrix * rotationMatrix * scaleMatrix);
+		glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), position);
+		modelMatrix *= glm::mat4_cast(rotation);
+		return glm::scale(modelMatrix, scale);
 	}
 
 	glm::mat4 Transform::GetWorldToLocalMatrix() const {
-		glm::mat4 translationMatrix = glm::translate(-position);
+		glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -position);
 		glm::mat4 rotationMatrix = glm::mat4_cast(glm::inverse(rotation));
-		glm::mat4 scaleMatrix = glm::scale(1.0f / scale);
+		glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), 1.0f / scale);
 
-		return glm::mat4(scaleMatrix * rotationMatrix * translationMatrix);
+		return scaleMatrix * rotationMatrix * translationMatrix;
 	}
 }
