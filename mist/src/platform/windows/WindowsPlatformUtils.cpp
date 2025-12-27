@@ -1,6 +1,5 @@
-#include "PlatformUtils.hpp"
-
 #if _WIN32
+#include "PlatformUtils.hpp"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 

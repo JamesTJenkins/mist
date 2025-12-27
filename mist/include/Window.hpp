@@ -1,9 +1,6 @@
 #pragma once
-#include <stdint.h>
-#include <string>
 #include <Math.hpp>
 #include <SDL3/SDL.h>
-#include "Core.hpp"
 
 namespace mist {
 	struct WindowProperties {
@@ -17,16 +14,18 @@ namespace mist {
 	public:
 		virtual ~Window(){};
 
-		virtual SDL_Window* GetNativeWindow() const = 0;
+		const glm::vec2 GetWindowPosition() const;
+		const uint32_t GetXPosition() const;
+		const uint32_t GetYPosition() const;
 
-		virtual void OnUpdate() = 0;
+		uint32_t GetWidth() const { return properties.width; }
+		uint32_t GetHeight() const { return properties.height; }
 
-		virtual glm::vec2 GetWindowPosition() const = 0;
-		virtual uint32_t GetXPosition() const = 0;
-		virtual uint32_t GetYPosition() const = 0;
-		virtual uint32_t GetWidth() const = 0;
-		virtual uint32_t GetHeight() const = 0;
+		inline SDL_Window* GetNativeWindow() const{ return window; }
 
 		static Window* Create(const WindowProperties& properties = WindowProperties());
+	protected:
+		WindowProperties properties;
+		SDL_Window* window;
 	};
 }

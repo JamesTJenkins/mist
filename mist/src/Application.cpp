@@ -71,8 +71,6 @@ namespace mist {
 
 			physics.Simulate(deltaTime);
 			
-			window->OnUpdate();
-
 			renderAPI->BeginRenderPass();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
