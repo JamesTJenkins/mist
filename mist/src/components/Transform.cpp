@@ -21,14 +21,6 @@ namespace mist {
 		return glm::degrees(glm::eulerAngles(quaternion));
 	}
 
-	void Transform::SetPosition(glm::vec3 position) { this->position = position; }
-	void Transform::SetRotation(glm::quat rotation) { this->rotation = rotation; }
-	void Transform::SetScale(glm::vec3 scale) { this->scale = scale; }
-
-	glm::vec3 Transform::GetPosition() const { return position; }
-	glm::quat Transform::GetRotation() const { return rotation; }
-	glm::vec3 Transform::GetScale() const { return scale; }
-
 	glm::vec3 Transform::Left() const { return rotation * glm::vec3(1.0f, 0.0f, 0.0f); }
 	glm::vec3 Transform::Right() const { return rotation * glm::vec3(-1.0f, 0.0f, 0.0f); }
 	glm::vec3 Transform::Up() const { return rotation * glm::vec3(0.0f, 1.0f, 0.0f); }

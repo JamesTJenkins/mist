@@ -211,12 +211,16 @@ namespace mist {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
 
+		VkPhysicalDeviceFeatures deviceFeatures{};
+		vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+
 		VkDeviceCreateInfo deviceCreateInfo{};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+		deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 		CheckVkResult(vkCreateDevice(physicalDevice, &deviceCreateInfo, allocationCallbacks, &device));
 		vkGetDeviceQueue(device, indicies.graphicsFamily.value(), 0, &graphicsQueue);
 		vkGetDeviceQueue(device, indicies.presentFamily.value(), 0, &presentQueue);

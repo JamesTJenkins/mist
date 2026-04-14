@@ -57,7 +57,7 @@ namespace mist {
 		MIST_INFO("Created new vertex buffer but no data set");
 	}
 	
-	VulkanVertexBuffer::VulkanVertexBuffer(std::vector<Vertex> vertices) {
+	VulkanVertexBuffer::VulkanVertexBuffer(const std::vector<Vertex>& vertices) {
 		const VkDeviceSize size = sizeof(Vertex) * vertices.size();
 		VmaAllocationInfo info {};
 		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertexBuffer, vertexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, 0, info);
@@ -99,12 +99,12 @@ namespace mist {
 		vkCmdBindVertexBuffers(context.GetCurrentFrameCommandBuffer(), 0, 1, &vertexBuffer, offsets);
 	}
 	
-	void VulkanVertexBuffer::SetData(const std::vector<Vertex> vertices) {
+	void VulkanVertexBuffer::SetData(const std::vector<Vertex>& vertices) {
 		const VkDeviceSize size = sizeof(Vertex) * vertices.size();
 		SetBufferData(vertices.data(), size, vertexBuffer);
 	}
 	
-	VulkanIndexBuffer::VulkanIndexBuffer(std::vector<uint32_t> indices) {
+	VulkanIndexBuffer::VulkanIndexBuffer(const std::vector<uint32_t>& indices) {
 		const VkDeviceSize size = indices.size() * sizeof(uint32_t);
 		VmaAllocationInfo info {};
 		CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, indexBuffer, indexAlloc, VMA_MEMORY_USAGE_GPU_ONLY, 0, info);
@@ -143,7 +143,7 @@ namespace mist {
 		vkCmdBindIndexBuffer(context.GetCurrentFrameCommandBuffer(), indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 	}
 	
-	void VulkanIndexBuffer::SetData(const std::vector<uint32_t> indices) {
+	void VulkanIndexBuffer::SetData(const std::vector<uint32_t>& indices) {
 		const VkDeviceSize size = indices.size() * sizeof(uint32_t);
 		SetBufferData(indices.data(), size, indexBuffer);
 	}

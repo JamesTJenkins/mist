@@ -43,8 +43,9 @@ namespace mist {
 
 	glm::mat4 Camera::GetViewMatrix() const {
 		return glm::lookAt(
-			transformComponent.GetPosition(), 
-			transformComponent.GetPosition() + transformComponent.Forward(), transformComponent.Up()
+			transformComponent.position, 
+			transformComponent.position + transformComponent.Forward(),
+			transformComponent.Up()
 		);
 	}
 

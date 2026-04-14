@@ -63,13 +63,12 @@ namespace mist {
 		const std::unordered_map<std::string, PushConstantResource>& GetPushConstantResources() const { return shaderPushConstants; }
 		const std::unordered_map<std::string, SampledImageShaderResources>& GetSampledImageResources() const { return shaderSampledImages; }
 	private:
-		std::string ReadFile(const std::string& path);
 		std::vector<uint32_t> ConvertGLSLToSPIRV(const std::string& src, EShLanguage stage);
 		std::unordered_map<EShLanguage, std::string> PreProcess(const std::string& src);
 		uint32_t CalculateSize(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type);
 		VkFormat GetDescriptionFormat(spirv_cross::SPIRType type);
 		VkShaderModule CreateShaderModule(const std::vector<uint32_t>& spirv);
-		void Compile(std::vector<uint32_t> spirv, EShLanguage stage);
+		void Compile(const std::vector<uint32_t>& spirv, EShLanguage stage);
 
 		std::string shaderName;
 		std::unordered_map<std::string, InputShaderResource> shaderInputs;

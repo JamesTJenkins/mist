@@ -5,6 +5,7 @@
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "Debug.hpp"
 #include "VulkanDebug.hpp"
+#include "PlatformUtils.hpp"
 
 namespace mist {
 	static TBuiltInResource GetDefaultResources() {
@@ -139,7 +140,7 @@ namespace mist {
 
 	VulkanShader::VulkanShader(const std::string& path) {
 		shaderName = std::filesystem::path(path).stem().string();
-		std::string src = ReadFile(path);
+		std::string src = Utils::ReadFile(path);
 		std::unordered_map<EShLanguage, std::string> shaderSources = PreProcess(src);
 
 		glslang::InitializeProcess();
@@ -190,23 +191,6 @@ namespace mist {
 		for (std::pair<std::string, SampledImageShaderResources> pair : shaderSampledImages) {
 			vkDestroyShaderModule(context.GetDevice(), pair.second.shaderModule, context.GetAllocationCallbacks());
 		}
-	}
-
-	std::string VulkanShader::ReadFile(const std::string& path) {
-		std::string result;
-		std::ifstream in(path);
-
-		if (in) {
-			in.seekg(0, std::ios::end);
-			result.resize(in.tellg());
-			in.seekg(0, std::ios::beg);
-			in.read(&result[0], result.size());
-			in.close();
-		} else {
-			MIST_ERROR("Failed to open file at: {0}", path);
-		}
-
-		return result;
 	}
 
 	std::unordered_map<EShLanguage, std::string> VulkanShader::PreProcess(const std::string& src) {
@@ -357,21 +341,33 @@ namespace mist {
 		return module;
 	}
 
-	void VulkanShader::Compile(std::vector<uint32_t> spirv, EShLanguage stage) {
+	void VulkanShader::Compile(const std::vector<uint32_t>& spirv, EShLanguage stage) {
 		spirv_cross::CompilerGLSL compiler(spirv);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+		uint32_t inputStride = 0;
+		for (const spirv_cross::Resource& res : resources.stage_inputs) {
+			inputStride += CalculateSize(compiler, compiler.get_type(res.type_id));
+		}
 
 		for (const spirv_cross::Resource& inputs : resources.stage_inputs) {
 			InputShaderResource res;
 			res.binding = compiler.get_decoration(inputs.id, spv::DecorationBinding);
 			res.location = compiler.get_decoration(inputs.id, spv::DecorationLocation);
-			res.offset = compiler.get_decoration(inputs.id, spv::DecorationOffset);
 			res.format = GetDescriptionFormat(compiler.get_type(inputs.type_id));
-			res.stride = res.offset + CalculateSize(compiler, compiler.get_type(inputs.type_id));
 			res.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 			res.flags = EShLanguageToVkStageFlags(stage);
 			res.shaderModule = CreateShaderModule(spirv);
 			
+			uint32_t offset = 0;
+			for (const spirv_cross::Resource& i : resources.stage_inputs) {
+				if (compiler.get_decoration(i.id, spv::DecorationLocation) < res.location)
+					offset += CalculateSize(compiler, compiler.get_type(i.type_id));
+			}
+
+			res.offset = offset;
+			res.stride = inputStride;
+
 			shaderInputs[inputs.name] = res;
 		}
 

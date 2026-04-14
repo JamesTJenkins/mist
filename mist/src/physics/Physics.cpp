@@ -12,21 +12,21 @@ namespace mist {
 	};
 
 	void Integrate(Transform& transform, Rigidbody& rigidbody, const float delta) {
-		transform.SetPosition(transform.GetPosition() + (rigidbody.velocity * delta));
+		transform.position += rigidbody.velocity * delta;
 	}
 
 	void ProjectOBB(const Transform& transform, const BoxCollider& collider, glm::vec3 axis, float& min, float& max) {
-		glm::mat3 rotMatrix = glm::mat3_cast(transform.GetRotation());
-		glm::vec3 scaledHalfExtents = collider.halfExtents * transform.GetScale();
+		glm::mat3 rotMatrix = glm::mat3_cast(transform.rotation);
+		glm::vec3 scaledHalfExtents = collider.halfExtents * transform.scale;
 		glm::vec3 corners[] = {
-			transform.GetPosition() + rotMatrix * glm::vec3(-scaledHalfExtents.x, -scaledHalfExtents.y, -scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3( scaledHalfExtents.x, -scaledHalfExtents.y, -scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3( scaledHalfExtents.x,  scaledHalfExtents.y, -scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3(-scaledHalfExtents.x,  scaledHalfExtents.y, -scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3(-scaledHalfExtents.x, -scaledHalfExtents.y,  scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3( scaledHalfExtents.x, -scaledHalfExtents.y,  scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3( scaledHalfExtents.x,  scaledHalfExtents.y,  scaledHalfExtents.z),
-			transform.GetPosition() + rotMatrix * glm::vec3(-scaledHalfExtents.x,  scaledHalfExtents.y,  scaledHalfExtents.z)
+			transform.position + rotMatrix * glm::vec3(-scaledHalfExtents.x, -scaledHalfExtents.y, -scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3( scaledHalfExtents.x, -scaledHalfExtents.y, -scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3( scaledHalfExtents.x,  scaledHalfExtents.y, -scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3(-scaledHalfExtents.x,  scaledHalfExtents.y, -scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3(-scaledHalfExtents.x, -scaledHalfExtents.y,  scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3( scaledHalfExtents.x, -scaledHalfExtents.y,  scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3( scaledHalfExtents.x,  scaledHalfExtents.y,  scaledHalfExtents.z),
+			transform.position + rotMatrix * glm::vec3(-scaledHalfExtents.x,  scaledHalfExtents.y,  scaledHalfExtents.z)
 		};
 
 		min = glm::dot(corners[0], axis);
@@ -39,14 +39,14 @@ namespace mist {
 	}
 
 	float GetScaledSphereRadius(const Transform& transform, const SphereCollider& collider) {
-		return collider.radius * glm::max(glm::max(transform.GetScale().x, transform.GetScale().y), transform.GetScale().z);
+		return collider.radius * glm::max(glm::max(transform.scale.x, transform.scale.y), transform.scale.z);
 	}
 
 	IntersectData SphereIntersect(const Transform& transformA, const SphereCollider& colliderA, const Transform& transformB, const SphereCollider& colliderB) {
 		float scaledRadiusA = GetScaledSphereRadius(transformA, colliderA);
 		float scaledRadiusB = GetScaledSphereRadius(transformB, colliderB);
 
-		glm::vec3 direction = transformB.GetPosition() - transformA.GetPosition();
+		glm::vec3 direction = transformB.position - transformA.position;
 		float distanceSqr = glm::dot(direction, direction);
 		float radiusSum = scaledRadiusA + scaledRadiusB;
 		float minDistanceSqr = radiusSum * radiusSum;
@@ -61,8 +61,8 @@ namespace mist {
 
 	IntersectData SphereBoxIntersect(const Transform& sphereTransform, const SphereCollider& sphereCollider, const Transform& boxTransform, const BoxCollider& boxCollider, const bool invert) {
 		float scaledRadius = GetScaledSphereRadius(sphereTransform, sphereCollider);
-		glm::vec3 scaledExtents = boxCollider.halfExtents * boxTransform.GetScale();
-		glm::vec3 localSphereCenter = glm::inverse(boxTransform.GetRotation()) * (sphereTransform.GetPosition() - boxTransform.GetPosition());
+		glm::vec3 scaledExtents = boxCollider.halfExtents * boxTransform.scale;
+		glm::vec3 localSphereCenter = glm::inverse(boxTransform.rotation) * (sphereTransform.position - boxTransform.position);
 		glm::vec3 closestPoint = {
 			std::max(-scaledExtents.x, std::min(localSphereCenter.x, scaledExtents.x)),
 			std::max(-scaledExtents.y, std::min(localSphereCenter.y, scaledExtents.y)),
@@ -76,13 +76,13 @@ namespace mist {
 
 		float penetrationDepth = scaledRadius - std::sqrt(distanceSqr);
 		glm::vec3 direction = glm::normalize(localSphereCenter - closestPoint);
-		glm::vec3 mtv = boxTransform.GetRotation() * (direction * penetrationDepth);
+		glm::vec3 mtv = boxTransform.rotation * (direction * penetrationDepth);
 		return IntersectData(true, invert ? mtv : -mtv);
 	}
 
 	IntersectData SpherePlaneIntersect(const Transform& sphereTransform, const SphereCollider& sphereCollider, const Transform& planeTransform, const PlaneCollider& planeCollider, const bool invert) {
 		float scaledRadius = GetScaledSphereRadius(sphereTransform, sphereCollider);
-		float distance = glm::dot(sphereTransform.GetPosition(), planeCollider.normal) + planeCollider.distance;
+		float distance = glm::dot(sphereTransform.position, planeCollider.normal) + planeCollider.distance;
 
 		if (std::abs(distance) > scaledRadius)
 			return IntersectData(false, glm::vec3(0,0,0));
@@ -93,19 +93,19 @@ namespace mist {
 	}
 
 	IntersectData BoxIntersect(const Transform& transformA, const BoxCollider& colliderA, const Transform& transformB, const BoxCollider& colliderB) {
-		glm::mat3 rotMatrixA = glm::mat3_cast(transformA.GetRotation());
-		glm::mat3 rotMatrixB = glm::mat3_cast(transformB.GetRotation());
+		glm::mat3 rotMatrixA = glm::mat3_cast(transformA.rotation);
+		glm::mat3 rotMatrixB = glm::mat3_cast(transformB.rotation);
 
 		glm::vec3 axesA[] = {
-			rotMatrixA[0] * transformA.GetScale().x, 
-			rotMatrixA[1] * transformA.GetScale().y,
-			rotMatrixA[2] * transformA.GetScale().z
+			rotMatrixA[0] * transformA.scale.x, 
+			rotMatrixA[1] * transformA.scale.y,
+			rotMatrixA[2] * transformA.scale.z
 		};
 
 		glm::vec3 axesB[] = {
-			rotMatrixB[0] * transformB.GetScale().x,
-			rotMatrixB[1] * transformB.GetScale().y,
-			rotMatrixB[2] * transformB.GetScale().z
+			rotMatrixB[0] * transformB.scale.x,
+			rotMatrixB[1] * transformB.scale.y,
+			rotMatrixB[2] * transformB.scale.z
 		};
 
 		glm::vec3 axes[] = {
@@ -148,21 +148,21 @@ namespace mist {
 			}
 		}
 
-		if (glm::dot(mtvAxis, transformB.GetPosition() - transformA.GetPosition()) < 0.0f)
+		if (glm::dot(mtvAxis, transformB.position - transformA.position) < 0.0f)
 			mtvAxis = -mtvAxis;
 
 		return IntersectData(true, mtvAxis * minOverlap);
 	}
 
 	IntersectData BoxPlaneIntersect(const Transform& boxTransform, const BoxCollider& boxCollider, const Transform& planeTransform, const PlaneCollider& planeCollider, const bool invert) {
-		glm::vec3 localPlanePoint = glm::inverse(boxTransform.GetRotation()) * (planeTransform.GetPosition() - boxTransform.GetPosition());
-		glm::vec3 localPlaneNormal = glm::inverse(boxTransform.GetRotation()) * planeCollider.normal;
+		glm::vec3 localPlanePoint = glm::inverse(boxTransform.rotation) * (planeTransform.position - boxTransform.position);
+		glm::vec3 localPlaneNormal = glm::inverse(boxTransform.rotation) * planeCollider.normal;
 
 		float distance = glm::dot(localPlaneNormal, -localPlanePoint);
 		float extent = 
-			(boxCollider.halfExtents.x * boxTransform.GetScale().x) * glm::abs(localPlaneNormal.x) +
-			(boxCollider.halfExtents.y * boxTransform.GetScale().y) * glm::abs(localPlaneNormal.y) +
-			(boxCollider.halfExtents.z * boxTransform.GetScale().z) * glm::abs(localPlaneNormal.z);
+			(boxCollider.halfExtents.x * boxTransform.scale.x) * glm::abs(localPlaneNormal.x) +
+			(boxCollider.halfExtents.y * boxTransform.scale.y) * glm::abs(localPlaneNormal.y) +
+			(boxCollider.halfExtents.z * boxTransform.scale.z) * glm::abs(localPlaneNormal.z);
 
 		float penetrationDepth = extent - distance;
 		glm::vec3 mtv = -planeCollider.normal * penetrationDepth;
@@ -276,8 +276,8 @@ namespace mist {
 				Transform& transform = colliderView.get<Transform>(entity);
 				Transform& otherTransform = colliderView.get<Transform>(collision.collidingEntity);
 	
-				transform.SetPosition(transform.GetPosition() + (correction * (otherRigidbody.mass / (rigidbody.mass + otherRigidbody.mass))));
-				otherTransform.SetPosition(otherTransform.GetPosition() - (correction * (rigidbody.mass / (rigidbody.mass + otherRigidbody.mass))));
+				transform.position += (correction * (otherRigidbody.mass / (rigidbody.mass + otherRigidbody.mass)));
+				otherTransform.position -= (correction * (rigidbody.mass / (rigidbody.mass + otherRigidbody.mass)));
 			}
 		}
 	}

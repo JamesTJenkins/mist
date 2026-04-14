@@ -17,7 +17,7 @@ namespace mist {
 		}
 	}
 
-	Ref<VertexBuffer> VertexBuffer::Create(std::vector<Vertex> vertices) {
+	Ref<VertexBuffer> VertexBuffer::Create(const std::vector<Vertex>& vertices) {
 		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");
@@ -30,7 +30,7 @@ namespace mist {
 		}
 	}
 
-	Ref<IndexBuffer> IndexBuffer::Create(std::vector<uint32_t> indices) {
+	Ref<IndexBuffer> IndexBuffer::Create(const std::vector<uint32_t>& indices) {
 		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "None render API not supported");

@@ -91,18 +91,18 @@ namespace mist {
 	public:
 		virtual void Clear() = 0;
 		virtual void Bind() const = 0;
-		virtual void SetData(const std::vector<Vertex> vertices) = 0;
+		virtual void SetData(const std::vector<Vertex>& vertices) = 0;
 
 		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(const std::vector<Vertex> vertices);
+		static Ref<VertexBuffer> Create(const std::vector<Vertex>& vertices);
 	};
 
 	class IndexBuffer {
 	public:
 		virtual void Clear() = 0;
 		virtual void Bind() const = 0;
-		virtual void SetData(const std::vector<uint32_t> indices) = 0;
+		virtual void SetData(const std::vector<uint32_t>& indices) = 0;
 
-		static Ref<IndexBuffer> Create(std::vector<uint32_t> indices);
+		static Ref<IndexBuffer> Create(const std::vector<uint32_t>& indices);
 	};
 }

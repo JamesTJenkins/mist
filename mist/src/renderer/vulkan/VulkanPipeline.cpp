@@ -1,6 +1,7 @@
 #include "VulkanPipeline.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "VulkanDebug.hpp"
+#include <set>
 
 namespace mist {
 	void VulkanPipeline::Cleanup() {
@@ -121,20 +122,28 @@ namespace mist {
 		std::vector<VkVertexInputBindingDescription> bindingDescriptions;
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptons;
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		std::set<VkShaderStageFlagBits> setStages;
+		std::set<uint32_t> setBindings;
 		for (const auto& res : shader->GetInputResources()) {
 			if (res.second.flags & VK_SHADER_STAGE_VERTEX_BIT) {
-				VkPipelineShaderStageCreateInfo shaderStageInfo{};
-				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-				shaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = "main";
-				shaderStages.push_back(shaderStageInfo);
+				if (!setStages.contains(VK_SHADER_STAGE_VERTEX_BIT)) {
+					VkPipelineShaderStageCreateInfo shaderStageInfo{};
+					shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+					shaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+					shaderStageInfo.module = res.second.shaderModule;
+					shaderStageInfo.pName = "main";
+					shaderStages.push_back(shaderStageInfo);
+					setStages.insert(VK_SHADER_STAGE_VERTEX_BIT);
+				}
 
-				VkVertexInputBindingDescription binding;
-				binding.binding = res.second.binding;
-				binding.stride = res.second.stride;
-				binding.inputRate = res.second.inputRate;
-				bindingDescriptions.push_back(binding);
+				if (!setBindings.contains(res.second.binding)) {
+					VkVertexInputBindingDescription binding;
+					binding.binding = res.second.binding;
+					binding.stride = res.second.stride;
+					binding.inputRate = res.second.inputRate;
+					bindingDescriptions.push_back(binding);
+					setBindings.insert(res.second.binding);
+				}
 
 				VkVertexInputAttributeDescription attrib;
 				attrib.binding = res.second.binding;
@@ -145,30 +154,39 @@ namespace mist {
 			}
 
 			if (res.second.flags & VK_SHADER_STAGE_FRAGMENT_BIT) {
-				VkPipelineShaderStageCreateInfo shaderStageInfo{};
-				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-				shaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = "main";
-				shaderStages.push_back(shaderStageInfo);
+				if (!setStages.contains(VK_SHADER_STAGE_FRAGMENT_BIT)) {
+					VkPipelineShaderStageCreateInfo shaderStageInfo{};
+					shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+					shaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+					shaderStageInfo.module = res.second.shaderModule;
+					shaderStageInfo.pName = "main";
+					shaderStages.push_back(shaderStageInfo);
+					setStages.insert(VK_SHADER_STAGE_FRAGMENT_BIT);
+				}
 			}
-
+			
 			if (res.second.flags & VK_SHADER_STAGE_GEOMETRY_BIT) {
-				VkPipelineShaderStageCreateInfo shaderStageInfo{};
-				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-				shaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = "main";
-				shaderStages.push_back(shaderStageInfo);
+				if (!setStages.contains(VK_SHADER_STAGE_GEOMETRY_BIT)) {
+					VkPipelineShaderStageCreateInfo shaderStageInfo{};
+					shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+					shaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+					shaderStageInfo.module = res.second.shaderModule;
+					shaderStageInfo.pName = "main";
+					shaderStages.push_back(shaderStageInfo);
+					setStages.insert(VK_SHADER_STAGE_GEOMETRY_BIT);
+				}
 			}
-
+			
 			if (res.second.flags & VK_SHADER_STAGE_COMPUTE_BIT) {
-				VkPipelineShaderStageCreateInfo shaderStageInfo{};
-				shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-				shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-				shaderStageInfo.module = res.second.shaderModule;
-				shaderStageInfo.pName = "main";
-				shaderStages.push_back(shaderStageInfo);
+				if (!setStages.contains(VK_SHADER_STAGE_COMPUTE_BIT)) {
+					VkPipelineShaderStageCreateInfo shaderStageInfo{};
+					shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+					shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+					shaderStageInfo.module = res.second.shaderModule;
+					shaderStageInfo.pName = "main";
+					shaderStages.push_back(shaderStageInfo);
+					setStages.insert(VK_SHADER_STAGE_COMPUTE_BIT);
+				}
 			}
 		}
 

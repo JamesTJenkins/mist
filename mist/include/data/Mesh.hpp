@@ -12,7 +12,7 @@ namespace mist {
         std::vector<uint32_t> indices;
 
         Mesh() {}
-        Mesh(std::vector<Vertex> _vertices, std::vector<uint32_t> _indices) {
+        Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _indices) {
             vertices = _vertices;
             indices = _indices;
         }
