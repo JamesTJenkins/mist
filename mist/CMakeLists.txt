@@ -8,8 +8,6 @@ endif()
 
 project ("mist")
 
-add_subdirectory(tests)
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -61,12 +59,11 @@ target_include_directories(mist
 )
 
 target_link_libraries(mist
-    PRIVATE $<$<PLATFORM_ID:Linux>:stdc++>
     PUBLIC glm::glm
     PRIVATE spdlog::spdlog
     PRIVATE Vulkan::Vulkan
     PRIVATE GPUOpen::VulkanMemoryAllocator
-    PUBLIC $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main> $<IF:$<TARGET_EXISTS:SDL3::SDL3>,SDL3::SDL3,SDL3::SDL3-static>
+    PUBLIC SDL3::SDL3
     PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV
     PRIVATE EnTT::EnTT
     PRIVATE spirv-cross-core

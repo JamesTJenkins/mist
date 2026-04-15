@@ -9,6 +9,7 @@ endif()
 project ("editor")
 
 add_subdirectory(mist)
+add_subdirectory(mist/tests)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -37,8 +38,6 @@ elseif(MSVC)
         "/W3;/wd4505;/wd4100"
     )
 endif()
-
-find_package(SDL3 REQUIRED)
 
 add_executable(editor ${SOURCES})
 

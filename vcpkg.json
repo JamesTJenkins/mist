@@ -11,7 +11,8 @@
     "spdlog",
     {
       "name": "sdl3",
-      "features": [ "vulkan" ]
+      "default-features": false,
+      "features": [ "x11", "wayland", "vulkan", "dbus", "ibus" ]
     },
     "entt",
     "spirv-cross",
