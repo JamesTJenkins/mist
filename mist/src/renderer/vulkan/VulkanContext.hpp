@@ -19,6 +19,7 @@ namespace mist {
 		VkImage image;
 		VkImageView view;
 		VmaAllocation imageAlloc;
+		bool isDepth;
 
 		void Cleanup();
 	};
@@ -50,6 +51,7 @@ namespace mist {
 		void RecreateSwapchain();
 		void BeginRenderPass();
 		void EndRenderPass();
+		void TransitionDepthImageLayout(VkCommandBuffer cmdBuffer, VkImage image);
 
 		void SetViewport(VkViewport newViewport) { viewport = newViewport; }
 		void SetScissor(VkRect2D newScissor) { scissor = newScissor; }
@@ -114,7 +116,7 @@ namespace mist {
 		std::vector<VkImageView> swapchainImageViews;
 		VkRenderPass renderPass = VK_NULL_HANDLE;
 		uint32_t colorAttachmentCount = 0;
-		std::vector<FramebufferAttachment> additionalFramebufferAttachments;
+		std::vector<std::vector<FramebufferAttachment>> additionalFramebufferAttachments;
 		std::vector<VkFramebuffer> framebuffers;
 		std::vector<FrameData> frameDatas;
 		std::vector<VkSemaphore> submitSemaphores;

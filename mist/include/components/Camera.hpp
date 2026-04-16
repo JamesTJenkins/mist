@@ -45,7 +45,7 @@ namespace mist {
 		void SetOrthographicFarPlane(float value) { orthographicFarPlane = value; RecreateCamera(); }
 
 		// PERSPECTIVE
-		void SetPerspectiveCamera(const float width, const float height, const float fov = 60, const float nearPlane = 0.1f, const float farPlane = 1000, const bool isMainCamera = true);
+		void SetPerspectiveCamera(const float width, const float height, const float fov = 60, const float nearPlane = 0.01f, const float farPlane = 1000, const bool isMainCamera = true);
 
 		float GetPerspectiveFOV() const { return fov; }
 		void SetPerspectiveFOV(float value) { fov = value; RecreateCamera(); }

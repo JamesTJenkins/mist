@@ -273,8 +273,9 @@ namespace mist {
 		for (VkFramebuffer& framebuffer : framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, allocationCallbacks);
 
-		for (FramebufferAttachment& attachment : additionalFramebufferAttachments)
-			attachment.Cleanup();
+		for (std::vector<FramebufferAttachment>& attachments : additionalFramebufferAttachments)
+			for (FramebufferAttachment& attachment : attachments)
+				attachment.Cleanup();
 
 		if (renderPass != VK_NULL_HANDLE)
 			vkDestroyRenderPass(device, renderPass, allocationCallbacks);
@@ -389,7 +390,7 @@ namespace mist {
 		attachment.format = VulkanHelper::GetVkFormat(textureProperties.textureFormat);
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -401,20 +402,24 @@ namespace mist {
 	void CreateRenderpass(VkDevice device, VkAllocationCallbacks* allocationCallbacks, FramebufferProperties& properties, uint32_t& colorAttachmentCount, VkRenderPass& renderPass) {
 		std::vector<VkAttachmentDescription> attachments;
 		std::vector<VkAttachmentReference> colorAttachmentRefs;
-		std::vector<VkAttachmentReference> depthAttachmentRefs;
+		
+		VkAttachmentReference depthAttachmentRef {};
+		bool hasDepthAttachment = false;
 
 		for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
 			VkAttachmentDescription attachment = CreateAttachmentDescription(i, properties.attachment.attachments[i]);
 			attachments.push_back(attachment);
 
-			bool depth = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
 			VkAttachmentReference ref {};
 			ref.attachment = static_cast<uint32_t>(i);
 			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachment.attachments[i].textureFormat);
-
-			if (depth) {
-				depthAttachmentRefs.push_back(ref);
+			
+			if (VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat)) {
+				depthAttachmentRef.attachment = ref.attachment;
+				depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				hasDepthAttachment = true;
 			} else {
+				ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 				colorAttachmentRefs.push_back(ref);
 			}
 		}
@@ -425,7 +430,15 @@ namespace mist {
 		subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpassInfo.colorAttachmentCount = colorAttachmentCount;
 		subpassInfo.pColorAttachments = colorAttachmentRefs.data();
-		subpassInfo.pDepthStencilAttachment = depthAttachmentRefs.empty() ? nullptr : depthAttachmentRefs.data();
+		subpassInfo.pDepthStencilAttachment = hasDepthAttachment ? &depthAttachmentRef : nullptr;
+
+		VkSubpassDependency dependency {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 		VkRenderPassCreateInfo renderpassInfo {};
 		renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -433,7 +446,8 @@ namespace mist {
 		renderpassInfo.pAttachments = attachments.data();
 		renderpassInfo.subpassCount = 1;
 		renderpassInfo.pSubpasses = &subpassInfo;
-		renderpassInfo.dependencyCount = 0;
+		renderpassInfo.dependencyCount = 1;
+		renderpassInfo.pDependencies = &dependency;
 
 		CheckVkResult(vkCreateRenderPass(device, &renderpassInfo, allocationCallbacks, &renderPass));
 	}
@@ -521,11 +535,6 @@ namespace mist {
 			CheckVkResult(vkCreateImageView(device, &imageViewInfo, allocationCallbacks, &swapchainImageViews[i]));
 		}
 
-		for (FramebufferAttachment& attachment : additionalFramebufferAttachments) {
-			attachment.Cleanup();
-		}
-		additionalFramebufferAttachments.clear();
-
 		int framebufferColorIndex;
 		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
 			if (VulkanHelper::IsColorFormat(properties.attachment.attachments[i].textureFormat)) {
@@ -533,47 +542,72 @@ namespace mist {
 				break;
 			}
 		}
-		additionalFramebufferAttachments.resize(properties.attachment.attachmentsCount - 1);
-
-		for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
-			// Skip as already used for swapchain
-			if (framebufferColorIndex == i)
-				continue;
-
-			VkImageCreateInfo imageInfo {};
-			imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-			imageInfo.imageType = VK_IMAGE_TYPE_2D;
-			imageInfo.extent.width = extent.width;
-			imageInfo.extent.height = extent.height;
-			imageInfo.extent.depth = 1;
-			imageInfo.mipLevels = 1;
-			imageInfo.arrayLayers = 1;
-			imageInfo.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
-			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			imageInfo.usage = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-			imageInfo.flags = 0;
-
-			VmaAllocationCreateInfo imageAllocInfo {};
-			imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-			additionalFramebufferAttachments[i] = {};
-			CheckVkResult(vmaCreateImage(allocator, &imageInfo, &imageAllocInfo, &additionalFramebufferAttachments[i].image, &additionalFramebufferAttachments[i].imageAlloc, nullptr));
 		
-			VkImageViewCreateInfo imageViewInfo {};
-			imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			imageViewInfo.image = additionalFramebufferAttachments[i].image;
-			imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			imageViewInfo.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
-			imageViewInfo.subresourceRange.aspectMask = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-			imageViewInfo.subresourceRange.baseMipLevel = 0;
-			imageViewInfo.subresourceRange.levelCount = 1;
-			imageViewInfo.subresourceRange.baseArrayLayer = 0;
-			imageViewInfo.subresourceRange.layerCount = 1;
+		for (std::vector<FramebufferAttachment>& attachments : additionalFramebufferAttachments) {
+			for (FramebufferAttachment& attachment : attachments) {
+				attachment.Cleanup();
+			}
+		}
+		additionalFramebufferAttachments.clear();
+		additionalFramebufferAttachments.resize(swapchainImageCount);
 
-			CheckVkResult(vkCreateImageView(device, &imageViewInfo, allocationCallbacks, &additionalFramebufferAttachments[i].view));
+		for (size_t swapchainImageIndex = 0; swapchainImageIndex < swapchainImageCount; ++swapchainImageIndex) {
+			additionalFramebufferAttachments[swapchainImageIndex].resize(properties.attachment.attachmentsCount - 1);
+			size_t attachmentIndex = 0;
+
+			for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
+				// Skip as already used for swapchain
+				if (framebufferColorIndex == i)
+					continue;
+
+				bool isDepthStencilFormat = VulkanHelper::IsDepthStencilFormat(properties.attachment.attachments[i].textureFormat);
+				bool isDepthFormat = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
+
+				VkImageCreateInfo imageInfo {};
+				imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+				imageInfo.imageType = VK_IMAGE_TYPE_2D;
+				imageInfo.extent.width = extent.width;
+				imageInfo.extent.height = extent.height;
+				imageInfo.extent.depth = 1;
+				imageInfo.mipLevels = 1;
+				imageInfo.arrayLayers = 1;
+				imageInfo.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
+				imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+				imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				imageInfo.usage = isDepthFormat ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+				imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+				imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+				imageInfo.flags = 0;
+
+				VmaAllocationCreateInfo imageAllocInfo {};
+				imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+				additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex] = {};
+				CheckVkResult(vmaCreateImage(allocator, &imageInfo, &imageAllocInfo, &additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].image, &additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].imageAlloc, nullptr));
+			
+				VkImageViewCreateInfo imageViewInfo {};
+				imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+				imageViewInfo.image = additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].image;
+				imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+				imageViewInfo.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
+				imageViewInfo.subresourceRange.baseMipLevel = 0;
+				imageViewInfo.subresourceRange.levelCount = 1;
+				imageViewInfo.subresourceRange.baseArrayLayer = 0;
+				imageViewInfo.subresourceRange.layerCount = 1;
+
+				if (isDepthStencilFormat) {
+					imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+				} else if (isDepthFormat) {
+					imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+				} else {
+					imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				}
+
+				CheckVkResult(vkCreateImageView(device, &imageViewInfo, allocationCallbacks, &additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].view));
+
+				additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].isDepth = isDepthFormat;
+				attachmentIndex++;
+			}
 		}
 
 		if (renderPass != VK_NULL_HANDLE)
@@ -584,13 +618,12 @@ namespace mist {
 		for (VkFramebuffer& framebuffer : framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, allocationCallbacks);
 		framebuffers.clear();
-		framebuffers.resize(swapchainImageViews.size());
+		framebuffers.resize(swapchainImageCount);
 		
-		for (size_t i = 0; i < swapchainImages.size(); ++i) {
+		for (size_t i = 0; i < swapchainImageCount; ++i) {
 			std::vector<VkImageView> attachments = { swapchainImageViews[i] };
-			attachments.resize(additionalFramebufferAttachments.size() + 1);
 
-			for (FramebufferAttachment& additionalAttachments : additionalFramebufferAttachments) {
+			for (FramebufferAttachment& additionalAttachments : additionalFramebufferAttachments[i]) {
 				attachments.push_back(additionalAttachments.view);
 			}
 
@@ -685,16 +718,32 @@ namespace mist {
 		cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		CheckVkResult(vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo));
 
+		for (FramebufferAttachment& attachment : additionalFramebufferAttachments[imageIndex]) {
+			if (attachment.isDepth) {
+				TransitionDepthImageLayout(commandBuffers[currentFrame], attachment.image);
+				break;
+			}
+		}
+
 		VkRenderPassBeginInfo renderPassInfo {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = renderPass;
 		renderPassInfo.framebuffer = framebuffers[imageIndex];
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = extent;
-		renderPassInfo.clearValueCount = 1;
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(additionalFramebufferAttachments[imageIndex].size()) + 1;	// Additional attachments + swapchain image
+
 		glm::vec4 color = Application::Get().GetRenderAPI()->GetClearColor();
-		VkClearValue clearColor = { color.r, color.g, color.b, color.a };
-		renderPassInfo.pClearValues = &clearColor;
+		VkClearValue clearColor {};
+		clearColor.color = { color.r, color.g, color.b, color.a };
+		VkClearValue depthValue {};
+		depthValue.depthStencil = { 1.0, 0 };
+		
+		std::vector<VkClearValue> clearValues;
+		clearValues.push_back(clearColor);	// Swapchain image
+		for (FramebufferAttachment& attachment : additionalFramebufferAttachments[imageIndex])
+			clearValues.push_back(attachment.isDepth ? depthValue : clearColor); 
+		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		
@@ -738,5 +787,24 @@ namespace mist {
 		}
 
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	}
+
+	void VulkanContext::TransitionDepthImageLayout(VkCommandBuffer cmdBuffer, VkImage image) {
+		VkImageMemoryBarrier barrier = {};
+    	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    	barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    	barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    	barrier.image = image;
+    	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    	barrier.subresourceRange.baseMipLevel = 0;
+    	barrier.subresourceRange.levelCount = 1;
+    	barrier.subresourceRange.baseArrayLayer = 0;
+    	barrier.subresourceRange.layerCount = 1;
+    	barrier.srcAccessMask = 0;
+    	barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+    	vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 	}
 }

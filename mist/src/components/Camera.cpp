@@ -1,5 +1,6 @@
 #include "components/Camera.hpp"
 #include "Application.hpp"
+#include <Debug.hpp>
 
 namespace mist {
 	Camera::Camera(Transform& transform) : transformComponent(transform) {}
@@ -27,10 +28,12 @@ namespace mist {
 			float right = size * aspect * 0.5f;
 			float bottom = -size * 0.5f;
 			float top = size * 0.5f;
-
-			projectionMatrix = glm::ortho(left, right, bottom, top, orthographicNearPlane, orthographicFarPlane);
+			
+			MIST_ASSERT(orthographicNearPlane < orthographicFarPlane, "Far plane is less than the near plane. Got them backwards?");
+			projectionMatrix = glm::orthoLH_ZO(left, right, bottom, top, orthographicNearPlane, orthographicFarPlane);
 		} else {
-			projectionMatrix = glm::perspective(glm::radians(fov), aspect, perspectiveNearPlane, perspectiveFarPlane);
+			MIST_ASSERT(perspectiveNearPlane < perspectiveFarPlane, "Far plane is less than the near plane. Got them backwards?");
+			projectionMatrix = glm::perspectiveLH_ZO(glm::radians(fov), aspect, perspectiveNearPlane,  perspectiveFarPlane);
 		}
 
 		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan)
@@ -42,7 +45,7 @@ namespace mist {
 	}
 
 	glm::mat4 Camera::GetViewMatrix() const {
-		return glm::lookAt(
+		return glm::lookAtLH(
 			transformComponent.position, 
 			transformComponent.position + transformComponent.Forward(),
 			transformComponent.Up()
