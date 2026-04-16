@@ -17,6 +17,6 @@ namespace mistEditor {
 		void Cleanup();
 	private:
 		mist::Ref<mist::Shader> testShader;
-		mist::Ref<mist::Mesh> testMesh;
+		std::vector<mist::Ref<mist::Mesh>> testMeshes;
 	};
 }

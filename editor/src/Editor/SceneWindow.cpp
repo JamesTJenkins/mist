@@ -5,13 +5,15 @@
 #include <components/MeshRenderer.hpp>
 #include <components/Collider.hpp>
 #include <components/Rigidbody.hpp>
+#include <data/Importer.hpp>
 
 namespace mistEditor {
 	SceneWindow::SceneWindow() {}
 
 	void SceneWindow::Initialize() {
 		std::vector<mist::FramebufferTextureProperties> attachments = {
-			mist::FramebufferTextureFormat::RGBA8
+			mist::FramebufferTextureFormat::RGBA8,
+			mist::FramebufferTextureFormat::DEPTH32_STENCIL8
 		};
 		mist::FramebufferProperties properties;
 		properties.attachment.attachments = attachments.data();
@@ -24,83 +26,37 @@ namespace mistEditor {
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		sm->LoadEmptyScene();
 		
+		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
+
+		testMeshes = mist::Importer::ImportMeshes("assets/brassfang.fbx");
+		//testMeshes = mist::Importer::ImportMeshes("assets/LightCycle.obj");
+		{
+			const entt::entity triEntity = sm->CreateEntity();
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0, 0), glm::quat_identity<float, glm::defaultp>(), glm::vec3(0.01f));
+			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMeshes[0]);
+		}
+
 		std::vector<mist::Vertex> verts = {
-			{{ -1.0f, -1.0f, 0.0f }},
-			{{ -1.0f,  1.0f, 0.0f }},
-			{{  1.0f, -1.0f, 0.0f }},
-			{{  1.0f,  1.0f, 0.0f }}
+			{{ -1.0f, -1.0f, 0.0f }, {0,0,0}},
+			{{ -1.0f,  1.0f, 0.0f }, {0,0,0}},
+			{{  1.0f, -1.0f, 0.0f }, {0,0,0}},
+			{{  1.0f,  1.0f, 0.0f }, {0,0,0}}
 		};
 		
 		std::vector<uint32_t> indices = {
 			0, 1, 2,
-			1, 3, 2
+			3, 2, 1
 		};
 		
-		testMesh = mist::CreateRef<mist::Mesh>(verts, indices);
-		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
-
-		//{
-		//	const entt::entity triEntity = sm->CreateEntity();
-		//	mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(3, 2.5, 0), glm::quat(glm::vec3(0,0,0)), glm::vec3(1));
-		//	sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		//	sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-		//	sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		//}
-		//{
-		//	const entt::entity triEntity = sm->CreateEntity();
-		//	mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-3, 3, 0));
-		//	sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		//	sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(2, 0, 0));
-		//	sm->AddComponent<mist::Collider>(triEntity, mist::PlaneCollider(glm::vec3(1,0,0), 0));
-		//}
-
+		mist::Ref<mist::Mesh> testMesh = mist::CreateRef<mist::Mesh>(verts, indices);
 		{
 			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(3, 2.5, 0), glm::quat(glm::vec3(0,0,45)), glm::vec3(2));
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, 0, 0));
 			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
 		}
-		{
-			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-3, 3, 0));
-			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-			sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(2, 0, 0));
-			sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		}
-
-		//{
-		//	const entt::entity triEntity = sm->CreateEntity();
-		//	mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(3, 2.5, 0), glm::quat(glm::vec3(0,0,45)), glm::vec3(1));
-		//	sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		//	sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-		//	sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		//}
-		//{
-		//	const entt::entity triEntity = sm->CreateEntity();
-		//	mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-3, 3, 0));
-		//	sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		//	sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(2, 0, 0));
-		//	sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1));
-		//}
-
-		//{
-		//	const entt::entity triEntity = sm->CreateEntity();
-		//	mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(3, 2.5, 0), glm::quat(glm::vec3(0,0,0)), glm::vec3(1));
-		//	sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		//	sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(-1, 0, 0));
-		//	sm->AddComponent<mist::Collider>(triEntity, mist::BoxCollider(glm::vec3(1,1,1)));
-		//}
-		//{
-		//	const entt::entity triEntity = sm->CreateEntity();
-		//	mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-3, 3, 0), glm::quat(glm::vec3(0,0,0)), glm::vec3(2));
-		//	sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMesh);
-		//	sm->AddComponent<mist::Rigidbody>(triEntity, 1.0f, 0.5f, glm::vec3(2, 0, 0));
-		//	sm->AddComponent<mist::Collider>(triEntity, mist::SphereCollider(1));
-		//}
 
 		const entt::entity sceneCameraEntity = sm->CreateEntity();
-		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -10));
+		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -5));
 		mist::Camera& sceneCamera = sm->AddComponent<mist::Camera>(sceneCameraEntity, sceneCameraT);
 		sceneCamera.SetPerspectiveCamera(1280, 720);
 	}
@@ -112,6 +68,12 @@ namespace mistEditor {
 	void SceneWindow::OnEditorUpdate() {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
+		float delta = mist::Application::Get().GetDeltaTime();
+
+		auto view = sm->GetActiveScene().view<mist::Transform, mist::MeshRenderer>();
+		view.each([delta](mist::Transform &transform, mist::MeshRenderer &render) {
+			transform.Rotate(glm::radians(30.0f) * delta, { 0, 1, 0 });
+		});
 	}
 
 	void SceneWindow::OnRender() {

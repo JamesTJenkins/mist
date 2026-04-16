@@ -2,6 +2,7 @@
 #version 460 core
 
 layout(location = 0) in vec3 Position;
+layout(location = 1) in vec3 Normal;
 
 layout(location = 0) out vec3 fragColor;
 
@@ -15,7 +16,7 @@ layout(set = 0, binding = 0) uniform CameraData {
 
 void main() {
 	gl_Position = cameraData.u_ViewProjectionMatrix * constants.ModelMatrix * vec4(Position, 1);
-	fragColor = Position;
+	fragColor = Position * 0.5 + 0.5;
 }
 
 #type fragment

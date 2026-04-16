@@ -16,6 +16,7 @@
     },
     "entt",
     "spirv-cross",
+    "assimp",
     "gtest"
   ]
 }
