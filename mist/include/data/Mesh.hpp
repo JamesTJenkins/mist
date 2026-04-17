@@ -12,10 +12,9 @@ namespace mist {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
 
-        Mesh() {}
-        Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _indices) {
-            vertices = _vertices;
-            indices = _indices;
-        }
+        Mesh();
+        Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _indices);
+
+        void GenerateNormals();
     };
 }
