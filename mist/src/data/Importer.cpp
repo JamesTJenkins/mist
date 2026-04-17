@@ -58,21 +58,24 @@ namespace mist {
 	    }
 	}
 
-	std::vector<Ref<Mesh>> Importer::ImportMeshes(const std::string& path) {
+	std::vector<Ref<Mesh>> Importer::ImportMeshes(const std::string& path, bool flipWinding) {
+		unsigned int flags = 
+		aiProcess_MakeLeftHanded				|
+		aiProcess_Triangulate                   |
+		aiProcess_JoinIdenticalVertices         |
+		aiProcess_ImproveCacheLocality          |
+		aiProcess_RemoveRedundantMaterials      |
+		aiProcess_SortByPType                   |
+		aiProcess_FindDegenerates               |
+		aiProcess_FindInvalidData				|
+		aiProcess_OptimizeMeshes				|
+		aiProcess_OptimizeGraph;
+		
+		if (flipWinding)
+			flags |= aiProcess_FlipWindingOrder;
+		
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(
-			path.c_str(),
-			aiProcess_MakeLeftHanded				|
-			aiProcess_Triangulate                   |
-			aiProcess_JoinIdenticalVertices         |
-			aiProcess_ImproveCacheLocality          |
-			aiProcess_RemoveRedundantMaterials      |
-			aiProcess_SortByPType                   |
-			aiProcess_FindDegenerates               |
-			aiProcess_FindInvalidData				|
-			aiProcess_OptimizeMeshes				|
-			aiProcess_OptimizeGraph
-		);
+		const aiScene* scene = importer.ReadFile(path.c_str(), flags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 			MIST_WARN(std::string("Assimp import error: ") + importer.GetErrorString());

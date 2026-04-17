@@ -6,6 +6,6 @@
 namespace mist {
     class Importer {
     public:
-        static std::vector<Ref<Mesh>> ImportMeshes(const std::string& path);
+        static std::vector<Ref<Mesh>> ImportMeshes(const std::string& path, bool flipWinding = false);
     };
 }
