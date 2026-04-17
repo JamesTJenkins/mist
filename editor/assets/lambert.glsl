@@ -29,8 +29,8 @@ layout(location = 1) in vec3 fragNormal;
 layout(location = 0) out vec4 color;
 
 layout(set = 0, binding = 1) uniform DirectionalLightData {
-	uniform vec3 u_LightDir;
-	uniform vec3 u_LightColor;
+	vec3 u_LightDir;
+	vec3 u_LightColor;
 } directionalLightData;
 
 void main() {
