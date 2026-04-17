@@ -4,6 +4,7 @@
 #include "renderer/Buffer.hpp"
 #include "components/Camera.hpp"
 #include "components/MeshRenderer.hpp"
+#include "components/DirectionalLight.hpp"
 
 namespace mist {
     class RenderAPI {
@@ -24,6 +25,7 @@ namespace mist {
         virtual void WaitForIdle() = 0;
         virtual void BeginRenderPass() = 0;
         virtual void EndRenderPass() = 0;
+        virtual void UpdateDirectionalLight(DirectionalLight& light) = 0;
         virtual void UpdateCamera(Camera& camera) = 0;
         virtual void BindMeshRenderer(const MeshRenderer& MeshRenderer) = 0;
         virtual void Draw(uint32_t indexCount) = 0;

@@ -16,6 +16,7 @@ namespace mist {
         virtual void WaitForIdle() override;
         virtual void BeginRenderPass() override;
         virtual void EndRenderPass() override;
+        virtual void UpdateDirectionalLight(DirectionalLight& light) override;
         virtual void UpdateCamera(Camera& camera) override;
         virtual void BindMeshRenderer(const MeshRenderer& meshRenderer) override;
         virtual void Draw(uint32_t indexCount) override;

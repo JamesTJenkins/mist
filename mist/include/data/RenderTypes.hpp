@@ -7,4 +7,9 @@ namespace mist {
 	struct CameraData {
 		glm::mat4 u_ViewProjectionMatrix;
 	};
+
+	struct DirectionalLightData {
+		glm::vec3 u_LightDir;
+		glm::vec3 u_LightColor;
+	};
 }

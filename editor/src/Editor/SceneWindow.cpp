@@ -5,6 +5,7 @@
 #include <components/MeshRenderer.hpp>
 #include <components/Collider.hpp>
 #include <components/Rigidbody.hpp>
+#include <components/DirectionalLight.hpp>
 #include <data/Importer.hpp>
 
 namespace mistEditor {
@@ -26,13 +27,13 @@ namespace mistEditor {
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		sm->LoadEmptyScene();
 		
-		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/test.glsl");
+		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/lambert.glsl");
 
-		testMeshes = mist::Importer::ImportMeshes("assets/brassfang.fbx");
-		//testMeshes = mist::Importer::ImportMeshes("assets/LightCycle.obj");
+		//testMeshes = mist::Importer::ImportMeshes("assets/brassfang.fbx");
+		testMeshes = mist::Importer::ImportMeshes("assets/LightCycle.obj", true);
 		{
 			const entt::entity triEntity = sm->CreateEntity();
-			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0, 0), glm::quat_identity<float, glm::defaultp>(), glm::vec3(0.01f));
+			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(-2, 0, 0), glm::quat_identity<float, glm::defaultp>(), glm::vec3(1.0f));
 			sm->AddComponent<mist::MeshRenderer>(triEntity, testT, testShader->GetName(), testMeshes[0]);
 		}
 
@@ -49,6 +50,7 @@ namespace mistEditor {
 		};
 		
 		mist::Ref<mist::Mesh> testMesh = mist::CreateRef<mist::Mesh>(verts, indices);
+		testMesh->GenerateNormals();
 		{
 			const entt::entity triEntity = sm->CreateEntity();
 			mist::Transform& testT = sm->AddComponent<mist::Transform>(triEntity, glm::vec3(2, 0, 0));
@@ -59,6 +61,10 @@ namespace mistEditor {
 		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -5));
 		mist::Camera& sceneCamera = sm->AddComponent<mist::Camera>(sceneCameraEntity, sceneCameraT);
 		sceneCamera.SetPerspectiveCamera(1280, 720);
+
+		const entt::entity directionalLightEntity = sm->CreateEntity();
+		mist::Transform& directionalLightT = sm->AddComponent<mist::Transform>(directionalLightEntity, glm::vec3(0, 0, -5), glm::quat(glm::radians(glm::vec3(37, -175, 0))));
+		mist::DirectionalLight& directionalLight = sm->AddComponent<mist::DirectionalLight>(directionalLightEntity, directionalLightT, glm::vec3(1,1,1));
 	}
 
 	void SceneWindow::Cleanup() {

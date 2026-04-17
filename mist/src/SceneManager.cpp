@@ -1,5 +1,6 @@
 #include "SceneManager.hpp"
 #include "components/Transform.hpp"
+#include "components/DirectionalLight.hpp"
 #include <Application.hpp>
 #include <Debug.hpp>
 
@@ -14,6 +15,12 @@ namespace mist {
 	}
 
 	void SceneManager::SubmitScene(uint32_t sceneIndex) {
+		auto lightView = loadedScenes[sceneIndex].view<DirectionalLight>();
+		for (auto entity : lightView) {
+			Application::Get().GetRenderAPI()->UpdateDirectionalLight(loadedScenes[activeScene].get<DirectionalLight>(entity));
+			break;	// Only pass the first directional light as there should only be 1
+		}
+		
 		ShaderLibrary* shaderLib = Application::Get().GetShaderLibrary();
 		auto view = loadedScenes[sceneIndex].view<MeshRenderer>();
 		

@@ -48,6 +48,15 @@ namespace mist {
 		context.EndRenderPass();
 	}
 
+	void VulkanRenderAPI::UpdateDirectionalLight(DirectionalLight& light) {
+		DirectionalLightData lightData;
+		lightData.u_LightDir = light.GetTransform().Forward();
+		lightData.u_LightColor = light.lightColor;
+
+		VulkanContext& context = VulkanContext::GetContext();
+		context.descriptors.UpdateUniformBuffer({ context.GetCurrentFrameIndex(), "DirectionalLightData" }, lightData);
+	}
+
 	void VulkanRenderAPI::UpdateCamera(Camera& camera) {
 		CameraData camData;
 		camData.u_ViewProjectionMatrix = camera.GetViewProjectionMatrix();
