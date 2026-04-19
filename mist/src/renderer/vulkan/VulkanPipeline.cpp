@@ -121,7 +121,7 @@ namespace mist {
 
 		VkPipelineLayout pipelineLayout;
 		CheckVkResult(vkCreatePipelineLayout(context.GetDevice(), &layoutInfo, context.GetAllocationCallbacks(), &pipelineLayout));
-		pipelineLayouts.emplace(shader->GetName(), pipelineLayout);
+		pipelineLayouts[shader->GetName()] = pipelineLayout;
 
 		std::vector<VkVertexInputBindingDescription> bindingDescriptions;
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptons;
@@ -221,7 +221,7 @@ namespace mist {
 		VkPipeline graphicsPipeline;
 		CheckVkResult(vkCreateGraphicsPipelines(context.GetDevice(), nullptr, 1, &pipelineInfo, context.GetAllocationCallbacks(), &graphicsPipeline));
 	
-		pipelines.emplace(shader->GetName(), graphicsPipeline);
+		pipelines[shader->GetName()] = graphicsPipeline;
 	}
 }
 

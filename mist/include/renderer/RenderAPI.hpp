@@ -17,7 +17,7 @@ namespace mist {
         virtual void Initialize() = 0;
         virtual void Shutdown() = 0;
 
-        virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
+        virtual void SetViewport(uint32_t width, uint32_t height) = 0;
 
         virtual void SetClearColor(glm::vec4& color) = 0;
         virtual glm::vec4 GetClearColor() = 0;

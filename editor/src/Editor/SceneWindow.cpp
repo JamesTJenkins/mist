@@ -21,8 +21,8 @@ namespace mistEditor {
 		properties.attachment.attachmentsCount = (uint32_t)attachments.size();
 		properties.width = 1280;
 		properties.height = 720;
+		mist::Application::Get().GetRenderAPI()->SetViewport(properties.width, properties.height);
 		mist::Framebuffer::Create(properties);
-		mist::Application::Get().GetRenderAPI()->SetViewport(0, 0, 1280, 720);
 
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		sm->LoadEmptyScene();

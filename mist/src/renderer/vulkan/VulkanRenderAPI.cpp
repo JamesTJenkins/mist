@@ -15,23 +15,9 @@ namespace mist {
 		context.Cleanup();
 	}
 	
-	void VulkanRenderAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+	void VulkanRenderAPI::SetViewport(uint32_t width, uint32_t height) {
 		VulkanContext& context = VulkanContext::GetContext();
-		VkViewport viewport = {
-			.x = viewport.x = static_cast<float>(x),
-			.y = static_cast<float>(y),
-			.width = static_cast<float>(width),
-			.height = static_cast<float>(height),
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
-		context.SetViewport(viewport);
-		
-		VkRect2D scissor = {
-			.offset = { 0, 0 },
-			.extent = { width, height }
-		};
-		context.SetScissor(scissor);
+		context.SetViewport(width, height);
 	}
 	
 	void VulkanRenderAPI::SetClearColor(glm::vec4& color) {

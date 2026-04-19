@@ -318,31 +318,22 @@ namespace mist {
 	}
 
 	VkSurfaceFormatKHR ChooseSwapchainFormat(VkPhysicalDevice phyiscalDevice, VkSurfaceKHR surface, FramebufferProperties& properties) {
-		bool validPreferredFormat = false;
+		std::vector<VkSurfaceFormatKHR> availableFormats = QuerySwapchainFormats(phyiscalDevice, surface);
+
 		VkSurfaceFormatKHR preferedFormat;
 		preferedFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-
 		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; i++) {
 			if (VulkanHelper::IsColorFormat(properties.attachment.attachments[i].textureFormat)) {
 				preferedFormat.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
-				validPreferredFormat = true;
+				for (const VkSurfaceFormatKHR& format : availableFormats) {
+					if (format.format == preferedFormat.format && format.colorSpace == preferedFormat.colorSpace) {
+						return preferedFormat;
+					}
+				}
 			}
 		}
 		
-		std::vector<VkSurfaceFormatKHR> availableFormats = QuerySwapchainFormats(phyiscalDevice, surface);
-
-		if (!validPreferredFormat) {
-			MIST_INFO("Cant use preferred swapchain format using a fallback.");
-			return availableFormats[0];
-		}
-
-		for (const VkSurfaceFormatKHR& format : availableFormats) {
-			if (format.format == preferedFormat.format && format.colorSpace == preferedFormat.colorSpace) {
-				return preferedFormat;
-			}
-		}
-
-		MIST_INFO("Valid preferred swapchain format, but not supported on this system using a fallback.");
+		MIST_INFO("No valid and supported swapchain format given, using a fallback from available formats.");
 		return availableFormats[0];
 	}
 
@@ -638,9 +629,18 @@ namespace mist {
 			
 			CheckVkResult(vkCreateFramebuffer(device, &framebufferInfo, allocationCallbacks, &framebuffers[i]));
 		}
+
+		descriptors.Cleanup();
+		pipeline.Cleanup();
+		const std::unordered_map<std::string, Ref<Shader>> shaders = Application::Get().GetShaderLibrary()->GetAllShaders();
+		for (const std::pair<std::string, Ref<Shader>>& shader : shaders) {
+			VulkanShader* vkShader = static_cast<VulkanShader*>(shader.second.get());
+			pipeline.CreateGraphicsPipeline(vkShader);
+		}
 	}
 
 	void VulkanContext::RecreateSwapchain() {
+		MIST_INFO("Recreating Swapchain");
 		vkDeviceWaitIdle(device);
 		CreateSwapchain(framebufferProperties);
 	}
@@ -710,20 +710,20 @@ namespace mist {
 		CheckVkResult(vkWaitForFences(device, 1, &frameDatas[currentFrame].inFlightFence, VK_TRUE, UINT64_MAX));
  		CheckVkResult(vkResetFences(device, 1, &frameDatas[currentFrame].inFlightFence));
 
-		CheckVkResult(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, frameDatas[currentFrame].acquireImageSempahore, VK_NULL_HANDLE, &imageIndex));
+		VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, frameDatas[currentFrame].acquireImageSempahore, VK_NULL_HANDLE, &imageIndex);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+			RecreateSwapchain();
+			BeginRenderPass();
+			return;
+		} else if (result != VK_SUCCESS) {
+			CheckVkResult(result);
+		}
 
 		CheckVkResult(vkResetCommandBuffer(commandBuffers[currentFrame], 0));
 		VkCommandBufferBeginInfo cmdInfo {};
 		cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		CheckVkResult(vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo));
-
-		for (FramebufferAttachment& attachment : additionalFramebufferAttachments[imageIndex]) {
-			if (attachment.isDepth) {
-				TransitionDepthImageLayout(commandBuffers[currentFrame], attachment.image);
-				break;
-			}
-		}
 
 		VkRenderPassBeginInfo renderPassInfo {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -780,31 +780,42 @@ namespace mist {
 
 		VkResult presentResult = vkQueuePresentKHR(presentQueue, &presentInfo);
 
-		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR) {
+		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
 			RecreateSwapchain();
-		} else if (presentResult != VK_SUCCESS && presentResult != VK_SUBOPTIMAL_KHR) {
+		} else if (presentResult != VK_SUCCESS) {
 			CheckVkResult(presentResult);
 		}
 
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanContext::TransitionDepthImageLayout(VkCommandBuffer cmdBuffer, VkImage image) {
-		VkImageMemoryBarrier barrier = {};
-    	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    	barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    	barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    	barrier.image = image;
-    	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    	barrier.subresourceRange.baseMipLevel = 0;
-    	barrier.subresourceRange.levelCount = 1;
-    	barrier.subresourceRange.baseArrayLayer = 0;
-    	barrier.subresourceRange.layerCount = 1;
-    	barrier.srcAccessMask = 0;
-    	barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	void VulkanContext::SetViewport(uint32_t width, uint32_t height) {
+		viewport = {
+			.x = 0,
+			.y = 0,
+			.width = static_cast<float>(width),
+			.height = static_cast<float>(height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
 
-    	vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+		scissor = {
+			.offset = { 0, 0 },
+			.extent = { width, height }
+		};
+
+		framebufferProperties.width = width;
+		framebufferProperties.height = height;
+
+		SceneManager* sm = Application::Get().GetSceneManager();
+		if (sm->GetActiveSceneIndex() >= 0) {
+			auto view = sm->GetActiveScene().view<mist::Camera>();
+			view.each([width, height](mist::Camera &camera) {
+				camera.SetViewportSize(static_cast<float>(width), static_cast<float>(height));
+			});
+		}
+
+		if (swapchain != VK_NULL_HANDLE)
+			RecreateSwapchain();
 	}
 }

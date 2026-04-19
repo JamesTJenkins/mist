@@ -51,10 +51,8 @@ namespace mist {
 		void RecreateSwapchain();
 		void BeginRenderPass();
 		void EndRenderPass();
-		void TransitionDepthImageLayout(VkCommandBuffer cmdBuffer, VkImage image);
 
-		void SetViewport(VkViewport newViewport) { viewport = newViewport; }
-		void SetScissor(VkRect2D newScissor) { scissor = newScissor; }
+		void SetViewport(uint32_t width, uint32_t height);
 
 		inline const VkInstance GetInstance() const { return instance; }
 		inline const VkSurfaceKHR GetSurface() const { return surface; }
@@ -112,7 +110,6 @@ namespace mist {
 		VkExtent2D extent;
 		VkViewport viewport;
 		VkRect2D scissor;
-		std::vector<VkImage> swapchainImages;
 		std::vector<VkImageView> swapchainImageViews;
 		VkRenderPass renderPass = VK_NULL_HANDLE;
 		uint32_t colorAttachmentCount = 0;

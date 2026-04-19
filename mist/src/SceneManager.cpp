@@ -14,7 +14,7 @@ namespace mist {
 		loadedScenes[activeScene].destroy(entity);
 	}
 
-	void SceneManager::SubmitScene(uint32_t sceneIndex) {
+	void SceneManager::SubmitScene(int32_t sceneIndex) {
 		auto lightView = loadedScenes[sceneIndex].view<DirectionalLight>();
 		for (auto entity : lightView) {
 			Application::Get().GetRenderAPI()->UpdateDirectionalLight(loadedScenes[activeScene].get<DirectionalLight>(entity));
@@ -57,10 +57,18 @@ namespace mist {
 	void SceneManager::LoadEmptyScene() {
 		loadedScenes.push_back(entt::registry{});
 		MIST_INFO("Loaded empty scene");
+		
+		if (activeScene == -1)
+			SetActiveScene(0);
 	}
 
 	void SceneManager::LoadScene() {
 		MIST_WARN("Currently not implemented");
+	}
+
+	void SceneManager::SetActiveScene(int32_t index) {
+		activeScene = index;
+		MIST_INFO(std::string("Set active scene to ") + std::to_string(index));
 	}
 
 	void SceneManager::Cleanup() {

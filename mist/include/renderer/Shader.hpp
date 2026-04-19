@@ -31,6 +31,7 @@ namespace mist {
 		Ref<Shader> Load(const std::string& name, const std::string& path);
 
 		Ref<Shader> Get(const std::string& name);
+		const std::unordered_map<std::string, Ref<Shader>> GetAllShaders() const { return shaders; }
 
 		bool Exists(const std::string& name) const;
 	private:

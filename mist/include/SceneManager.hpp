@@ -17,21 +17,21 @@ namespace mist {
 			loadedScenes[activeScene].erase<T>(entity);
 		}
 		
-		inline const uint32_t GetActiveSceneIndex() { return activeScene; }
+		inline const int32_t GetActiveSceneIndex() { return activeScene; }
 		inline entt::registry& GetActiveScene() { return loadedScenes[activeScene]; }
 
 		inline void SubmitActiveScene() { SubmitScene(activeScene); }
-		void SubmitScene(uint32_t index);
+		void SubmitScene(int32_t index);
 
 		void UpdateSceneCamera();
 
 		void LoadEmptyScene();
 		void LoadScene();
-		void SetActiveScene(uint32_t index) { activeScene = index; }
+		void SetActiveScene(int32_t index);
 
 		void Cleanup();
 	private:
-		uint32_t activeScene = 0;
+		int32_t activeScene = -1;
 		std::vector<entt::registry> loadedScenes;
 	};
 }

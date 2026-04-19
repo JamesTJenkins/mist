@@ -62,7 +62,6 @@ namespace mist {
 		void CreateDescriptorPool();
 		VkDescriptorSet& CreateDescriptorSet(const MeshRenderer& meshRenderer);
 		
-		void ClearPool();
 		void Cleanup();
 		
 		inline const VkDescriptorPool& GetDescriptorPool(const int index) const { return pools[index]; }

@@ -120,30 +120,28 @@ namespace mist {
 		return descriptorSets[key];
 	}
 
-	void VulkanDescriptor::ClearPool() {
-		VulkanContext& context = VulkanContext::GetContext();
-		for (VkDescriptorPool& pool : pools) {
-			vkDestroyDescriptorPool(context.GetDevice(), pool, context.GetAllocationCallbacks());
-		}
-	}
-
 	void VulkanDescriptor::Cleanup() {
 		VulkanContext& context = VulkanContext::GetContext();
 		for (std::pair<std::string, VkDescriptorSetLayout> layout : descriptorSetLayouts) {
 			vkDestroyDescriptorSetLayout(context.GetDevice(), layout.second, context.GetAllocationCallbacks());
 		}
+		descriptorSetLayouts.clear();
 		
 		for (auto& set : descriptorSets) {
 			vkFreeDescriptorSets(context.GetDevice(), pools[set.first.poolIndex], 1, &set.second);
 		}
+		descriptorSets.clear();
 
 		for (std::pair<const std::pair<uint8_t, std::string>, mist::UniformBuffer>& ubo : uniformBuffers) {
 			ubo.second.Clear();
 		}
+		uniformBuffers.clear();
+		uniformBufferNames.clear();
 
 		for (VkDescriptorPool& pool : pools) {
 			vkDestroyDescriptorPool(context.GetDevice(), pool, context.GetAllocationCallbacks());
 		}
+		pools.clear();
 
 		MIST_INFO("Destroyed descriptors and uniform buffers");
 	}
