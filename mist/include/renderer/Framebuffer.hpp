@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.hpp"
+#include <vector>
 
 namespace mist {
 	enum class FramebufferTextureFormat {
@@ -64,22 +65,14 @@ namespace mist {
 
 	struct FramebufferTextureProperties {
 		FramebufferTextureProperties() = default;
-		FramebufferTextureProperties(FramebufferTextureFormat format) : textureFormat(format) {}
+		FramebufferTextureProperties(const FramebufferTextureFormat& format) : textureFormat(format) {}
 
 		FramebufferTextureFormat textureFormat = FramebufferTextureFormat::None;
 	};
 
-	struct FramebufferAttachmentProperties {
-		FramebufferAttachmentProperties() = default;
-		FramebufferAttachmentProperties(FramebufferTextureProperties* attachments, uint32_t attachmentsCount) : attachments(attachments), attachmentsCount(attachmentsCount) {}
-
-		FramebufferTextureProperties* attachments;
-		uint32_t attachmentsCount = 0;
-	};
-
 	struct FramebufferProperties {
 		uint32_t width = 1, height = 1;
-		FramebufferAttachmentProperties attachment;
+		std::vector<mist::FramebufferTextureProperties> attachments;
 		uint32_t samples = 1;
 	};
 

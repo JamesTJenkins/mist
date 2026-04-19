@@ -322,9 +322,9 @@ namespace mist {
 
 		VkSurfaceFormatKHR preferedFormat;
 		preferedFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; i++) {
-			if (VulkanHelper::IsColorFormat(properties.attachment.attachments[i].textureFormat)) {
-				preferedFormat.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
+		for (uint32_t i = 0; i < properties.attachments.size(); i++) {
+			if (VulkanHelper::IsColorFormat(properties.attachments[i].textureFormat)) {
+				preferedFormat.format = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
 				for (const VkSurfaceFormatKHR& format : availableFormats) {
 					if (format.format == preferedFormat.format && format.colorSpace == preferedFormat.colorSpace) {
 						return preferedFormat;
@@ -361,9 +361,9 @@ namespace mist {
 	VkFormat ChooseSwapchainDepthFormat(FramebufferProperties& properties) {
 		bool validFormat = false;
 		VkFormat preferredFormat;
-		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; i++) {
-			if (VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat)) {
-				preferredFormat = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
+		for (uint32_t i = 0; i < properties.attachments.size(); i++) {
+			if (VulkanHelper::IsDepthFormat(properties.attachments[i].textureFormat)) {
+				preferredFormat = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
 				validFormat = true;
 			}
 		}
@@ -397,15 +397,15 @@ namespace mist {
 		VkAttachmentReference depthAttachmentRef {};
 		bool hasDepthAttachment = false;
 
-		for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
-			VkAttachmentDescription attachment = CreateAttachmentDescription(i, properties.attachment.attachments[i]);
+		for (size_t i = 0; i < properties.attachments.size(); ++i) {
+			VkAttachmentDescription attachment = CreateAttachmentDescription(i, properties.attachments[i]);
 			attachments.push_back(attachment);
 
 			VkAttachmentReference ref {};
 			ref.attachment = static_cast<uint32_t>(i);
-			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachment.attachments[i].textureFormat);
+			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachments[i].textureFormat);
 			
-			if (VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat)) {
+			if (VulkanHelper::IsDepthFormat(properties.attachments[i].textureFormat)) {
 				depthAttachmentRef.attachment = ref.attachment;
 				depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 				hasDepthAttachment = true;
@@ -527,8 +527,8 @@ namespace mist {
 		}
 
 		int framebufferColorIndex;
-		for (uint32_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
-			if (VulkanHelper::IsColorFormat(properties.attachment.attachments[i].textureFormat)) {
+		for (uint32_t i = 0; i < properties.attachments.size(); ++i) {
+			if (VulkanHelper::IsColorFormat(properties.attachments[i].textureFormat)) {
 				framebufferColorIndex = i;
 				break;
 			}
@@ -543,16 +543,16 @@ namespace mist {
 		additionalFramebufferAttachments.resize(swapchainImageCount);
 
 		for (size_t swapchainImageIndex = 0; swapchainImageIndex < swapchainImageCount; ++swapchainImageIndex) {
-			additionalFramebufferAttachments[swapchainImageIndex].resize(properties.attachment.attachmentsCount - 1);
+			additionalFramebufferAttachments[swapchainImageIndex].resize(properties.attachments.size() - 1);
 			size_t attachmentIndex = 0;
 
-			for (size_t i = 0; i < properties.attachment.attachmentsCount; ++i) {
+			for (size_t i = 0; i < properties.attachments.size(); ++i) {
 				// Skip as already used for swapchain
 				if (framebufferColorIndex == i)
 					continue;
 
-				bool isDepthStencilFormat = VulkanHelper::IsDepthStencilFormat(properties.attachment.attachments[i].textureFormat);
-				bool isDepthFormat = VulkanHelper::IsDepthFormat(properties.attachment.attachments[i].textureFormat);
+				bool isDepthStencilFormat = VulkanHelper::IsDepthStencilFormat(properties.attachments[i].textureFormat);
+				bool isDepthFormat = VulkanHelper::IsDepthFormat(properties.attachments[i].textureFormat);
 
 				VkImageCreateInfo imageInfo {};
 				imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -562,7 +562,7 @@ namespace mist {
 				imageInfo.extent.depth = 1;
 				imageInfo.mipLevels = 1;
 				imageInfo.arrayLayers = 1;
-				imageInfo.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
+				imageInfo.format = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
 				imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 				imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				imageInfo.usage = isDepthFormat ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -580,7 +580,7 @@ namespace mist {
 				imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 				imageViewInfo.image = additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].image;
 				imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-				imageViewInfo.format = VulkanHelper::GetVkFormat(properties.attachment.attachments[i].textureFormat);
+				imageViewInfo.format = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
 				imageViewInfo.subresourceRange.baseMipLevel = 0;
 				imageViewInfo.subresourceRange.levelCount = 1;
 				imageViewInfo.subresourceRange.baseArrayLayer = 0;

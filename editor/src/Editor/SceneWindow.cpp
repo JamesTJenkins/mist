@@ -17,8 +17,7 @@ namespace mistEditor {
 			mist::FramebufferTextureFormat::DEPTH32_STENCIL8
 		};
 		mist::FramebufferProperties properties;
-		properties.attachment.attachments = attachments.data();
-		properties.attachment.attachmentsCount = (uint32_t)attachments.size();
+		properties.attachments = attachments;
 		properties.width = 1280;
 		properties.height = 720;
 		mist::Application::Get().GetRenderAPI()->SetViewport(properties.width, properties.height);

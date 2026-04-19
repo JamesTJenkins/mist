@@ -67,8 +67,8 @@ namespace mist {
 	}
 
 	void ValidateFramebufferProperties(FramebufferProperties& properties) {
-		for (size_t i = 0; i < properties.attachment.attachmentsCount; i++) {
-			FramebufferTextureProperties& textureProperties = properties.attachment.attachments[i];
+		for (size_t i = 0; i < properties.attachments.size(); i++) {
+			FramebufferTextureProperties& textureProperties = properties.attachments[i];
 			if (VulkanHelper::IsColorFormatSupported(VulkanHelper::GetVkFormat(textureProperties.textureFormat))) {
 				continue;
 			}
