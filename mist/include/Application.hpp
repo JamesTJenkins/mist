@@ -6,6 +6,7 @@
 #include "renderer/Shader.hpp"
 #include "SceneManager.hpp"
 #include "physics/Physics.hpp"
+#include "imgui/ImguiLayer.hpp"
 
 namespace mist {
 	class Application {
@@ -30,6 +31,7 @@ namespace mist {
 		inline const char* GetApplicationName() { return appName; }
 		inline ShaderLibrary* GetShaderLibrary() { return &shaderLib; }
 		inline SceneManager* GetSceneManager() { return &sceneManager; }
+		inline ImguiLayer* GetImguiLayer() { return imguiLayer; }
 	private:
 		static Application* instance;
 		const float maxDeltaTime = 0.05f;	// Stop weird issues if the game freezes, lags, etc.
@@ -43,5 +45,6 @@ namespace mist {
 		RenderAPI* renderAPI;
 		SceneManager sceneManager;
 		Physics physics;
+		ImguiLayer* imguiLayer;
 	};
 }

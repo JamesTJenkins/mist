@@ -26,7 +26,7 @@ namespace mistEditor {
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		sm->LoadEmptyScene();
 		
-		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/lambert.glsl");
+		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/shaders/lambert.glsl");
 
 		//testMeshes = mist::Importer::ImportMeshes("assets/brassfang.fbx");
 		testMeshes = mist::Importer::ImportMeshes("assets/LightCycle.obj", true);

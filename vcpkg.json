@@ -17,6 +17,10 @@
     "entt",
     "spirv-cross",
     "assimp",
-    "gtest"
+    "gtest",
+    {
+      "name": "imgui",
+      "features": [ "sdl3-binding", "vulkan-binding", "docking-experimental" ]
+    }
   ]
 }

@@ -25,6 +25,10 @@ namespace mistEditor {
 	void EditorLayer::OnRender() {
 		sceneWindow.OnRender();
 	}
+
+	void EditorLayer::OnImguiRender() {
+		
+	}
 	
 	void EditorLayer::OnEvent(const SDL_Event* e) {
 		

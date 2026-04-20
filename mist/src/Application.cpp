@@ -41,8 +41,12 @@ namespace mist {
 	}
 
 	void Application::Run() {
+		// This is done here instead of in Application()
+		// as the swapchain isnt generated until the editor sets the framebuffer
+		imguiLayer = new ImguiLayer();
+		layerStack.PushLayer(imguiLayer);
+		
 		std::chrono::high_resolution_clock::time_point lastTime = std::chrono::high_resolution_clock::now();
-
 		while (running) {
 			SDL_Event event;
 			while (SDL_PollEvent (&event)) {
@@ -72,9 +76,12 @@ namespace mist {
 			physics.Simulate(deltaTime);
 			
 			renderAPI->BeginRenderPass();
+			imguiLayer->Begin();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
+				layer->OnImguiRender();
 			}
+			imguiLayer->End();
 			renderAPI->EndRenderPass();
 
 			std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();

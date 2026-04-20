@@ -64,6 +64,8 @@ namespace mist {
 		
 		void Cleanup();
 		
+		VkDescriptorPool& GetImGuiDescriptorPool(); 
+		
 		inline const VkDescriptorPool& GetDescriptorPool(const int index) const { return pools[index]; }
 		inline const std::vector<VkDescriptorPool>& GetDescriptorPools() const { return pools; }
 		
@@ -88,6 +90,7 @@ namespace mist {
 	private:
 		bool Exists(const std::string& name) const { return descriptorSetLayouts.find(name) != descriptorSetLayouts.end(); }
 
+		VkDescriptorPool imguiPool = VK_NULL_HANDLE;
 		std::vector<VkDescriptorPool> pools;
 		std::unordered_map<std::string, VkDescriptorSetLayout> descriptorSetLayouts;
 		std::unordered_map<std::string, std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;

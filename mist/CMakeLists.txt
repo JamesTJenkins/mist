@@ -51,6 +51,7 @@ find_package(spirv_cross_msl CONFIG REQUIRED)
 find_package(spirv_cross_reflect CONFIG REQUIRED)
 find_package(spirv_cross_c CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_library(mist STATIC ${SOURCES})
 
@@ -75,6 +76,7 @@ target_link_libraries(mist
     PRIVATE spirv-cross-reflect
     PRIVATE spirv-cross-c
     PRIVATE assimp::assimp
+    PUBLIC imgui::imgui
 )
 
 target_compile_definitions(${PROJECT_NAME} 
