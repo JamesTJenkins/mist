@@ -66,7 +66,7 @@ namespace mist {
 		std::vector<uint32_t> ConvertGLSLToSPIRV(const std::string& src, EShLanguage stage);
 		std::unordered_map<EShLanguage, std::string> PreProcess(const std::string& src);
 		uint32_t CalculateSize(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type);
-		VkFormat GetDescriptionFormat(spirv_cross::SPIRType type);
+		VkFormat GetDescriptionFormat(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType type);
 		VkShaderModule CreateShaderModule(const std::vector<uint32_t>& spirv);
 		void Compile(const std::vector<uint32_t>& spirv, EShLanguage stage);
 

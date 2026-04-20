@@ -300,29 +300,33 @@ namespace mist {
 		return size;
 	}
 
-	VkFormat VulkanShader::GetDescriptionFormat(spirv_cross::SPIRType type) {
+	VkFormat VulkanShader::GetDescriptionFormat(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType type) {
 		if (type.basetype == spirv_cross::SPIRType::Float) {
-			if (type.vecsize == 1) {
-				return VK_FORMAT_R32_SFLOAT;
-			} else if (type.vecsize == 2) {
-				return VK_FORMAT_R32G32_SFLOAT;
-			} else if (type.vecsize == 3) {
-				return VK_FORMAT_R32G32B32_SFLOAT;
-			} else if (type.vecsize == 4) {
-				return VK_FORMAT_R32G32B32A32_SFLOAT;
-			}
+			if (type.vecsize == 1) return VK_FORMAT_R32_SFLOAT;
+			if (type.vecsize == 2) return VK_FORMAT_R32G32_SFLOAT;
+			if (type.vecsize == 3) return VK_FORMAT_R32G32B32_SFLOAT;
+			if (type.vecsize == 4) return VK_FORMAT_R32G32B32A32_SFLOAT;
 		}
 
 		if (type.basetype == spirv_cross::SPIRType::Int) {
-			if (type.vecsize == 1) {
-				return VK_FORMAT_R32_SINT;
-			} else if (type.vecsize == 2) {
-				return VK_FORMAT_R32G32_SINT;
-			} else if (type.vecsize == 3) {
-				return VK_FORMAT_R32G32B32_SINT;
-			} else if (type.vecsize == 4) {
-				return VK_FORMAT_R32G32B32A32_SINT;
-			}
+			if (type.vecsize == 1) return VK_FORMAT_R32_SINT;
+			if (type.vecsize == 2) return VK_FORMAT_R32G32_SINT;
+			if (type.vecsize == 3) return VK_FORMAT_R32G32B32_SINT;
+			if (type.vecsize == 4) return VK_FORMAT_R32G32B32A32_SINT;
+		}
+
+		if (type.basetype == spirv_cross::SPIRType::UInt) {
+			if (type.vecsize == 1) return VK_FORMAT_R32_UINT;
+			if (type.vecsize == 2) return VK_FORMAT_R32G32_UINT;
+			if (type.vecsize == 3) return VK_FORMAT_R32G32B32_UINT;
+			if (type.vecsize == 4) return VK_FORMAT_R32G32B32A32_UINT;
+		}
+
+		if (type.basetype == spirv_cross::SPIRType::Boolean) return VK_FORMAT_R32_SINT;
+
+		if (type.basetype == spirv_cross::SPIRType::Struct) {
+			if (type.member_types.empty()) return VK_FORMAT_UNDEFINED;
+			return GetDescriptionFormat(compiler, compiler.get_type(type.member_types[0]));
 		}
 
 		MIST_WARN("Couldnt get description format");
@@ -354,7 +358,7 @@ namespace mist {
 			InputShaderResource res;
 			res.binding = compiler.get_decoration(inputs.id, spv::DecorationBinding);
 			res.location = compiler.get_decoration(inputs.id, spv::DecorationLocation);
-			res.format = GetDescriptionFormat(compiler.get_type(inputs.type_id));
+			res.format = GetDescriptionFormat(compiler, compiler.get_type(inputs.type_id));
 			res.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 			res.flags = EShLanguageToVkStageFlags(stage);
 			res.shaderModule = CreateShaderModule(spirv);
