@@ -60,7 +60,7 @@ namespace mist {
 
 		VkDescriptorSetLayout CreateDescriptorSetLayout(const VulkanShader* shader);
 		void CreateDescriptorPool();
-		VkDescriptorSet& CreateDescriptorSet(const MeshRenderer& meshRenderer);
+		VkDescriptorSet& CreateDescriptorSet(const uint8_t frameIndex, const MeshRenderer& meshRenderer);
 		
 		void Cleanup();
 		
@@ -72,7 +72,7 @@ namespace mist {
 		VkDescriptorSetLayout& GetDescriptorSetLayout(const std::string& name);
 		VkDescriptorSet& GetDescriptorSet(const MeshRenderer& meshRenderer);
 		
-		void UpdateDescriptorSetsWithUniformBuffers(const MeshRenderer& meshRenderer);
+		void UpdateDescriptorSetsWithUniformBuffers(const uint8_t frameIndex, const MeshRenderer& meshRenderer);
 		void UpdateDescriptorSetsWithUniformBuffer(const std::string& name);
 		
 		template<typename T>

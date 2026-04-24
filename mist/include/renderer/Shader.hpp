@@ -11,10 +11,10 @@ namespace mist {
 
 		virtual void Clear() = 0;
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
+		virtual void Bind(const uint8_t renderDataId) const = 0;
+		virtual void Unbind(const uint8_t renderDataId) const = 0;
 
-		virtual void SetUniformData(const std::string& name, const int size, const void* value) = 0;
+		virtual void SetUniformData(const uint8_t renderDataId, const std::string& name, const int size, const void* value) = 0;
 
 		virtual const std::string& GetName() const = 0;
 

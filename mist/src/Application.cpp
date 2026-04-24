@@ -41,24 +41,19 @@ namespace mist {
 	}
 
 	void Application::Run() {
-		// This is done here instead of in Application()
-		// as the swapchain isnt generated until the editor sets the framebuffer
-		imguiLayer = new ImguiLayer();
-		layerStack.PushLayer(imguiLayer);
-		
 		std::chrono::high_resolution_clock::time_point lastTime = std::chrono::high_resolution_clock::now();
 		while (running) {
 			SDL_Event event;
 			while (SDL_PollEvent (&event)) {
 				switch (event.type) {
-				case SDL_EVENT_WINDOW_RESIZED:
-				{
-					uint32_t newWidth = event.window.data1;
-					uint32_t newHeight = event.window.data2;
-					if (newWidth > 0 && newHeight > 0 && (window->GetWidth() != newWidth || window->GetHeight() != newHeight))
-						renderAPI->SetViewport(newWidth, newHeight);
-					break;
-				}
+				//case SDL_EVENT_WINDOW_RESIZED:
+				//{
+				//	uint32_t newWidth = event.window.data1;
+				//	uint32_t newHeight = event.window.data2;
+				//	if (newWidth > 0 && newHeight > 0 && (window->GetWidth() != newWidth || window->GetHeight() != newHeight))
+				//		renderAPI->SetViewport(newWidth, newHeight);
+				//	break;
+				//}
 				case SDL_EVENT_QUIT:
 					Quit();
 					break;
@@ -75,14 +70,9 @@ namespace mist {
 
 			physics.Simulate(deltaTime);
 			
-			renderAPI->BeginRenderPass();
-			imguiLayer->Begin();
 			for (Layer* layer : layerStack) {
 				layer->OnRender();
-				layer->OnImguiRender();
 			}
-			imguiLayer->End();
-			renderAPI->EndRenderPass();
 
 			std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
 			deltaTime = std::min(std::chrono::duration<float>(currentTime - lastTime).count(), maxDeltaTime);

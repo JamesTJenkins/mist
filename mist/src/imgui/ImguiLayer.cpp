@@ -1,14 +1,25 @@
 #include "imgui/ImguiLayer.hpp"
-#include <imgui.h>
+#include <vulkan/vulkan.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
+#include <vector>
+#include <unordered_map>
 #include "Application.hpp"
 #include "Log.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "renderer/vulkan/VulkanDebug.hpp"
+#include "renderer/vulkan/VulkanRenderData.hpp"
+#include <Debug.hpp>
 
 namespace mist {
-	ImguiLayer::ImguiLayer() : Layer("ImguiLayer") {}
+	class ImguiLayer::ImguiLayerData {
+	public:
+		uint32_t activeTextureIDCounter = 0;
+		VkSampler vulkanSampler = VK_NULL_HANDLE;
+		std::unordered_map<ImGuiTextureID, VkDescriptorSet> activeVulkanTextures;
+	};
+
+	ImguiLayer::ImguiLayer(const char* name) : Layer(name), layerData(new ImguiLayerData()) {}
 
 	ImguiLayer::~ImguiLayer() {}
 
@@ -31,7 +42,19 @@ namespace mist {
 		}
 		SetDarkThemeColors();
 
+		std::vector<mist::FramebufferTextureProperties> attachments = {
+			mist::FramebufferTextureFormat::RGBA8
+		};
+		mist::FramebufferProperties properties;
+		properties.type = FramebufferType::SWAPCHAIN;
+		properties.attachments = attachments;
+		properties.width = 1280;
+		properties.height = 720;
+		renderData = mist::RenderData::Create(properties);
+
 		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			Ref<VulkanRenderData> data = std::dynamic_pointer_cast<VulkanRenderData>(renderData);
+
 			ImGui_ImplSDL3_InitForVulkan(Application::Get().GetWindow()->GetNativeWindow());
 			
 			VulkanContext& context = VulkanContext::GetContext();
@@ -50,39 +73,57 @@ namespace mist {
 			info.QueueFamily = indicies.graphicsFamily.value();
 			info.Queue = context.GetGraphicsQueue();
 			info.PipelineCache = VK_NULL_HANDLE;
-			info.DescriptorPool = context.descriptors.GetImGuiDescriptorPool();
+			info.DescriptorPool = data->descriptors.GetImGuiDescriptorPool();
 			info.MinImageCount = capabilities.minImageCount;
 			info.ImageCount = swapchainImageCount;
 			info.Allocator = context.GetAllocationCallbacks();
-			info.PipelineInfoMain.RenderPass = context.GetRenderPass();
+			info.PipelineInfoMain.RenderPass = data->renderPass;
 			info.PipelineInfoMain.Subpass = 0;
 			info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 			info.CheckVkResultFn = CheckVkResult;
 			ImGui_ImplVulkan_Init(&info);
 			ImGui_ImplVulkan_CreateMainPipeline(&info.PipelineInfoMain);
+
+			VkSamplerCreateInfo samplerInfo{};
+			samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+			samplerInfo.magFilter = VK_FILTER_LINEAR;
+			samplerInfo.minFilter = VK_FILTER_LINEAR;
+			samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		
+			MIST_ASSERT(layerData != nullptr, "Layerdata not init");
+			CheckVkResult(vkCreateSampler(context.GetDevice(), &samplerInfo, context.GetAllocationCallbacks(), &layerData->vulkanSampler));
 		} else {
 			MIST_ERROR("Not implemented imgui backends for this render API");
 		}
 	}
 
 	void ImguiLayer::OnDetach() {
-		ImGui_ImplVulkan_Shutdown();
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			VulkanContext& context = VulkanContext::GetContext();
+			if (layerData->vulkanSampler != VK_NULL_HANDLE)
+				vkDestroySampler(context.GetDevice(), layerData->vulkanSampler, context.GetAllocationCallbacks());
+
+			ImGui_ImplVulkan_Shutdown();
+		}
+
 		ImGui_ImplSDL3_Shutdown();
 		ImGui::DestroyContext();
 	}
-
-	void ImguiLayer::OnUpdate() {}
-
-	void ImguiLayer::OnRender() {}
-
-	void ImguiLayer::OnImguiRender() {}
 
 	void ImguiLayer::OnEvent(const SDL_Event* e) {
 		ImGui_ImplSDL3_ProcessEvent(e);
 	}
 
 	void ImguiLayer::Begin() {
-		ImGui_ImplVulkan_NewFrame();
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			ImGui_ImplVulkan_NewFrame();
+		} else {
+			MIST_ERROR("Not implemented imgui backends for this render API");
+		}
+
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 		//ImGuizmo::BeginFrame(); This is not been added to the cmake and vcpkg yet but will mostly likely use this later
@@ -95,13 +136,50 @@ namespace mist {
 			(float)Application::Get().GetWindow()->GetHeight()
 		);
 
-		VulkanContext& context = VulkanContext::GetContext();
 		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), context.GetCurrentFrameCommandBuffer());
+
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			VulkanContext& context = VulkanContext::GetContext();
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), context.GetCurrentFrameCommandBuffer());
+		} else {
+			MIST_ERROR("Not implemented imgui backends for this render API");
+		}
 	
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
+		}
+	}
+
+	ImGuiTextureID ImguiLayer::AddTexture(const Ref<RenderData>& renderData) {
+		ImGuiTextureID id = 0;
+
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			Ref<VulkanRenderData> data = std::dynamic_pointer_cast<VulkanRenderData>(renderData);
+			layerData->activeVulkanTextures.emplace(layerData->activeTextureIDCounter++, ImGui_ImplVulkan_AddTexture(layerData->vulkanSampler, data->GetFirstFramebufferImageView(), data->GetFirstFramebufferImageLayout()));
+		}
+
+		return id;
+	}
+
+	void ImguiLayer::UpdateTexture(const ImGuiTextureID& id, const Ref<RenderData>& renderData) {
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			Ref<VulkanRenderData> data = std::dynamic_pointer_cast<VulkanRenderData>(renderData);
+			ImGui_ImplVulkan_RemoveTexture(layerData->activeVulkanTextures[id]);
+			layerData->activeVulkanTextures[id] = ImGui_ImplVulkan_AddTexture(layerData->vulkanSampler, data->GetFirstFramebufferImageView(), data->GetFirstFramebufferImageLayout());
+		}
+	}
+
+	void ImguiLayer::RemoveTexture(const ImGuiTextureID& id) {
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			ImGui_ImplVulkan_RemoveTexture(layerData->activeVulkanTextures[id]);
+			layerData->activeVulkanTextures.erase(id);
+		}
+	}
+
+	void ImguiLayer::ImGuiImage(const ImGuiTextureID& id, const ImVec2& imageSize, const ImVec2& uv0, const ImVec2& uv1) {
+		if (Application::Get().GetRenderAPI()->GetAPI() == RenderAPI::Vulkan) {
+			ImGui::Image(layerData->activeVulkanTextures[id], imageSize, uv0, uv1);
 		}
 	}
 

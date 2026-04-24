@@ -69,7 +69,7 @@ namespace mist {
 		return layout;
 	}
 
-	VkDescriptorSet& VulkanDescriptor::CreateDescriptorSet(const MeshRenderer& meshRenderer) {
+	VkDescriptorSet& VulkanDescriptor::CreateDescriptorSet(const uint8_t frameIndex, const MeshRenderer& meshRenderer) {
 		VkDescriptorSet descriptorSet;
 		VulkanContext& context = VulkanContext::GetContext();
 
@@ -93,7 +93,7 @@ namespace mist {
 				MIST_INFO("Allocated descriptor set to existing pool");
 				key.poolIndex = i;
 				descriptorSets[key] = descriptorSet;
-				UpdateDescriptorSetsWithUniformBuffers(meshRenderer);
+				UpdateDescriptorSetsWithUniformBuffers(frameIndex, meshRenderer);
 				return descriptorSets[key];
 			case VK_ERROR_FRAGMENTED_POOL:
 			case VK_ERROR_OUT_OF_POOL_MEMORY:
@@ -117,7 +117,7 @@ namespace mist {
 		MIST_INFO("Allocated descriptor set to new pool");
 
 		descriptorSets[key] = descriptorSet;
-		UpdateDescriptorSetsWithUniformBuffers(meshRenderer);
+		UpdateDescriptorSetsWithUniformBuffers(frameIndex, meshRenderer);
 		return descriptorSets[key];
 	}
 
@@ -186,12 +186,12 @@ namespace mist {
 		if (it != descriptorSets.end())
 			return it->second;
 
-		return CreateDescriptorSet(meshRenderer);
+		VulkanContext& context = VulkanContext::GetContext();
+		return CreateDescriptorSet(context.GetCurrentFrameIndex(), meshRenderer);
 	}
 
-	void VulkanDescriptor::UpdateDescriptorSetsWithUniformBuffers(const MeshRenderer& meshRenderer) {
+	void VulkanDescriptor::UpdateDescriptorSetsWithUniformBuffers(const uint8_t frameIndex, const MeshRenderer& meshRenderer) {
 		VulkanContext& context = VulkanContext::GetContext();
-		uint8_t frameIndex = context.GetCurrentFrameIndex();
 		for (const VkDescriptorSetLayoutBinding& binding : descriptorSetLayoutBindings[meshRenderer.shaderName]) {
 			UniformBuffer& buffer = uniformBuffers[{ frameIndex, uniformBufferNames[{meshRenderer.shaderName, binding.binding}] }];
 			VkDescriptorSet descriptor = GetDescriptorSet(meshRenderer);	// Get here incase we require to create the descriptor set incase we skip over due to the uniform buffer not being ready yet

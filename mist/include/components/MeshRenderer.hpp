@@ -10,7 +10,7 @@ namespace mist {
         MeshRenderer(Transform& transform, std::string shaderName, Ref<Mesh> mesh);
         ~MeshRenderer();
 
-        void Bind();
+        void Bind(const uint8_t renderDataID);
         void Draw();
         void Apply();
         void Clear();

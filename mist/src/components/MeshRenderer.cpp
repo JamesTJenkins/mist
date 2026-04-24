@@ -8,8 +8,8 @@ namespace mist {
 
 	MeshRenderer::~MeshRenderer() {}
 
-	void MeshRenderer::Bind() {
-		Application::Get().GetRenderAPI()->BindMeshRenderer(*this);
+	void MeshRenderer::Bind(const uint8_t renderDataID) {
+		Application::Get().GetRenderAPI()->BindMeshRenderer(renderDataID, *this);
 	}
 	
 	void MeshRenderer::Draw() {

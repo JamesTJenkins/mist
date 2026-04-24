@@ -150,8 +150,8 @@ namespace mist {
 		}
 		glslang::FinalizeProcess();
 
-		VulkanContext& context = VulkanContext::GetContext();
-		context.pipeline.CreateGraphicsPipeline(this);
+		//VulkanContext& context = VulkanContext::GetContext();
+		//context.pipeline.CreateGraphicsPipeline(this);
 
 		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + shaderName);
 	}
@@ -168,8 +168,8 @@ namespace mist {
 		}
 		glslang::FinalizeProcess();
 
-		VulkanContext& context = VulkanContext::GetContext();
-		context.pipeline.CreateGraphicsPipeline(this);
+		//VulkanContext& context = VulkanContext::GetContext();
+		//context.pipeline.CreateGraphicsPipeline(this);
 
 		MIST_INFO(std::string("Loaded shader and created graphics pipeline for: ") + name);
 	}
@@ -425,20 +425,25 @@ namespace mist {
 		}
 	}
 
-	void VulkanShader::Bind() const {
+	void VulkanShader::Bind(const uint8_t renderDataId) const {
 		VulkanContext& context = VulkanContext::GetContext();
+		Ref<VulkanRenderData> data = context.GetRenderData(renderDataId);
+		if (!data->pipeline.HasPipeline(shaderName))
+			data->CreateGraphicsPipeline(this);
+
 		vkCmdBindPipeline(
 			context.GetCurrentFrameCommandBuffer(),
 			VK_PIPELINE_BIND_POINT_GRAPHICS, 	// TODO: make a way to detect correct bind point, will probably just have to hold a reference if cant defer
-			context.pipeline.GetGraphicsPipeline(shaderName)
+			data->pipeline.GetGraphicsPipeline(shaderName)
 		);
 	}
 
-	void VulkanShader::Unbind() const {}
+	void VulkanShader::Unbind(const uint8_t renderDataId) const {}
 
-	void VulkanShader::SetUniformData(const std::string& name, const int size, const void* data) {
+	void VulkanShader::SetUniformData(const uint8_t renderDataId, const std::string& name, const int size, const void* data) {
 		VulkanContext& context = VulkanContext::GetContext();
 		PushConstantResource& res = shaderPushConstants[name];
+		Ref<VulkanRenderData> renderData = context.GetRenderData(renderDataId);
 		
 #if DEBUG
 		MIST_ASSERT(shaderPushConstants.contains(name), std::string("Invalid push constants name passed: " + name));
@@ -449,7 +454,7 @@ namespace mist {
 
 		vkCmdPushConstants(
 			context.GetCurrentFrameCommandBuffer(), 
-			context.pipeline.GetGraphicsPipelineLayout(shaderName),
+			renderData->pipeline.GetGraphicsPipelineLayout(shaderName),
 			res.flags,
 			res.offset,
 			res.size,

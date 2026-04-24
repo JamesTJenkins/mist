@@ -17,8 +17,8 @@ namespace mist {
 		static bool IsDepthFormat(const FramebufferTextureFormat& format);
 		static bool IsDepthFormat(const VkFormat& format);
 		static bool IsColorFormat(const FramebufferTextureFormat& format);
-		static VkImageLayout GetVkAttachmentDescriptionLayout(const FramebufferTextureFormat& format);
-		static VkImageLayout GetVkAttachmentDescriptionFinalLayout(size_t attachmentIndex, const FramebufferTextureFormat& format);
+		static VkImageLayout GetVkAttachmentDescriptionLayout(const FramebufferType type, const FramebufferTextureFormat& format);
+		static VkImageLayout GetVkAttachmentDescriptionFinalLayout(const FramebufferType type, const size_t attachmentIndex, const FramebufferTextureFormat& format);
 		static VkFormat GetVkFormat(const FramebufferTextureFormat& format);
 		static FramebufferTextureFormat GetFramebufferTextureFormat(const VkFormat& format);
 		static VkPresentModeKHR GetPresentMode(RenderAPI::VSYNC mode);

@@ -14,10 +14,10 @@ namespace mist {
 		loadedScenes[activeScene].destroy(entity);
 	}
 
-	void SceneManager::SubmitScene(int32_t sceneIndex) {
+	void SceneManager::SubmitScene(const uint8_t renderDataID, const int32_t sceneIndex) {
 		auto lightView = loadedScenes[sceneIndex].view<DirectionalLight>();
 		for (auto entity : lightView) {
-			Application::Get().GetRenderAPI()->UpdateDirectionalLight(loadedScenes[activeScene].get<DirectionalLight>(entity));
+			Application::Get().GetRenderAPI()->UpdateDirectionalLight(renderDataID, loadedScenes[activeScene].get<DirectionalLight>(entity));
 			break;	// Only pass the first directional light as there should only be 1
 		}
 		
@@ -28,18 +28,18 @@ namespace mist {
 		// ideally we bind a shader then render everything with that shader before moving on
 		// unless there is better methods im unaware of
 		std::string currentPipeline;
-		view.each([shaderLib, &currentPipeline](MeshRenderer &renderer) {
+		view.each([renderDataID, shaderLib, &currentPipeline](MeshRenderer &renderer) {
 			if (renderer.shaderName.compare(currentPipeline) != 0) {
-				shaderLib->Get(renderer.shaderName)->Bind();
+				shaderLib->Get(renderer.shaderName)->Bind(renderDataID);
 				currentPipeline = renderer.shaderName;
 			}
 			
-			renderer.Bind();
+			renderer.Bind(renderDataID);
 			renderer.Draw();
 		});
 	}
 
-	void SceneManager::UpdateSceneCamera() {
+	void SceneManager::UpdateSceneCamera(const uint8_t renderDataID) {
 		auto camView = loadedScenes[activeScene].view<Camera>();
 		
 		Camera* cam;
@@ -51,7 +51,7 @@ namespace mist {
 		}
 
 		if (cam != nullptr)
-			Application::Get().GetRenderAPI()->UpdateCamera(*cam);
+			Application::Get().GetRenderAPI()->UpdateCamera(renderDataID, *cam);
 	}
 
 	void SceneManager::LoadEmptyScene() {
@@ -66,9 +66,9 @@ namespace mist {
 		MIST_WARN("Currently not implemented");
 	}
 
-	void SceneManager::SetActiveScene(int32_t index) {
-		activeScene = index;
-		MIST_INFO(std::string("Set active scene to ") + std::to_string(index));
+	void SceneManager::SetActiveScene(const int32_t sceneIndex) {
+		activeScene = sceneIndex;
+		MIST_INFO(std::string("Set active scene to ") + std::to_string(sceneIndex));
 	}
 
 	void SceneManager::Cleanup() {

@@ -1,4 +1,4 @@
-#include "VulkanHelper.hpp"
+#include "renderer/vulkan/VulkanHelper.hpp"
 #include "renderer/vulkan/VulkanContext.hpp"
 #include "Debug.hpp"
 
@@ -158,20 +158,29 @@ namespace mist {
 		}
 	};
 
-	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionLayout(const FramebufferTextureFormat& format) {
+	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionLayout(const FramebufferType type, const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
-			return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			if (type == FramebufferType::SWAPCHAIN)	
+				return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			
+			return VulkanHelper::IsDepthStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
 		}
 
-		return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		if (type == FramebufferType::SWAPCHAIN)
+			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 
-	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionFinalLayout(size_t attachmentIndex, const FramebufferTextureFormat& format) {
+	VkImageLayout VulkanHelper::GetVkAttachmentDescriptionFinalLayout(const FramebufferType type, const size_t attachmentIndex, const FramebufferTextureFormat& format) {
 		if (VulkanHelper::IsDepthFormat(format)) {
 			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
-		return attachmentIndex == 0 ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		if (type == FramebufferType::SWAPCHAIN && attachmentIndex == 0)
+			return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		
+		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 
 	VkFormat VulkanHelper::GetVkFormat(const FramebufferTextureFormat& format) {

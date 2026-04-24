@@ -6,18 +6,9 @@
 #include "Application.hpp"
 #include "Debug.hpp"
 #include "renderer/vulkan/VulkanHelper.hpp"
+#include "renderer/vulkan/VulkanRenderData.hpp"
 
 namespace mist {
-	void FramebufferAttachment::Cleanup() {
-		VulkanContext& context = VulkanContext::GetContext();
-
-		if (view != VK_NULL_HANDLE)
-			vkDestroyImageView(context.GetDevice(), view, context.GetAllocationCallbacks());
-
-		if (image != VK_NULL_HANDLE)
-			vmaDestroyImage(context.GetAllocator(), image, imageAlloc);
-	}
-	
 	void FrameData::Cleanup() {
 		VulkanContext& context = VulkanContext::GetContext();
 
@@ -65,6 +56,52 @@ namespace mist {
         MIST_ERROR("Failed to find suitable memory type");
         return 0;
     }
+
+	std::vector<VkSurfaceFormatKHR> QuerySwapchainFormats(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface) {
+		uint32_t count;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &count, nullptr);
+		std::vector<VkSurfaceFormatKHR> formats(count);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &count, formats.data());
+		return formats;
+	}
+
+	VkSurfaceFormatKHR ChooseSwapchainFormat(const VkPhysicalDevice phyiscalDevice, const VkSurfaceKHR surface, const SwapchainProperties& properties) {
+		MIST_ASSERT(VulkanHelper::IsColorFormat(properties.colorFormat), "Trying to create swapchain with a non color format.");
+		std::vector<VkSurfaceFormatKHR> availableFormats = QuerySwapchainFormats(phyiscalDevice, surface);
+
+		VkSurfaceFormatKHR preferedFormat;
+		preferedFormat.format = VulkanHelper::GetVkFormat(properties.colorFormat);
+		preferedFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+		for (const VkSurfaceFormatKHR& format : availableFormats) {
+			if (format.format == preferedFormat.format && format.colorSpace == preferedFormat.colorSpace) {
+				return preferedFormat;
+			}
+		}
+		
+		MIST_INFO("No valid and supported swapchain format given, using a fallback from available formats.");
+		return availableFormats[0];
+	}
+
+	VkPresentModeKHR ChooseSwapchainPresentMode(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface, const RenderAPI::VSYNC vsync) {
+		VkPresentModeKHR preferredMode = VulkanHelper::GetPresentMode(vsync);
+
+		uint32_t presentModeCount;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+		std::vector<VkPresentModeKHR> availablePresentModes(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, availablePresentModes.data());
+
+		if (std::find(availablePresentModes.begin(), availablePresentModes.end(), preferredMode) != availablePresentModes.end())
+			return preferredMode;
+
+		return availablePresentModes[0];
+	}
+
+	VkExtent2D ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR capabilities, const SwapchainProperties& properties) {
+		return {
+			std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, properties.width)),
+			std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, properties.height))
+		};
+	}
 
 	void VulkanContext::CreateInstance() {
 		VkApplicationInfo appInfo = {};
@@ -267,19 +304,8 @@ namespace mist {
 	}
 
 	void VulkanContext::Cleanup() {
-		descriptors.Cleanup();
-		pipeline.Cleanup();
-
-		for (VkFramebuffer& framebuffer : framebuffers)
-			vkDestroyFramebuffer(device, framebuffer, allocationCallbacks);
-
-		for (std::vector<FramebufferAttachment>& attachments : additionalFramebufferAttachments)
-			for (FramebufferAttachment& attachment : attachments)
-				attachment.Cleanup();
-
-		if (renderPass != VK_NULL_HANDLE)
-			vkDestroyRenderPass(device, renderPass, allocationCallbacks);
-
+		for (std::pair<const uint8_t, Ref<VulkanRenderData>>& data : renderDatas)
+			data.second->Cleanup();
 		for (VkImageView& swapchainImageView : swapchainImageViews)
 			vkDestroyImageView(device, swapchainImageView, allocationCallbacks);
 
@@ -309,143 +335,46 @@ namespace mist {
 		MIST_INFO("Cleaned up Vulkan API");
 	}
 
-	std::vector<VkSurfaceFormatKHR> QuerySwapchainFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
-		uint32_t count;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &count, nullptr);
-		std::vector<VkSurfaceFormatKHR> formats(count);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &count, formats.data());
-		return formats;
-	}
-
-	VkSurfaceFormatKHR ChooseSwapchainFormat(VkPhysicalDevice phyiscalDevice, VkSurfaceKHR surface, FramebufferProperties& properties) {
-		std::vector<VkSurfaceFormatKHR> availableFormats = QuerySwapchainFormats(phyiscalDevice, surface);
-
-		VkSurfaceFormatKHR preferedFormat;
-		preferedFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-		for (uint32_t i = 0; i < properties.attachments.size(); i++) {
-			if (VulkanHelper::IsColorFormat(properties.attachments[i].textureFormat)) {
-				preferedFormat.format = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
-				for (const VkSurfaceFormatKHR& format : availableFormats) {
-					if (format.format == preferedFormat.format && format.colorSpace == preferedFormat.colorSpace) {
-						return preferedFormat;
-					}
-				}
-			}
-		}
+	void VulkanContext::CreateCommandPool() {
+		if (commandPool != VK_NULL_HANDLE)
+			vkDestroyCommandPool(device, commandPool, allocationCallbacks);
 		
-		MIST_INFO("No valid and supported swapchain format given, using a fallback from available formats.");
-		return availableFormats[0];
+		VkCommandPoolCreateInfo poolInfo {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.queueFamilyIndex = FindQueueFamilies().graphicsFamily.value();
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		CheckVkResult(vkCreateCommandPool(device, &poolInfo, allocationCallbacks, &commandPool));
 	}
 
-	VkPresentModeKHR ChooseSwapchainPresentMode(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, RenderAPI::VSYNC vsync) {
-		VkPresentModeKHR preferredMode = VulkanHelper::GetPresentMode(vsync);
-
-		uint32_t presentModeCount;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
-		std::vector<VkPresentModeKHR> availablePresentModes(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, availablePresentModes.data());
-
-		if (std::find(availablePresentModes.begin(), availablePresentModes.end(), preferredMode) != availablePresentModes.end())
-			return preferredMode;
-
-		return availablePresentModes[0];
-	}
-
-	VkExtent2D ChooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, FramebufferProperties& properties) {
-		return {
-			std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, properties.width)),
-			std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, properties.height))
-		};
-	}
-
-	VkFormat ChooseSwapchainDepthFormat(FramebufferProperties& properties) {
-		bool validFormat = false;
-		VkFormat preferredFormat;
-		for (uint32_t i = 0; i < properties.attachments.size(); i++) {
-			if (VulkanHelper::IsDepthFormat(properties.attachments[i].textureFormat)) {
-				preferredFormat = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
-				validFormat = true;
-			}
-		}
+	void VulkanContext::AllocateCommandBuffers() {
+		commandBuffers.clear();
+		commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 		
-		if (!validFormat) {
-			MIST_INFO("No valid depth buffer selected, skipping depth buffer creation");
-			return VK_FORMAT_UNDEFINED;
-		}
+		VkCommandBufferAllocateInfo allocInfo {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = commandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
-		return VulkanHelper::FindSupportedDepthStencilFormat(preferredFormat, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+		CheckVkResult(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
+
+		VkCommandBufferAllocateInfo tempAllocInfo {};
+		tempAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		tempAllocInfo.commandPool = commandPool;
+		tempAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		tempAllocInfo.commandBufferCount = 1;
+
+		CheckVkResult(vkAllocateCommandBuffers(device, &tempAllocInfo, &tempCommandBuffer));
+
+		if (tempCommandBufferFence != VK_NULL_HANDLE)
+			vkDestroyFence(device, tempCommandBufferFence, allocationCallbacks);
+
+		VkFenceCreateInfo tempCommandBufferFenceInfo{};
+		tempCommandBufferFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		CheckVkResult(vkCreateFence(device, &tempCommandBufferFenceInfo, allocationCallbacks, &tempCommandBufferFence));
 	}
 
-	VkAttachmentDescription CreateAttachmentDescription(size_t index, const FramebufferTextureProperties& textureProperties) {
-		VkAttachmentDescription attachment {};
-		attachment.format = VulkanHelper::GetVkFormat(textureProperties.textureFormat);
-		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachment.finalLayout = VulkanHelper::GetVkAttachmentDescriptionFinalLayout(index, textureProperties.textureFormat);
-
-		return attachment;
-	}
-
-	void CreateRenderpass(VkDevice device, VkAllocationCallbacks* allocationCallbacks, FramebufferProperties& properties, uint32_t& colorAttachmentCount, VkRenderPass& renderPass) {
-		std::vector<VkAttachmentDescription> attachments;
-		std::vector<VkAttachmentReference> colorAttachmentRefs;
-		
-		VkAttachmentReference depthAttachmentRef {};
-		bool hasDepthAttachment = false;
-
-		for (size_t i = 0; i < properties.attachments.size(); ++i) {
-			VkAttachmentDescription attachment = CreateAttachmentDescription(i, properties.attachments[i]);
-			attachments.push_back(attachment);
-
-			VkAttachmentReference ref {};
-			ref.attachment = static_cast<uint32_t>(i);
-			ref.layout = VulkanHelper::GetVkAttachmentDescriptionLayout(properties.attachments[i].textureFormat);
-			
-			if (VulkanHelper::IsDepthFormat(properties.attachments[i].textureFormat)) {
-				depthAttachmentRef.attachment = ref.attachment;
-				depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-				hasDepthAttachment = true;
-			} else {
-				ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-				colorAttachmentRefs.push_back(ref);
-			}
-		}
-
-		colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
-
-		VkSubpassDescription subpassInfo {};
-		subpassInfo.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassInfo.colorAttachmentCount = colorAttachmentCount;
-		subpassInfo.pColorAttachments = colorAttachmentRefs.data();
-		subpassInfo.pDepthStencilAttachment = hasDepthAttachment ? &depthAttachmentRef : nullptr;
-
-		VkSubpassDependency dependency {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-		VkRenderPassCreateInfo renderpassInfo {};
-		renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderpassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-		renderpassInfo.pAttachments = attachments.data();
-		renderpassInfo.subpassCount = 1;
-		renderpassInfo.pSubpasses = &subpassInfo;
-		renderpassInfo.dependencyCount = 1;
-		renderpassInfo.pDependencies = &dependency;
-
-		CheckVkResult(vkCreateRenderPass(device, &renderpassInfo, allocationCallbacks, &renderPass));
-	}
-
-	void VulkanContext::CreateSwapchain(FramebufferProperties& properties) {
-		framebufferProperties = properties;
-
+	void VulkanContext::CreateSwapchain(const SwapchainProperties& properties) {
 		VkSurfaceFormatKHR selectedFormat = ChooseSwapchainFormat(physicalDevice, surface, properties);
 		
 		VkSurfaceCapabilitiesKHR capabilities;
@@ -467,7 +396,7 @@ namespace mist {
 
 		VkSwapchainKHR oldSwapchain = swapchain;
 
-		extent = ChooseSwapchainExtent(capabilities, properties);
+		VkExtent2D extent = ChooseSwapchainExtent(capabilities, properties);
 
 		VkSwapchainCreateInfoKHR swapchainInfo {};
 		swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -525,163 +454,12 @@ namespace mist {
 			imageViewInfo.subresourceRange.layerCount = 1;
 			CheckVkResult(vkCreateImageView(device, &imageViewInfo, allocationCallbacks, &swapchainImageViews[i]));
 		}
-
-		int framebufferColorIndex;
-		for (uint32_t i = 0; i < properties.attachments.size(); ++i) {
-			if (VulkanHelper::IsColorFormat(properties.attachments[i].textureFormat)) {
-				framebufferColorIndex = i;
-				break;
-			}
-		}
-		
-		for (std::vector<FramebufferAttachment>& attachments : additionalFramebufferAttachments) {
-			for (FramebufferAttachment& attachment : attachments) {
-				attachment.Cleanup();
-			}
-		}
-		additionalFramebufferAttachments.clear();
-		additionalFramebufferAttachments.resize(swapchainImageCount);
-
-		for (size_t swapchainImageIndex = 0; swapchainImageIndex < swapchainImageCount; ++swapchainImageIndex) {
-			additionalFramebufferAttachments[swapchainImageIndex].resize(properties.attachments.size() - 1);
-			size_t attachmentIndex = 0;
-
-			for (size_t i = 0; i < properties.attachments.size(); ++i) {
-				// Skip as already used for swapchain
-				if (framebufferColorIndex == i)
-					continue;
-
-				bool isDepthStencilFormat = VulkanHelper::IsDepthStencilFormat(properties.attachments[i].textureFormat);
-				bool isDepthFormat = VulkanHelper::IsDepthFormat(properties.attachments[i].textureFormat);
-
-				VkImageCreateInfo imageInfo {};
-				imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-				imageInfo.imageType = VK_IMAGE_TYPE_2D;
-				imageInfo.extent.width = extent.width;
-				imageInfo.extent.height = extent.height;
-				imageInfo.extent.depth = 1;
-				imageInfo.mipLevels = 1;
-				imageInfo.arrayLayers = 1;
-				imageInfo.format = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
-				imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-				imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-				imageInfo.usage = isDepthFormat ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-				imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-				imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-				imageInfo.flags = 0;
-
-				VmaAllocationCreateInfo imageAllocInfo {};
-				imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-				additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex] = {};
-				CheckVkResult(vmaCreateImage(allocator, &imageInfo, &imageAllocInfo, &additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].image, &additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].imageAlloc, nullptr));
-			
-				VkImageViewCreateInfo imageViewInfo {};
-				imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-				imageViewInfo.image = additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].image;
-				imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-				imageViewInfo.format = VulkanHelper::GetVkFormat(properties.attachments[i].textureFormat);
-				imageViewInfo.subresourceRange.baseMipLevel = 0;
-				imageViewInfo.subresourceRange.levelCount = 1;
-				imageViewInfo.subresourceRange.baseArrayLayer = 0;
-				imageViewInfo.subresourceRange.layerCount = 1;
-
-				if (isDepthStencilFormat) {
-					imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-				} else if (isDepthFormat) {
-					imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-				} else {
-					imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				}
-
-				CheckVkResult(vkCreateImageView(device, &imageViewInfo, allocationCallbacks, &additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].view));
-
-				additionalFramebufferAttachments[swapchainImageIndex][attachmentIndex].isDepth = isDepthFormat;
-				attachmentIndex++;
-			}
-		}
-
-		if (renderPass != VK_NULL_HANDLE)
-			vkDestroyRenderPass(device, renderPass, allocationCallbacks);
-
-		CreateRenderpass(device, allocationCallbacks, properties, colorAttachmentCount, renderPass);
-
-		for (VkFramebuffer& framebuffer : framebuffers)
-			vkDestroyFramebuffer(device, framebuffer, allocationCallbacks);
-		framebuffers.clear();
-		framebuffers.resize(swapchainImageCount);
-		
-		for (size_t i = 0; i < swapchainImageCount; ++i) {
-			std::vector<VkImageView> attachments = { swapchainImageViews[i] };
-
-			for (FramebufferAttachment& additionalAttachments : additionalFramebufferAttachments[i]) {
-				attachments.push_back(additionalAttachments.view);
-			}
-
-			VkFramebufferCreateInfo framebufferInfo {};
-			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = renderPass;
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = extent.width;
-			framebufferInfo.height = extent.height;
-			framebufferInfo.layers = 1;
-			
-			CheckVkResult(vkCreateFramebuffer(device, &framebufferInfo, allocationCallbacks, &framebuffers[i]));
-		}
-
-		descriptors.Cleanup();
-		pipeline.Cleanup();
-		const std::unordered_map<std::string, Ref<Shader>> shaders = Application::Get().GetShaderLibrary()->GetAllShaders();
-		for (const std::pair<std::string, Ref<Shader>>& shader : shaders) {
-			VulkanShader* vkShader = static_cast<VulkanShader*>(shader.second.get());
-			pipeline.CreateGraphicsPipeline(vkShader);
-		}
 	}
 
 	void VulkanContext::RecreateSwapchain() {
 		MIST_INFO("Recreating Swapchain");
-		vkDeviceWaitIdle(device);
-		CreateSwapchain(framebufferProperties);
-	}
-
-	void VulkanContext::CreateCommandPool() {
-		if (commandPool != VK_NULL_HANDLE)
-			vkDestroyCommandPool(device, commandPool, allocationCallbacks);
-		
-		VkCommandPoolCreateInfo poolInfo {};
-		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		poolInfo.queueFamilyIndex = FindQueueFamilies().graphicsFamily.value();
-		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		CheckVkResult(vkCreateCommandPool(device, &poolInfo, allocationCallbacks, &commandPool));
-	}
-
-	void VulkanContext::AllocateCommandBuffers() {
-		commandBuffers.clear();
-		commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-		
-		VkCommandBufferAllocateInfo allocInfo {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = commandPool;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
-
-		CheckVkResult(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
-
-		VkCommandBufferAllocateInfo tempAllocInfo {};
-		tempAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		tempAllocInfo.commandPool = commandPool;
-		tempAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		tempAllocInfo.commandBufferCount = 1;
-
-		CheckVkResult(vkAllocateCommandBuffers(device, &tempAllocInfo, &tempCommandBuffer));
-
-		if (tempCommandBufferFence != VK_NULL_HANDLE)
-			vkDestroyFence(device, tempCommandBufferFence, allocationCallbacks);
-
-		VkFenceCreateInfo tempCommandBufferFenceInfo{};
-		tempCommandBufferFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		CheckVkResult(vkCreateFence(device, &tempCommandBufferFenceInfo, allocationCallbacks, &tempCommandBufferFence));
+		vkDeviceWaitIdle(VulkanContext::GetContext().GetDevice());
+		CreateSwapchain(swapchainProperties);
 	}
 
 	void VulkanContext::BeginSingleTimeCommands() {
@@ -706,14 +484,14 @@ namespace mist {
 		CheckVkResult(vkResetFences(device, 1, &tempCommandBufferFence));
 	}
 
-	void VulkanContext::BeginRenderPass() {
+	void VulkanContext::BeginFrame() {
 		CheckVkResult(vkWaitForFences(device, 1, &frameDatas[currentFrame].inFlightFence, VK_TRUE, UINT64_MAX));
  		CheckVkResult(vkResetFences(device, 1, &frameDatas[currentFrame].inFlightFence));
 
 		VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, frameDatas[currentFrame].acquireImageSempahore, VK_NULL_HANDLE, &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 			RecreateSwapchain();
-			BeginRenderPass();
+			BeginFrame();
 			return;
 		} else if (result != VK_SUCCESS) {
 			CheckVkResult(result);
@@ -724,36 +502,9 @@ namespace mist {
 		cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cmdInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		CheckVkResult(vkBeginCommandBuffer(commandBuffers[currentFrame], &cmdInfo));
-
-		VkRenderPassBeginInfo renderPassInfo {};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = renderPass;
-		renderPassInfo.framebuffer = framebuffers[imageIndex];
-		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = extent;
-		renderPassInfo.clearValueCount = static_cast<uint32_t>(additionalFramebufferAttachments[imageIndex].size()) + 1;	// Additional attachments + swapchain image
-
-		glm::vec4 color = Application::Get().GetRenderAPI()->GetClearColor();
-		VkClearValue clearColor {};
-		clearColor.color = { color.r, color.g, color.b, color.a };
-		VkClearValue depthValue {};
-		depthValue.depthStencil = { 1.0, 0 };
-		
-		std::vector<VkClearValue> clearValues;
-		clearValues.push_back(clearColor);	// Swapchain image
-		for (FramebufferAttachment& attachment : additionalFramebufferAttachments[imageIndex])
-			clearValues.push_back(attachment.isDepth ? depthValue : clearColor); 
-		renderPassInfo.pClearValues = clearValues.data();
-
-		vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		
-		// Using dynamic viewport and scissor so needs to be set every frame
-		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
-		vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &scissor);
 	}
 
-	void VulkanContext::EndRenderPass() {
-		vkCmdEndRenderPass(commandBuffers[currentFrame]);
+	void VulkanContext::EndFrame() {
 		CheckVkResult(vkEndCommandBuffer(commandBuffers[currentFrame]));
 
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -789,33 +540,54 @@ namespace mist {
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanContext::SetViewport(uint32_t width, uint32_t height) {
-		viewport = {
-			.x = 0,
-			.y = 0,
-			.width = static_cast<float>(width),
-			.height = static_cast<float>(height),
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
+	void VulkanContext::BeginRenderPass(const uint8_t renderDataID) {
+		Ref<VulkanRenderData> data = renderDatas[renderDataID]; 
+		uint32_t index = imageIndex;
+		if (data->GetProperties().type != FramebufferType::SWAPCHAIN)
+			index = 0;
 
-		scissor = {
-			.offset = { 0, 0 },
-			.extent = { width, height }
-		};
+		glm::vec4 color = Application::Get().GetRenderAPI()->GetClearColor();
+		VkClearValue clearColor {};
+		clearColor.color = { color.r, color.g, color.b, color.a };
+		VkClearValue depthValue {};
+		depthValue.depthStencil = { 1.0, 0 };
+		
+		std::vector<VkClearValue> clearValues;
+		if (data->GetProperties().type == FramebufferType::SWAPCHAIN)
+			clearValues.push_back(clearColor);	// Swapchain image
+			
+		for (FramebufferAttachment& attachment : data->framebufferAttachments[index])
+			clearValues.push_back(attachment.isDepth ? depthValue : clearColor); 
+			
+		VkRenderPassBeginInfo renderPassInfo {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = data->renderPass;
+		renderPassInfo.framebuffer = data->framebuffers[index];
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = data->scissor.extent;
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
 
-		framebufferProperties.width = width;
-		framebufferProperties.height = height;
+		vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		
+		// Using dynamic viewport and scissor so needs to be set every frame
+		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &data->viewport);
+		vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &data->scissor);
+	}
 
-		SceneManager* sm = Application::Get().GetSceneManager();
-		if (sm->GetActiveSceneIndex() >= 0) {
-			auto view = sm->GetActiveScene().view<mist::Camera>();
-			view.each([width, height](mist::Camera &camera) {
-				camera.SetViewportSize(static_cast<float>(width), static_cast<float>(height));
-			});
-		}
+	void VulkanContext::EndRenderPass() {
+		vkCmdEndRenderPass(commandBuffers[currentFrame]);
+	}
 
-		if (swapchain != VK_NULL_HANDLE)
-			RecreateSwapchain();
+	Ref<VulkanRenderData> VulkanContext::CreateNewRenderData() {
+		uint8_t id = GetNewRenderDataID();
+		renderDatas.emplace(id, CreateRef<VulkanRenderData>(id));
+		return renderDatas[id];
+	}
+
+	uint8_t VulkanContext::GetNewRenderDataID() {
+		uint8_t id = renderDataCounter;
+		renderDataCounter++;
+		return id;
 	}
 }

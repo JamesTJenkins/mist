@@ -1,11 +1,11 @@
 #pragma once
-#include <Layer.hpp>
+#include <imgui/ImguiLayer.hpp>
 #include "Editor/SceneWindow.hpp"
 
 namespace mistEditor {
-	class EditorLayer : public mist::Layer {
+	class EditorLayer : public mist::ImguiLayer {
 	public:
-		EditorLayer();
+		EditorLayer(const char* name = "Imgui Layer");
 		virtual ~EditorLayer() override;
 	
 		EditorLayer(const EditorLayer& other) = delete;
@@ -15,9 +15,9 @@ namespace mistEditor {
 		virtual void OnDetach() override;
 		virtual void OnUpdate() override;
 		virtual void OnRender() override;
-		virtual void OnImguiRender() override;
 		virtual void OnEvent(const SDL_Event* e) override;
 	private:
+		void OnImguiRender();
 		void NewScene();
 		void OpenScene();
 		void SaveSceneAs();

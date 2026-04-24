@@ -10,13 +10,15 @@ namespace mist {
 		for (std::pair<const std::string, VkPipeline>& pipeline : pipelines) {
 			vkDestroyPipeline(context.GetDevice(), pipeline.second, context.GetAllocationCallbacks());
 		}
+		pipelines.clear();
 		
 		for (std::pair<const std::string, VkPipelineLayout>& layout : pipelineLayouts) {
 			vkDestroyPipelineLayout(context.GetDevice(), layout.second, context.GetAllocationCallbacks());
 		}
+		pipelineLayouts.clear();
 	}
 
-	void VulkanPipeline::CreateGraphicsPipeline(const VulkanShader* shader) {
+	void VulkanPipeline::CreateGraphicsPipeline(const VulkanShader* shader, const VkRenderPass& renderPass, const uint32_t colorAttachmentCount, VulkanDescriptor& descriptors) {
 		// going to have to generate all the configurations before they are used so at game launch or creating a cache file where all the shaders and variants are stored after compilation
 		// Hold onto the pipeline in a unorderedmap/dictionary so the pipelines can be loaded when needed
 		// read through this more https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/
@@ -68,7 +70,7 @@ namespace mist {
 		depthStencil.back = {};
 
 		// 1 ColorBlendAttachmentState per attachment
-		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates(context.GetColorAttachmentCount());
+		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates(colorAttachmentCount);
 		for (VkPipelineColorBlendAttachmentState& state : colorBlendAttachmentStates) {
 			state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 			state.blendEnable = VK_FALSE;
@@ -84,7 +86,7 @@ namespace mist {
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlending.logicOpEnable = VK_FALSE;
 		colorBlending.logicOp = VK_LOGIC_OP_COPY;
-		colorBlending.attachmentCount = context.GetColorAttachmentCount();
+		colorBlending.attachmentCount = colorAttachmentCount;
 		colorBlending.pAttachments = colorBlendAttachmentStates.data();
 		colorBlending.blendConstants[0] = 0.0f;
 		colorBlending.blendConstants[1] = 0.0f;
@@ -101,7 +103,7 @@ namespace mist {
 		dynamicState.dynamicStateCount = 2;
 		dynamicState.pDynamicStates = dynamicStates;
 
-		VkDescriptorSetLayout layout = context.descriptors.CreateDescriptorSetLayout(shader);
+		VkDescriptorSetLayout layout = descriptors.CreateDescriptorSetLayout(shader);
 
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -214,7 +216,7 @@ namespace mist {
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.layout = pipelineLayout;
-		pipelineInfo.renderPass = context.GetRenderPass();
+		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

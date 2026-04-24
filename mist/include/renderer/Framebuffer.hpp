@@ -63,6 +63,11 @@ namespace mist {
 		STENCIL8
 	};
 
+	enum class FramebufferType {
+		SWAPCHAIN,	// Will generate a double or triple buffered framebuffers with the swapchain images
+		SINGLE		// Single framebuffer
+	};
+
 	struct FramebufferTextureProperties {
 		FramebufferTextureProperties() = default;
 		FramebufferTextureProperties(const FramebufferTextureFormat& format) : textureFormat(format) {}
@@ -71,20 +76,32 @@ namespace mist {
 	};
 
 	struct FramebufferProperties {
+		FramebufferType type;
 		uint32_t width = 1, height = 1;
-		std::vector<mist::FramebufferTextureProperties> attachments;
+		std::vector<FramebufferTextureProperties> attachments;
 		uint32_t samples = 1;
+	};
+
+	struct SwapchainProperties {
+		uint32_t width = 1, height = 1;
+		FramebufferTextureFormat colorFormat;
 	};
 
 	extern "C" const char* FramebufferTextureFormatToString(const FramebufferTextureFormat format);
 
-	class Framebuffer {
+	class RenderData {
 	public:
-		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		RenderData(const uint8_t ID) : ID(ID) {}
+		virtual ~RenderData() {}
 
-		virtual uint32_t GetColorAttachmentRenderID(uint32_t index = 0) const = 0;
-		virtual const FramebufferProperties& GetProperties() const = 0;
+		virtual void Resize(const uint32_t width, const uint32_t height) = 0;
+		
+		inline const FramebufferProperties& GetProperties() const { return framebufferProperties; }
+		inline const uint8_t GetRenderDataID() { return ID; }
 
-		static void Create(FramebufferProperties& properties);
+		static Ref<RenderData> Create(FramebufferProperties& properties);
+	protected:
+		uint8_t ID;
+		FramebufferProperties framebufferProperties;
 	};
 }

@@ -3,9 +3,9 @@
 #include <vk_mem_alloc.h>
 #include <optional>
 #include <vector>
+#include <unordered_map>
 #include "renderer/Framebuffer.hpp"
-#include "renderer/vulkan/VulkanPipeline.hpp"
-#include "renderer/vulkan/VulkanDescriptors.hpp"
+#include "renderer/vulkan/VulkanRenderData.hpp"
 
 namespace mist {
 	struct QueueFamilyIndices {
@@ -13,15 +13,6 @@ namespace mist {
 		std::optional<uint32_t> presentFamily;
 
 		bool Valid() { return graphicsFamily.has_value() && presentFamily.has_value(); }
-	};
-
-	struct FramebufferAttachment {
-		VkImage image;
-		VkImageView view;
-		VmaAllocation imageAlloc;
-		bool isDepth;
-
-		void Cleanup();
 	};
 
 	struct FrameData {
@@ -47,12 +38,15 @@ namespace mist {
 		void BeginSingleTimeCommands();
 		void EndSingleTimeCommands();
 		
-		void CreateSwapchain(FramebufferProperties& properties);
+		void CreateSwapchain(const SwapchainProperties& properties);
 		void RecreateSwapchain();
-		void BeginRenderPass();
+		void BeginFrame();
+		void EndFrame();
+		void BeginRenderPass(const uint8_t renderDataID);
 		void EndRenderPass();
 
-		void SetViewport(uint32_t width, uint32_t height);
+		Ref<VulkanRenderData> CreateNewRenderData();
+		Ref<VulkanRenderData> GetRenderData(const uint8_t renderDataId) { return renderDatas[renderDataId]; }
 
 		inline const VkInstance GetInstance() const { return instance; }
 		inline const VkSurfaceKHR GetSurface() const { return surface; }
@@ -62,17 +56,15 @@ namespace mist {
 		inline const VkQueue GetPresentQueue() const { return presentQueue; }
         inline const VkDebugUtilsMessengerEXT GetDebugMessenger() const { return debugMessenger; }
         inline const VmaAllocator GetAllocator() const { return allocator; }
-		inline const VkRenderPass GetRenderPass() const { return renderPass; }
+		inline const VkCommandPool GetCommandPool() const { return commandPool; }
+		inline const VkCommandBuffer GetTempCommandBuffer() const { return tempCommandBuffer; }
+		inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocationCallbacks; }
 		inline const VkSwapchainKHR GetSwapchain() const { return swapchain; }
-		inline const uint32_t GetColorAttachmentCount() const { return colorAttachmentCount; }
 		inline const uint32_t GetCurrentFrameIndex() const { return currentFrame; }
 		inline const VkCommandBuffer GetCommandBuffer(uint32_t index) const { return commandBuffers[index]; }
 		inline const VkCommandBuffer GetCurrentFrameCommandBuffer() const { return commandBuffers[currentFrame]; }
-		inline const VkCommandBuffer GetTempCommandBuffer() const { return tempCommandBuffer; }
-		inline const VkAllocationCallbacks* GetAllocationCallbacks() const { return allocationCallbacks; }
-
-		VulkanPipeline pipeline;
-		VulkanDescriptor descriptors;
+		inline const uint32_t GetSwapchainImageCount() const { return static_cast<uint32_t>(swapchainImageViews.size()); }
+		inline const VkImageView GetSwapchainImageView(const uint8_t index) const { return swapchainImageViews[index]; }
 
 		const int MAX_FRAMES_IN_FLIGHT = 3;
 	private:
@@ -92,6 +84,7 @@ namespace mist {
 		void AllocateCommandBuffers();
 		void CreateDescriptorPool();
 
+		uint8_t GetNewRenderDataID();
 		uint32_t currentFrame = 0;
 		uint32_t imageIndex = 0;
 
@@ -104,23 +97,19 @@ namespace mist {
 		VkAllocationCallbacks* allocationCallbacks = nullptr;
 		VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
         VmaAllocator allocator = nullptr;
-
+		
+		SwapchainProperties swapchainProperties;
 		VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-		FramebufferProperties framebufferProperties;
-		VkExtent2D extent;
-		VkViewport viewport;
-		VkRect2D scissor;
 		std::vector<VkImageView> swapchainImageViews;
-		VkRenderPass renderPass = VK_NULL_HANDLE;
-		uint32_t colorAttachmentCount = 0;
-		std::vector<std::vector<FramebufferAttachment>> additionalFramebufferAttachments;
-		std::vector<VkFramebuffer> framebuffers;
-		std::vector<FrameData> frameDatas;
 		std::vector<VkSemaphore> submitSemaphores;
+		std::vector<FrameData> frameDatas;
 
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer> commandBuffers;
 		VkCommandBuffer tempCommandBuffer = VK_NULL_HANDLE;
 		VkFence tempCommandBufferFence = VK_NULL_HANDLE;
+
+		uint8_t renderDataCounter;
+		std::unordered_map<uint8_t, Ref<VulkanRenderData>> renderDatas;
 	};
 }

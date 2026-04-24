@@ -87,20 +87,29 @@ namespace mist {
 		}
 	}
 
-	void Framebuffer::Create(FramebufferProperties& properties) {
+	Ref<RenderData> RenderData::Create(FramebufferProperties& properties) {
 		switch (Application::Get().GetRenderAPI()->GetAPI()) {
 		case RenderAPI::API::Vulkan:
 		{
 			ValidateFramebufferProperties(properties);
 			
 			VulkanContext& context = VulkanContext::GetContext();
-			MIST_INFO("Creating new swapchain for framebuffer");
-			context.CreateSwapchain(properties);
-			break;
+			if (properties.type == FramebufferType::SWAPCHAIN) {
+				MIST_ASSERT(VulkanHelper::IsColorFormat(properties.attachments[0].textureFormat), "First framebuffer attachment is not a color format, cant create swapchain");
+				SwapchainProperties swapchainProperties{};
+				swapchainProperties.colorFormat = properties.attachments[0].textureFormat;
+				swapchainProperties.width = properties.width;
+				swapchainProperties.height = properties.height;
+				context.CreateSwapchain(swapchainProperties);
+			}
+
+			Ref<VulkanRenderData> data = context.CreateNewRenderData();
+			data->CreateRenderData(properties);
+			return std::static_pointer_cast<RenderData>(data);
 		}
 		case RenderAPI::API::None:
 			MIST_ASSERT(false, "Running headless");
-			break;
+			return nullptr;
 		}
 	}
 }

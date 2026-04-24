@@ -1,6 +1,8 @@
 #pragma once
+#include <vulkan/vulkan.h>
 #include <unordered_map>
 #include "renderer/vulkan/VulkanShader.hpp"
+#include "renderer/vulkan/VulkanDescriptors.hpp"
 
 namespace mist {
 	class VulkanPipeline {
@@ -9,10 +11,11 @@ namespace mist {
 		~VulkanPipeline() {}
 
 		void Cleanup();
-		void CreateGraphicsPipeline(const VulkanShader* shaderResources);
+		void CreateGraphicsPipeline(const VulkanShader* shaderResources, const VkRenderPass& renderPass, const uint32_t colorAttachmentCount, VulkanDescriptor& descriptors);
 
-		VkPipeline& GetGraphicsPipeline(std::string name) { return pipelines[name]; }
-		VkPipelineLayout& GetGraphicsPipelineLayout(std::string name) { return pipelineLayouts[name]; }
+		bool HasPipeline(const std::string name) { return pipelines.contains(name); }		
+		VkPipeline& GetGraphicsPipeline(const std::string name) { return pipelines[name]; }
+		VkPipelineLayout& GetGraphicsPipelineLayout(const std::string name) { return pipelineLayouts[name]; }
 	private:
 		std::unordered_map<std::string, VkPipelineLayout> pipelineLayouts;
 		std::unordered_map<std::string, VkPipeline> pipelines;

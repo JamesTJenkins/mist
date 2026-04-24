@@ -5,34 +5,35 @@
 #include "components/Camera.hpp"
 #include "components/MeshRenderer.hpp"
 #include "components/DirectionalLight.hpp"
+#include "Framebuffer.hpp"
 
 namespace mist {
-    class RenderAPI {
-    public:
-        enum API { None, Vulkan };
-        enum VSYNC { Off, On, TripleBuffer };
+	class RenderAPI {
+	public:
+		enum API { None, Vulkan };
+		enum VSYNC { Off, On, TripleBuffer };
 
-        virtual ~RenderAPI() {}
+		virtual ~RenderAPI() {}
 
-        virtual void Initialize() = 0;
-        virtual void Shutdown() = 0;
+		virtual void Initialize() = 0;
+		virtual void Shutdown() = 0;
 
-        virtual void SetViewport(uint32_t width, uint32_t height) = 0;
+		virtual void SetClearColor(glm::vec4& color) = 0;
+		virtual glm::vec4 GetClearColor() = 0;
 
-        virtual void SetClearColor(glm::vec4& color) = 0;
-        virtual glm::vec4 GetClearColor() = 0;
+		virtual void WaitForIdle() = 0;
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
+		virtual void BeginRenderPass(const uint8_t renderDataID) = 0;
+		virtual void EndRenderPass() = 0;
+		virtual void UpdateDirectionalLight(const uint8_t renderDataID, const DirectionalLight& light) = 0;
+		virtual void UpdateCamera(const uint8_t renderDataID, const Camera& camera) = 0;
+		virtual void BindMeshRenderer(const uint8_t renderDataID, const MeshRenderer& meshRenderer) = 0;
+		virtual void Draw(uint32_t indexCount) = 0;
 
-        virtual void WaitForIdle() = 0;
-        virtual void BeginRenderPass() = 0;
-        virtual void EndRenderPass() = 0;
-        virtual void UpdateDirectionalLight(DirectionalLight& light) = 0;
-        virtual void UpdateCamera(Camera& camera) = 0;
-        virtual void BindMeshRenderer(const MeshRenderer& MeshRenderer) = 0;
-        virtual void Draw(uint32_t indexCount) = 0;
+		virtual API GetAPI() = 0;
 
-        virtual API GetAPI() = 0;
-
-        virtual void SetVsyncMode(RenderAPI::VSYNC newMode) = 0;
-        virtual VSYNC GetVsyncMode() = 0;
-    };
+		virtual void SetVsyncMode(RenderAPI::VSYNC newMode) = 0;
+		virtual VSYNC GetVsyncMode() = 0;
+	};
 }

@@ -20,14 +20,14 @@ namespace mist {
 		inline const int32_t GetActiveSceneIndex() { return activeScene; }
 		inline entt::registry& GetActiveScene() { return loadedScenes[activeScene]; }
 
-		inline void SubmitActiveScene() { SubmitScene(activeScene); }
-		void SubmitScene(int32_t index);
+		inline void SubmitActiveScene(const uint8_t renderDataID) { SubmitScene(renderDataID, activeScene); }
+		void SubmitScene(const uint8_t renderDataID, const int32_t sceneIndex);
 
-		void UpdateSceneCamera();
+		void UpdateSceneCamera(const uint8_t renderDataID);
 
 		void LoadEmptyScene();
 		void LoadScene();
-		void SetActiveScene(int32_t index);
+		void SetActiveScene(const int32_t sceneIndex);
 
 		void Cleanup();
 	private:
