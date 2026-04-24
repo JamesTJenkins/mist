@@ -6,7 +6,6 @@
 #include <components/Collider.hpp>
 #include <components/Rigidbody.hpp>
 #include <components/DirectionalLight.hpp>
-#include <components/Tags.hpp>
 #include <data/Importer.hpp>
 
 namespace mistEditor {
