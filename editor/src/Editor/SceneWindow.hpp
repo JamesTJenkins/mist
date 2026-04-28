@@ -6,6 +6,7 @@
 #include <renderer/Shader.hpp>
 #include <components/Camera.hpp>
 #include <imgui/ImguiLayer.hpp>
+#include <entt/entt.hpp>
 
 namespace mistEditor {
 	class SceneWindow {
@@ -21,7 +22,10 @@ namespace mistEditor {
 	private:
 		mist::ImguiLayer* parent;
 		mist::Ref<mist::RenderData> renderData;
-		
+		entt::entity sceneCameraEntity;
+		float xRotation = 0;
+		float yRotation = 0;
+
 		bool resizeRequested = false;
 		mist::ImGuiTextureID sceneFramebufferID;
 		glm::vec2 sceneViewportSize = { 0, 0 };

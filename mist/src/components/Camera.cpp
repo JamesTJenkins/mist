@@ -63,7 +63,7 @@ namespace mist {
 		RecreateCamera();
 	}
 
-	void Camera::SetPerspectiveCamera(const float _width, const float _height, const float _fov, const float _nearPlane, const float _farPlane, const bool isMainCamera) {
+	void Camera::SetPerspectiveCamera(const float _width, const float _height, const float _fov, const float _nearPlane, const float _farPlane) {
 		width = _width;
 		height = _height;
 		aspect = width / height;
@@ -73,8 +73,6 @@ namespace mist {
 		type = Perspective;
 
 		RecreateCamera();
-		if (isMainCamera)
-			SetMainCamera(this);
 	}
 
 	Camera::Camera(const Camera& other) : type(other.type), projectionMatrix(other.projectionMatrix), transformComponent(other.transformComponent), 
@@ -102,7 +100,7 @@ namespace mist {
 		return *this;
 	}
 
-	void Camera::SetOrthographicCamera(const float _width, const float _height, const float _size, const float _nearPlane, const float _farPlane, const bool isMainCamera) {
+	void Camera::SetOrthographicCamera(const float _width, const float _height, const float _size, const float _nearPlane, const float _farPlane) {
 		width = _width;
 		height = _height;
 		aspect = width / height;
@@ -112,7 +110,7 @@ namespace mist {
 		type = Orthographic;
 
 		RecreateCamera();
-		if (isMainCamera)
-			SetMainCamera(this);
 	}
+
+	SceneCamera::SceneCamera(Transform& transform) : Camera(transform) {}
 }

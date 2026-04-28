@@ -39,6 +39,10 @@ namespace mist {
 		});
 	}
 
+	void SceneManager::UpdateSceneCamera(const Camera& camera, const uint8_t renderDataID) {
+		Application::Get().GetRenderAPI()->UpdateCamera(renderDataID, camera);
+	}
+
 	void SceneManager::UpdateSceneCamera(const uint8_t renderDataID) {
 		auto camView = loadedScenes[activeScene].view<Camera>();
 		
@@ -50,8 +54,12 @@ namespace mist {
 				break;
 		}
 
-		if (cam != nullptr)
+		if (cam != nullptr) {
 			Application::Get().GetRenderAPI()->UpdateCamera(renderDataID, *cam);
+			return;
+		}
+
+		MIST_WARN("No camera in active scene");
 	}
 
 	void SceneManager::LoadEmptyScene() {

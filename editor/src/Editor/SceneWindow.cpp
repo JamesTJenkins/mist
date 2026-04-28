@@ -27,6 +27,11 @@ namespace mistEditor {
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
 		sm->LoadEmptyScene();
 
+		sceneCameraEntity = sm->CreateEntity();
+		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(sceneCameraEntity, glm::vec3(0, 0, -5));
+		mist::Camera& sceneCamera = sm->AddComponent<mist::SceneCamera>(sceneCameraEntity, sceneCameraT);
+		sceneCamera.SetPerspectiveCamera(1280, 720);
+
 		// GAME
 		testShader = mist::Application::Get().GetShaderLibrary()->Load("assets/shaders/lambert.glsl");
 
@@ -59,8 +64,8 @@ namespace mistEditor {
 		}
 
 		const entt::entity gameCameraEntity = sm->CreateEntity();
-		mist::Transform& sceneCameraT = sm->AddComponent<mist::Transform>(gameCameraEntity, glm::vec3(0, 0, -5));
-		mist::Camera& sceneCamera = sm->AddComponent<mist::Camera>(gameCameraEntity, sceneCameraT);
+		mist::Transform& gameCameraT = sm->AddComponent<mist::Transform>(gameCameraEntity, glm::vec3(0, 0, -5));
+		mist::Camera& gameCamera = sm->AddComponent<mist::Camera>(gameCameraEntity, sceneCameraT);
 		sceneCamera.SetPerspectiveCamera(1280, 720);
 
 		const entt::entity directionalLightEntity = sm->CreateEntity();
@@ -81,6 +86,39 @@ namespace mistEditor {
 		view.each([delta](mist::Transform &transform, mist::MeshRenderer &render) {
 			transform.Rotate(glm::radians(30.0f) * delta, { 0, 1, 0 });
 		});
+
+		mist::Transform& transform = sm->GetComponent<mist::Transform>(sceneCameraEntity);
+		glm::vec2 mouse;
+		uint32_t buttons = SDL_GetRelativeMouseState(&mouse.x, &mouse.y);
+		mouse *= 1.0;	// Sensitivity
+		xRotation += mouse.y;
+		xRotation = glm::clamp(xRotation, -90.0f, 90.0f);
+		yRotation += mouse.x;
+
+		glm::quat pitch = glm::angleAxis(glm::radians(xRotation), glm::vec3(1,0,0));
+		glm::quat yaw = glm::angleAxis(glm::radians(yRotation), glm::vec3(0,1,0));
+		transform.rotation = yaw * pitch;
+		
+		const bool* state = SDL_GetKeyboardState(NULL);
+		glm::vec3 move = { 0, 0, 0 };
+		if (state[SDL_SCANCODE_W])
+			move.z += 1;
+		if (state[SDL_SCANCODE_S])
+			move.z -= 1;
+		if (state[SDL_SCANCODE_D])
+			move.x += 1;
+		if (state[SDL_SCANCODE_A])
+			move.x -= 1;
+		if (state[SDL_SCANCODE_SPACE])
+			move.y += 1;
+		if (state[SDL_SCANCODE_LCTRL])
+			move.y -= 1;
+
+		transform.position += (
+			transform.Forward() * move.z +
+			transform.Up() * move.y +
+			transform.Left() * move.x
+		) * 15.0f * delta;		
 	}
 
 	void SceneWindow::OnImguiRender() {
@@ -106,7 +144,8 @@ namespace mistEditor {
 		mist::RenderAPI* renderAPI = mist::Application::Get().GetRenderAPI();
 		renderAPI->BeginRenderPass(renderData->GetRenderDataID());
 		mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
-		sm->UpdateSceneCamera(renderData->GetRenderDataID());
+		mist::Camera& cam = dynamic_cast<mist::Camera&>(sm->GetComponent<mist::SceneCamera>(sceneCameraEntity));
+		sm->UpdateSceneCamera(cam, renderData->GetRenderDataID());
 		sm->SubmitActiveScene(renderData->GetRenderDataID());
 		renderAPI->EndRenderPass();
 	}
@@ -115,7 +154,8 @@ namespace mistEditor {
 		if (resizeRequested) {
 			renderData->Resize(sceneViewportSize.x, sceneViewportSize.y);
 			parent->UpdateTexture(sceneFramebufferID, renderData);
-			//sceneCam.SetViewportSize(viewportSize.x, viewportSize.y);
+			mist::SceneManager* sm = mist::Application::Get().GetSceneManager();
+			sm->GetComponent<mist::SceneCamera>(sceneCameraEntity).SetViewportSize(sceneViewportSize.x, sceneViewportSize.y);
 			resizeRequested = false;
 		}
 	}

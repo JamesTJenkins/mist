@@ -1,5 +1,6 @@
 #pragma once
 #include <entt/entt.hpp>
+#include "components/Camera.hpp"
 
 namespace mist {
 	class SceneManager {
@@ -11,10 +12,15 @@ namespace mist {
 		T& AddComponent(Args&& ... args) {
 			return loadedScenes[activeScene].emplace<T>(std::forward<Args>(args)...);
 		}
-
+		
 		template<typename T>
 		void RemoveComponent(const entt::entity entity) {
 			loadedScenes[activeScene].erase<T>(entity);
+		}
+
+		template<typename T>
+		T& GetComponent(const entt::entity entity) {
+			return loadedScenes[activeScene].get<T>(entity);
 		}
 		
 		inline const int32_t GetActiveSceneIndex() { return activeScene; }
@@ -23,6 +29,7 @@ namespace mist {
 		inline void SubmitActiveScene(const uint8_t renderDataID) { SubmitScene(renderDataID, activeScene); }
 		void SubmitScene(const uint8_t renderDataID, const int32_t sceneIndex);
 
+		void UpdateSceneCamera(const Camera& camera, const uint8_t renderDataID);
 		void UpdateSceneCamera(const uint8_t renderDataID);
 
 		void LoadEmptyScene();

@@ -29,11 +29,8 @@ namespace mist {
 		inline void SetTransform(Transform& value) { transformComponent = value; }
 		inline Transform& GetTransform() const { return transformComponent; }
 
-		inline static Camera* GetMainCamera() { return mainCamera; }
-		inline static void SetMainCamera(Camera* value) { mainCamera = value; }
-
 		// ORTHOGRAPHIC
-		void SetOrthographicCamera(const float width, const float height, const float size = 10, const float nearPlane = -1, const float farPlane = 1, const bool isMainCamera = true);
+		void SetOrthographicCamera(const float width, const float height, const float size = 10, const float nearPlane = -1, const float farPlane = 1);
 		
 		float GetOrthographicSize() const { return size; }
 		void SetOrthographicSize(float value) { size = value; RecreateCamera(); }
@@ -45,7 +42,7 @@ namespace mist {
 		void SetOrthographicFarPlane(float value) { orthographicFarPlane = value; RecreateCamera(); }
 
 		// PERSPECTIVE
-		void SetPerspectiveCamera(const float width, const float height, const float fov = 60, const float nearPlane = 0.01f, const float farPlane = 1000, const bool isMainCamera = true);
+		void SetPerspectiveCamera(const float width, const float height, const float fov = 60, const float nearPlane = 0.01f, const float farPlane = 1000);
 
 		float GetPerspectiveFOV() const { return fov; }
 		void SetPerspectiveFOV(float value) { fov = value; RecreateCamera(); }
@@ -55,7 +52,7 @@ namespace mist {
 
 		float GetPerspectiveFarPlane() const { return perspectiveFarPlane; }
 		void SetPerspectiveFarPlane(float value) { perspectiveFarPlane = value; RecreateCamera(); }
-	public:
+
 		Camera(const Camera& other);				// Copy construct
 		Camera& operator=(const Camera& other);	    // Copy assign
 
@@ -69,18 +66,18 @@ namespace mist {
 		float width;
 		float height;
 		float aspect;
-	private:
 		// Orthographic
 		float size = 10;
 		float orthographicNearPlane = -1;
 		float orthographicFarPlane = 1;
-	private:
 		// Perspective
 		float fov = 60;
 		float perspectiveNearPlane = 0.1f;
 		float perspectiveFarPlane = 1000;
-	private:
-		// TODO: Move to scene
-		inline static Camera* mainCamera;
+	};
+
+	class SceneCamera : public Camera {
+	public:
+		SceneCamera(Transform& transform);
 	};
 }
